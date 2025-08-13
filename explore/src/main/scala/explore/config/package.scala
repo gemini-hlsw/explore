@@ -18,6 +18,8 @@ import explore.modes.SpectroscopyModesMatrix
 import japgolly.scalajs.react.*
 import lucuma.core.math.Wavelength
 import lucuma.core.math.WavelengthDelta
+import lucuma.core.optics.Format
+import lucuma.core.syntax.string.parseBigDecimalOption
 import lucuma.core.validation.*
 import lucuma.refined.*
 import lucuma.schemas.model.ObservingMode
@@ -40,6 +42,9 @@ trait ConfigurationFormats:
   lazy val wvDeltaNanoInput     = ExploreModelValidators.wavelengthNanoDeltaValidWedge.optional
   lazy val wvDeltaAngstromInput = ExploreModelValidators.wavelengthAngstromDeltaValidWedge.optional
 
+  private def bdFormat(scale: Int): Format[String, BigDecimal] =
+    Format[String, BigDecimal](parseBigDecimalOption, _.setScale(scale).toString)
+
   extension (u: WavelengthUnits)
     def toAuditor: ChangeAuditor =
       u match
@@ -60,6 +65,12 @@ trait ConfigurationFormats:
         case WavelengthUnits.Micrometers => ExploreModelValidators.wavelengthMicroValidWedge
         case WavelengthUnits.Nanometers  => ExploreModelValidators.wavelengthNanoValidWedge
         case WavelengthUnits.Angstroms   => ExploreModelValidators.wavelengthAngstromValidWedge
+
+    def format: Format[String, Wavelength] =
+      u match
+        case WavelengthUnits.Micrometers => bdFormat(2).andThen(Wavelength.decimalMicrometers)
+        case WavelengthUnits.Nanometers  => bdFormat(1).andThen(Wavelength.decimalNanometers)
+        case WavelengthUnits.Angstroms   => bdFormat(0).andThen(Wavelength.decimalAngstroms)
 
     def toDeltaInputWedge: InputValidWedge[Option[WavelengthDelta]] =
       u match

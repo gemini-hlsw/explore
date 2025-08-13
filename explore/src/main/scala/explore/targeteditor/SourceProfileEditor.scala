@@ -12,6 +12,7 @@ import explore.components.HelpIcon
 import explore.model.AppContext
 import explore.model.AttachmentList
 import explore.model.enums.SourceProfileType
+import explore.model.enums.WavelengthUnits
 import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -42,7 +43,8 @@ case class SourceProfileEditor(
   attachments:     View[AttachmentList],
   authToken:       Option[NonEmptyString],
   calibrationRole: Option[CalibrationRole],
-  disabled:        Boolean
+  disabled:        Boolean,
+  units:           WavelengthUnits
 ) extends ReactFnProps(SourceProfileEditor)
 
 object SourceProfileEditor
@@ -84,8 +86,9 @@ object SourceProfileEditor
                 brightnessExpanded,
                 props.attachments,
                 props.authToken,
-                props.disabled,
-                props.calibrationRole
+                props.units,
+                props.calibrationRole,
+                props.disabled
               )
             ),
           props.sourceProfile
@@ -101,8 +104,9 @@ object SourceProfileEditor
                 brightnessExpanded,
                 props.attachments,
                 props.authToken,
-                props.disabled,
-                props.calibrationRole
+                props.units,
+                props.calibrationRole,
+                props.disabled
               )
             ),
           gaussianAlignerOpt
@@ -134,8 +138,9 @@ object SourceProfileEditor
                   brightnessExpanded,
                   props.attachments,
                   props.authToken,
-                  props.disabled,
-                  props.calibrationRole
+                  props.units,
+                  props.calibrationRole,
+                  props.disabled
                 )
               )
             )

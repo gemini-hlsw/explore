@@ -5,7 +5,9 @@ package explore.targeteditor.spectralDefinition.emissionLineEditor
 
 import crystal.react.*
 import explore.*
+import explore.model.enums.WavelengthUnits
 import explore.utils.IsExpanded
+import japgolly.scalajs.react.*
 import lucuma.core.math.BrightnessUnits.*
 import lucuma.core.math.Wavelength
 import lucuma.core.math.dimensional.*
@@ -19,7 +21,8 @@ import scala.collection.immutable.SortedMap
 case class IntegratedEmissionLineEditor(
   emissionLines: View[SortedMap[Wavelength, EmissionLine[Integrated]]],
   expanded:      View[IsExpanded],
-  disabled:      Boolean
+  disabled:      Boolean,
+  units:         WavelengthUnits
 ) extends ReactFnProps[IntegratedEmissionLineEditor](IntegratedEmissionLineEditor.component)
     with EmissionLineEditor[Integrated]
 
@@ -27,4 +30,7 @@ object IntegratedEmissionLineEditor
     extends EmissionLineEditorBuilder[Integrated, IntegratedEmissionLineEditor] {
   val defaultLineUnits =
     summon[TaggedUnit[ErgsPerSecondCentimeter2, LineFlux[Integrated]]].unit
+
+  val component = ScalaFnComponent[IntegratedEmissionLineEditor]: props =>
+    componentWithWavelengthUnits(props.units)(props)
 }

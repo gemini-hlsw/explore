@@ -380,7 +380,8 @@ object SiderealTargetEditor:
                 props.attachments,
                 props.authToken,
                 props.obsConf.flatMap(_.calibrationRole),
-                disabled
+                disabled,
+                props.userPreferences.get.globalPreferences.wavelengthUnits
               ).withKey(obsToCloneTo.get.fold("none")(_.show))
             )
           )

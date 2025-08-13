@@ -5,7 +5,9 @@ package explore.targeteditor.spectralDefinition.emissionLineEditor
 
 import crystal.react.*
 import explore.*
+import explore.model.enums.WavelengthUnits
 import explore.utils.IsExpanded
+import japgolly.scalajs.react.*
 import lucuma.core.math.BrightnessUnits.*
 import lucuma.core.math.Wavelength
 import lucuma.core.math.dimensional.*
@@ -19,6 +21,7 @@ import scala.collection.immutable.SortedMap
 case class SurfaceEmissionLineEditor(
   emissionLines: View[SortedMap[Wavelength, EmissionLine[Surface]]],
   expanded:      View[IsExpanded],
+  units:         WavelengthUnits,
   disabled:      Boolean
 ) extends ReactFnProps[SurfaceEmissionLineEditor](SurfaceEmissionLineEditor.component)
     with EmissionLineEditor[Surface]
@@ -28,4 +31,7 @@ object SurfaceEmissionLineEditor
 
   val defaultLineUnits =
     summon[TaggedUnit[ErgsPerSecondCentimeter2Arcsec2, LineFlux[Surface]]].unit
+
+  val component = ScalaFnComponent[SurfaceEmissionLineEditor]: props =>
+    componentWithWavelengthUnits(props.units)(props)
 }
