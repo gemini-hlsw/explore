@@ -12,6 +12,7 @@ import explore.common.*
 import explore.model.AttachmentList
 import explore.model.enums.SedType
 import explore.model.enums.SurfaceSedType
+import explore.model.enums.WavelengthUnits
 import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -42,8 +43,9 @@ case class SurfaceSpectralDefinitionEditor(
   brightnessExpanded: View[IsExpanded],
   attachments:        View[AttachmentList],
   authToken:          Option[NonEmptyString],
-  disabled:           Boolean,
-  calibrationRole:    Option[CalibrationRole]
+  units:              WavelengthUnits,
+  calibrationRole:    Option[CalibrationRole],
+  disabled:           Boolean
 )(using Logger[IO])
     extends ReactFnProps[SurfaceSpectralDefinitionEditor](
       SurfaceSpectralDefinitionEditor.component
@@ -122,8 +124,11 @@ object SurfaceSpectralDefinitionEditor
     (brightnessesView, expanded, disabled) =>
       SurfaceBrightnessEditor(brightnessesView, expanded, disabled)
 
-  override protected val emissionLineEditor
-    : (View[SortedMap[Wavelength, EmissionLine[Surface]]], View[IsExpanded], Boolean) => VdomNode =
+  override protected def emissionLineEditor(props: SurfaceSpectralDefinitionEditor): (
+    View[SortedMap[Wavelength, EmissionLine[Surface]]],
+    View[IsExpanded],
+    Boolean
+  ) => VdomNode =
     (emissionLinesView, expanded, disabled) =>
-      SurfaceEmissionLineEditor(emissionLinesView, expanded, disabled)
+      SurfaceEmissionLineEditor(emissionLinesView, expanded, props.units, disabled)
 }

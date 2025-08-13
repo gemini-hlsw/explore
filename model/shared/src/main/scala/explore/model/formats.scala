@@ -4,7 +4,6 @@
 package explore.model
 
 import cats.syntax.all.*
-import coulomb.*
 import eu.timepit.refined.collection.NonEmpty
 import explore.model.Constants
 import explore.optics.all.*
@@ -62,11 +61,6 @@ trait formats:
 
   val formatCZ: Format[String, ApparentRadialVelocity] =
     formatBigDecimalCZ.andThen(FromKilometersPerSecondCZ)
-
-  val formatWavelengthMicron: Format[String, Wavelength] =
-    Format(_.parseBigDecimalOption.flatMap(Wavelength.decimalMicrometers.getOption),
-           _.toMicrometers.value.value.toString
-    )
 
   def formatPercentile(v: IntCentiPercent): String =
     s"${v.toPercent.toInt}%"

@@ -76,8 +76,9 @@ private abstract class SpectralDefinitionEditorBuilder[
 
   protected def brightnessEditor
     : (View[SortedMap[Band, BrightnessMeasure[T]]], View[IsExpanded], Boolean) => VdomNode
-  protected def emissionLineEditor
-    : (View[SortedMap[Wavelength, EmissionLine[T]]], View[IsExpanded], Boolean) => VdomNode
+  protected def emissionLineEditor(
+    props: Props
+  ): (View[SortedMap[Wavelength, EmissionLine[T]]], View[IsExpanded], Boolean) => VdomNode
 
   protected def currentType: SpectralDefinition[T] => Option[SedType[T]]
   protected def userDefinedType: SedType[T]
@@ -342,7 +343,7 @@ private abstract class SpectralDefinitionEditorBuilder[
                 props.emissionLinesViewOpt
                   .map(e =>
                     <.div(ExploreStyles.BrightnessesTableWrapper)(
-                      emissionLineEditor(e, props.brightnessExpanded, props.disabled)
+                      emissionLineEditor(props)(e, props.brightnessExpanded, props.disabled)
                     )
                   )
               )

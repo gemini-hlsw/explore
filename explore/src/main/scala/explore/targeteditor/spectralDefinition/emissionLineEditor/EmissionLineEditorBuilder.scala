@@ -9,12 +9,12 @@ import coulomb.*
 import coulomb.syntax.*
 import crystal.react.*
 import crystal.react.hooks.*
-import eu.timepit.refined.*
 import eu.timepit.refined.cats.*
 import eu.timepit.refined.types.string.NonEmptyString
 import explore.*
 import explore.components.ui.ExploreStyles
-import explore.model.formats.*
+import explore.config.ConfigurationFormats.*
+import explore.model.enums.WavelengthUnits
 import explore.utils.IsExpanded
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -44,7 +44,6 @@ import lucuma.ui.table.*
 import lucuma.ui.utils.*
 
 import scala.collection.immutable.SortedMap
-import scala.math.BigDecimal.RoundingMode
 
 private abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[T]](using
   enumUnits: Enumerated[Units Of LineFlux[T]]
@@ -67,18 +66,14 @@ private abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[
   private val LineUnitsColumnId: ColumnId  = ColumnId("lineUnits")
   private val DeleteColumnId: ColumnId     = ColumnId("delete")
 
-  private val Columns =
+  private def columnsWithWavelengthUnits(wavelengthUnits: WavelengthUnits) =
     Reusable.always:
       List(
         ColDef(
           WavelengthColumnId,
           _._1,
-          _ => <.span(ExploreStyles.TextPlain, "λ (µm)"),
-          cell =>
-            Wavelength.decimalMicrometers
-              .reverseGet(cell.value)
-              .setScale(3, RoundingMode.HALF_UP)
-              .toString,
+          _ => <.span(ExploreStyles.TextPlain, s"λ (${wavelengthUnits.symbol})"),
+          cell => wavelengthUnits.format.reverseGet(cell.value),
           size = 74.toPx
         ).sortable,
         ColDef(
@@ -146,14 +141,14 @@ private abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[
         )
       )
 
-  protected[targeteditor] val component =
+  protected[targeteditor] def componentWithWavelengthUnits(wavelengthUnits: WavelengthUnits) =
     ScalaFnComponent[Props]: props =>
       for
         rows          <- useMemo(props.emissionLines.get): _ =>
                            props.emissionLines.widen[Map[Wavelength, EmissionLine[T]]].toListOfViews
         table         <- useReactTable:
                            TableOptions(
-                             Columns,
+                             columnsWithWavelengthUnits(wavelengthUnits),
                              rows,
                              getRowId = (row, _, _) => RowId(row._1.toPicometers.value.toString),
                              enableSorting = true,
@@ -188,14 +183,10 @@ private abstract class EmissionLineEditorBuilder[T, Props <: EmissionLineEditor[
               id = "newWavelength".refined,
               value = newWavelength,
               label = "New line λ:",
-              validFormat = InputValidSplitEpi.fromFormat(formatWavelengthMicron).optional,
-              changeAuditor = ChangeAuditor
-                .fromFormat(formatWavelengthMicron)
-                .decimal(3.refined)
-                .allow(List("0", "0.").contains)
-                .optional,
+              validFormat = wavelengthUnits.toInputWedge,
+              changeAuditor = wavelengthUnits.toAuditor,
               onTextChange = (s: String) => addDisabled.set(AddDisabled(s.isEmpty)),
-              units = "μm"
+              units = wavelengthUnits.symbol
             ),
             Button(
               icon = Icons.New,
