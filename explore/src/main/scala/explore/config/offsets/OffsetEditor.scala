@@ -22,6 +22,7 @@ import lucuma.core.util.Display
 import lucuma.react.common.*
 import lucuma.react.primereact.Button
 import lucuma.react.primereact.Checkbox
+import lucuma.react.primereact.Divider
 import lucuma.react.resizeDetector.hooks.*
 import lucuma.refined.*
 import lucuma.ui.primereact.*
@@ -86,6 +87,7 @@ object OffsetEditor {
       gridType       <- useStateView(GridType.Random)
       previewOffsets <- useState(props.offsets.get.some)
       showNumbers    <- useStateView(false)
+      showArrows     <- useStateView(true)
       isInitialMount <- useState(true)
       params          = gridType.get match {
                           case GridType.Rectangular => rectParams.get
@@ -113,7 +115,7 @@ object OffsetEditor {
         <.div(
           OffsetEditorStyles.GridDisplay,
           (previewOffsets.value, size).mapN((o, s) =>
-            OffsetGridDisplay(o, svgSize = s, showNumbers = showNumbers.get || o.size < 30)
+            OffsetGridDisplay(o, svgSize = s, showNumbers = showNumbers.get || o.size < 30, showArrows = showArrows.get)
           )
         ).withRef(resize.ref),
         <.div(
@@ -196,19 +198,12 @@ object OffsetEditor {
                 )
               )
           },
-          <.div(
-            OffsetEditorStyles.FormRow,
-            <.div(
-              Checkbox(
-                inputId = "show-numbers",
-                checked = showNumbers.get || previewOffsets.value.exists(_.size < 30),
-                onChange = checked => showNumbers.set(checked)
-              ),
-              <.label(^.htmlFor := "show-numbers", " Offset numbers")
-            ),
-            gridType.get match {
-              case GridType.Rectangular => EmptyVdom
-              case _                    =>
+          gridType.get match {
+            case GridType.Rectangular => EmptyVdom
+            case _                    =>
+              <.div(
+                OffsetEditorStyles.FormRow,
+                <.label("Refresh:"),
                 Button(
                   text = false,
                   icon = Icons.ArrowsRepeat,
@@ -216,7 +211,30 @@ object OffsetEditor {
                   clazz = ExploreStyles.OffsetRegenerate,
                   onClick = generateCurrentGrid(params, props.pointCount, updateOffsets)
                 ).mini.compact
-            }
+              )
+          },
+          Divider(),
+          <.h4("View Options"),
+          <.div(
+            OffsetEditorStyles.FormRow,
+            <.div(
+              OffsetEditorStyles.SmallCheckbox,
+              Checkbox(
+                inputId = "show-numbers",
+                checked = showNumbers.get || previewOffsets.value.exists(_.size < 30),
+                onChange = checked => showNumbers.set(checked)
+              ),
+              <.label(^.htmlFor := "show-numbers", " Offset numbers")
+            ),
+            <.div(
+              OffsetEditorStyles.SmallCheckbox,
+              Checkbox(
+                inputId = "show-arrows",
+                checked = showArrows.get,
+                onChange = checked => showArrows.set(checked)
+              ),
+              <.label(^.htmlFor := "show-arrows", " Show arrows")
+            )
           )
         )
       )

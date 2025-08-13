@@ -20,4 +20,6 @@ object OffsetEditorStyles:
   val Axes: Css         = Css("offset-grid-axes")
   val Labels: Css       = Css("offset-grid-labels")
   val OffsetPoints: Css = Css("offset-grid-points")
+  val Arrows: Css       = Css("offset-grid-arrows")
   val Crosshair: Css    = Css("offset-grid-crosshair")
+  val SmallCheckbox: Css = Css("offset-small-checkbox")

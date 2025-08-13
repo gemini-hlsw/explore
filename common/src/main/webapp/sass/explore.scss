@@ -3791,4 +3791,56 @@ span.explore-offsets-count {
       stroke-width: 1.5;
     }
   }
+
+  .offset-grid-arrows {
+    --arrow-transparency: 0.9;
+    --arrow-color: rgba(255, 165, 0, var(--arrow-transparency));
+
+    line {
+      stroke: var(--arrow-color);
+      stroke-width: 0.6;
+    }
+
+    polygon {
+      fill: var(--arrow-color);
+    }
+  }
+}
+
+.offset-small-checkbox {
+  .p-checkbox {
+    width: 16px;
+    height: 16px;
+
+    .p-checkbox-box {
+      width: 16px;
+      height: 16px;
+    }
+
+    .p-checkbox-icon {
+      font-size: 10px;
+    }
+  }
+
+  label {
+    font-size: 13px;
+  }
+}
+
+// Mobile dialog header optimization
+@media (max-width: 768px) {
+  .p-dialog .p-dialog-header {
+    padding: 0.75rem 1rem;
+    min-height: auto;
+
+    .p-dialog-title {
+      font-size: 1.25rem;
+      line-height: 1.2;
+    }
+  }
+
+  // Hide divider on mobile to save space
+  .p-divider {
+    display: none;
+  }
 }
