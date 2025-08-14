@@ -11,8 +11,8 @@ import lucuma.react.common.style.*
 object ExploreStyles:
   val FadeIn: Css = Css("fade-in")
 
-  val HideReusability = Css("hide-reusability")
-
+  val HideReusability   = Css("hide-reusability")
+  val TopMenu           = Css("explore-top-menu")
   val GlobalErrorDialog = Css("explore-global-error-dialog")
 
   val Tile: Css                        = Css("explore-tile")
