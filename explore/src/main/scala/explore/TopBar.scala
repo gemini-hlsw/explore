@@ -187,6 +187,26 @@ object TopBar:
                       label = "Redeem invitations",
                       icon = Icons.UserGroupSimple,
                       command = isReedemInvitationsOpen.setState(IsReedemInvitationsOpen(true))
+                    ),
+                  MenuItem
+                    .Item(
+                      label = "User Manual",
+                      icon = Icons.BookOpen,
+                      command = Callback(
+                        window.open("https://www.gemini.edu/files/software/gpp/Explore_Manual.pdf",
+                                    "_blank"
+                        )
+                      )
+                    ),
+                  MenuItem
+                    .Item(
+                      label = "Help Desk",
+                      icon = Icons.ArrowUpRightFromSquare,
+                      command = Callback(
+                        window.open("https://noirlab.atlassian.net/servicedesk/customer/portal/12",
+                                    "_blank"
+                        )
+                      )
                     )
                 ) ::: lastItems
             } else firstItems ::: lastItems
@@ -214,7 +234,7 @@ object TopBar:
                 )
               )
             ),
-            PopupTieredMenu(model = menuItems).withRef(menuRef.ref),
+            PopupTieredMenu(model = menuItems, clazz = ExploreStyles.TopMenu).withRef(menuRef.ref),
             if (isAboutOpen.get.value)
               About(
                 "Explore".refined,
