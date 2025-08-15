@@ -384,6 +384,10 @@ h2.react-datepicker__current-month {
   margin-bottom: -8px;
 }
 
+.react-datepicker__week > .react-datepicker__day--keyboard-selected {
+  color: var(--tooltip-viz-text-color);
+}
+
 .react-datepicker__week {
   white-space: nowrap;
 }

@@ -195,8 +195,7 @@ object TargetColumns:
             siderealColumn(EpochColumnId, Target.Sidereal.epoch.get)
               .withCell(
                 _.value
-                  .map: value =>
-                    s"${value.scheme.prefix}${Epoch.fromStringNoScheme.reverseGet(value)}"
+                  .map(formatEpochWithScheme)
                   .orEmpty
               )
               .withSize(90.toPx)

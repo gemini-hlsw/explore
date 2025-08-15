@@ -167,4 +167,12 @@ trait formats:
       time => time.format(Constants.GppTimeFormatter)
     )
 
+  def formatEpochWithScheme(epoch: Epoch): String =
+    val milliyears = epoch.toMilliyears.value
+    val year       = milliyears / 1000
+    val fm         = milliyears % 1000
+    val f          = fm / 10
+    val t          = f"$year%d.$f%02d"
+    s"${epoch.scheme.prefix}$t"
+
 object formats extends formats
