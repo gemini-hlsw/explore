@@ -82,23 +82,29 @@ object PAConfigurationPanel:
         paView
           .zoom(PosAngleConstraint.parallacticOverrideAngle)
 
+      def paDisplay(angle: Angle, averagePA: AveragePABasis) =
+        <.div(ExploreStyles.AveragePA)(
+          <.label(f"${angle.toDoubleDegrees}%.2f °"),
+          <.label(averagePA.when.toString),
+          <.label(
+            TimeSpanView(averagePA.duration, tooltipPosition = Tooltip.Position.Left.some)
+          )
+        ).some
+
       val selectedAngle = props.posAngleView.get match
         case PosAngleConstraint.Unbounded                                          =>
           props.selectedPA
             .map(a => <.label(f"${a.toDoubleDegrees}%.0f °"))
         case PosAngleConstraint.AverageParallactic                                 =>
-          props.averagePA
-            .map: a =>
-              <.div(ExploreStyles.AveragePA)(
-                <.label(f"${a.averagePA.toDoubleDegrees}%.2f °"),
-                <.label(a.when.toString),
-                <.label(TimeSpanView(a.duration, tooltipPosition = Tooltip.Position.Left.some))
-              )
-            .orElse(
+          (props.selectedPA, props.averagePA) match
+            case (Some(selectedPA), Some(averagePA)) =>
+              paDisplay(selectedPA, averagePA)
+            case (None, Some(averagePA))             =>
+              paDisplay(averagePA.averagePA, averagePA)
+            case _                                   =>
               <.label(
                 "Not Visible, observation complete, or explicit observation duration is less than setup time."
               ).some
-            )
         case PosAngleConstraint.AllowFlip(af) if props.selectedPA.exists(_ =!= af) =>
           props.selectedPA
             .map(a => <.label(f"Flipped to ${a.toDoubleDegrees}%.0f °"))
