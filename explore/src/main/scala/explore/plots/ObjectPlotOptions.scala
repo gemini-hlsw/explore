@@ -6,7 +6,6 @@ package explore.plots
 import cats.*
 import cats.derived.*
 import cats.syntax.all.*
-import explore.model.Constants
 import explore.model.ElevationPlotScheduling
 import explore.model.enums.PlotRange
 import explore.model.enums.TimeDisplay
@@ -23,6 +22,7 @@ import lucuma.core.model.Semester
 import monocle.Focus
 import org.typelevel.cats.time.given
 
+import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
 
@@ -39,9 +39,6 @@ case class ObjectPlotOptions(
     val (date, semester) = ObjectPlotOptions.dateAndSemesterOf(observationTime.some, site)
     copy(date = date, semester = semester)
 
-  private val tz =
-    timeDisplay.fold(Constants.UTC, Constants.UTC, site.timezone)
-
   def minInstant: Instant =
     range match
       case PlotRange.Night    =>
@@ -50,12 +47,12 @@ case class ObjectPlotOptions(
           .twilightBoundedUnsafe(TwilightType.Official)
           .start
       case PlotRange.FullDay  =>
-        ObservingNight
-          .fromSiteAndLocalDate(site, date)
-          .toLocalDate
-          .atStartOfDay()
-          .atZone(tz)
-          .toInstant
+        val night           = ObservingNight.fromSiteAndLocalDate(site, date)
+        val twilightBounded = night.twilightBoundedUnsafe(TwilightType.Official)
+        val nightCenter     = twilightBounded.start.plusSeconds(
+          Duration.between(twilightBounded.start, twilightBounded.`end`).getSeconds / 2
+        )
+        nightCenter.minus(Duration.ofHours(12))
       case PlotRange.Semester => semester.start.atSite(site).toInstant
 
   def maxInstant: Instant =
@@ -66,13 +63,12 @@ case class ObjectPlotOptions(
           .twilightBoundedUnsafe(TwilightType.Official)
           .`end`
       case PlotRange.FullDay  =>
-        ObservingNight
-          .fromSiteAndLocalDate(site, date)
-          .toLocalDate
-          .plusDays(1)
-          .atStartOfDay()
-          .atZone(tz)
-          .toInstant
+        val night           = ObservingNight.fromSiteAndLocalDate(site, date)
+        val twilightBounded = night.twilightBoundedUnsafe(TwilightType.Official)
+        val nightCenter     = twilightBounded.start.plusSeconds(
+          Duration.between(twilightBounded.start, twilightBounded.`end`).getSeconds / 2
+        )
+        nightCenter.plus(Duration.ofHours(12))
       case PlotRange.Semester => semester.`end`.atSite(site).toInstant
 
   def interval: BoundedInterval[Instant] = BoundedInterval.unsafeClosed(minInstant, maxInstant)

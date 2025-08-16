@@ -280,10 +280,10 @@ object ElevationPlotTile:
               "elevation-plot-time".refined,
               timeDisplayView,
               buttonClass = LucumaPrimeStyles.Tiny |+| LucumaPrimeStyles.VeryCompact
-            )(^.visibility.hidden.when(rangeView.when(_ === PlotRange.Semester))),
+            ).when(rangeView.get =!= PlotRange.Semester),
             ToggleButton(
-              onLabel = "Scheduling: On",
-              offLabel = "Scheduling: Off",
+              onLabel = "Scheduling",
+              offLabel = "Scheduling",
               checked = showSchedulingView.when(_.value),
               onChange = showSchedulingView.set.compose(ElevationPlotScheduling.Value.reverseGet),
               clazz = LucumaPrimeStyles.Tiny |+| LucumaPrimeStyles.VeryCompact

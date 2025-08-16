@@ -225,7 +225,7 @@ object SemesterPlot:
             .setYAxis(
               List(
                 YAxisOptions()
-                  .setTitle(YAxisTitleOptions().setText("Hours"))
+                  .setTitle(YAxisTitleOptions().setText("Hours / Night"))
                   .setAllowDecimals(false)
                   .setMin(0)
                   .setMax(15)

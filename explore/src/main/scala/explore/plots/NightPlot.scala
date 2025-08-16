@@ -106,10 +106,11 @@ object NightPlot:
     )
 
   private case class ChartSeriesData(
-    seriesType:       SeriesType,
-    objectPlotData:   ObjectPlotData,
-    objectSeriesData: ObjectPlotData.SeriesData,
-    visiblePlots:     List[SeriesType]
+    seriesType:         SeriesType,
+    objectPlotData:     ObjectPlotData,
+    objectSeriesData:   ObjectPlotData.SeriesData,
+    visiblePlots:       List[SeriesType],
+    isSingleTargetPlot: Boolean
   ):
     lazy val name: String               =
       if (seriesType === SeriesType.LunarElevation) "Moon" else objectPlotData.name.value
@@ -121,6 +122,8 @@ object NightPlot:
     lazy val data: js.Array[Chart.Data] = seriesType.data(objectSeriesData)
     // SkyBrightness can be out of bounds, in that case we hide the label (otherwise it's confusingly shown at the top of the chart).
     lazy val showLabel: Boolean         = seriesType match
+      case SeriesType.Elevation     =>
+        !isSingleTargetPlot
       case SeriesType.SkyBrightness =>
         data.exists: point =>
           point
@@ -247,7 +250,8 @@ object NightPlot:
                     seriesType,
                     targetPlotData,
                     targetChartData,
-                    opts.visiblePlots
+                    opts.visiblePlots,
+                    isSingleTargetPlot
                   )
 
           val targetsBelowHorizonStr: Option[String] =
@@ -304,29 +308,28 @@ object NightPlot:
                   ) ++
                     List(
                       XAxisPlotBandsOptions()
-                        .setFrom(tbNauticalNight.start.toEpochMilli.toDouble)
-                        .setTo(tbNauticalNight.end.toEpochMilli.toDouble)
+                        .setFrom(opts.minInstant.toEpochMilli.toDouble)
+                        .setTo(tbNauticalNight.start.toEpochMilli.toDouble)
                         .setClassName("plot-band-twilight-nautical")
-                        // We need z-index > 0 to display over grid. But not too high, or it will display over tooltips.
                         .setZIndex(1)
                         .setLabel(
                           XAxisPlotBandsLabelOptions()
                             .setText(s"  Evening 12° - Twilight: $dusk")
                             .setRotation(270)
-                            .setAlign(AlignValue.left)
+                            .setAlign(AlignValue.right)
                             .setTextAlign(AlignValue.center)
                             .setVerticalAlign(VerticalAlignValue.middle)
                         ),
-                      XAxisPlotBandsOptions() // Empty bands don't work on highcharts 11.4.8. Instead we create the same band in revese and no fill
+                      XAxisPlotBandsOptions()
                         .setFrom(tbNauticalNight.end.toEpochMilli.toDouble)
-                        .setTo(tbNauticalNight.start.toEpochMilli.toDouble)
+                        .setTo(opts.maxInstant.toEpochMilli.toDouble)
                         .setClassName("plot-band-twilight-nautical-end")
                         .setZIndex(1)
                         .setLabel:
                           XAxisPlotBandsLabelOptions()
                             .setText(s"  Morning 12° - Twilight: $dawn")
                             .setRotation(270)
-                            .setAlign(AlignValue.right)
+                            .setAlign(AlignValue.left)
                             .setTextAlign(AlignValue.center)
                             .setVerticalAlign(VerticalAlignValue.middle)
                     )).toJSArray

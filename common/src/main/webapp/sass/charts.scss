@@ -121,7 +121,8 @@ See https://github.com/highcharts/highcharts/issues/13320 */
   }
 
   .plot-band-twilight-nautical-end {
-    fill-opacity: 0;
+    fill: var(--plot-plot-band-night-color);
+    fill-opacity: var(--plot-plot-band-night-opacity);
   }
 
   .highcharts-plot-band-label {
