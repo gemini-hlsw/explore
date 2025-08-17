@@ -258,6 +258,7 @@ object ObsTabContents extends TwoPanels:
               none, // TODO Deduce site from the first target?
               none,
               none,
+              props.observations.get.size === 1,
               List.empty,
               props.globalPreferences.get,
               "No observation selected"

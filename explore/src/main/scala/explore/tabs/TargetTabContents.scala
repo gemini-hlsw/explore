@@ -550,6 +550,7 @@ object TargetTabContents extends TwoPanels:
                 configuration.map(_.siteFor),
                 obsTimeView.get,
                 none,
+                plotData.value.size === 1,
                 Nil,
                 props.globalPreferences.get,
                 Constants.NoTargetSelected
@@ -605,6 +606,7 @@ object TargetTabContents extends TwoPanels:
               selectedTargetIds.get.headOption.flatMap(props.sitesForTarget(_).headOption),
               none,
               none,
+              plotData.value.size === 1,
               Nil,
               props.globalPreferences.get,
               Constants.NoTargetSelected
