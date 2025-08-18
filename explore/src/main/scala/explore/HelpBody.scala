@@ -78,7 +78,7 @@ object HelpBody:
         <.div(ExploreStyles.HelpTitle)(
           <.h4("Help"),
           <.div(
-            TagMod.when(props.userVault.isStaff)(
+            TagMod.when(props.userVault.isStaffOrAdmin)(
               <.a(
                 Button(
                   icon = Icons.Edit,
@@ -113,7 +113,7 @@ object HelpBody:
             case Pot.Error(o) if o.getMessage.contains("404") =>
               <.div(ExploreStyles.HelpMarkdownBody)(
                 "Not found",
-                TagMod.when(props.userVault.isStaff)(
+                TagMod.when(props.userVault.isStaffOrAdmin)(
                   React.Fragment(
                     ", maybe you want to create it ",
                     <.a(^.href := props.newPage.toString(), ^.target := "_blank", Icons.Edit)

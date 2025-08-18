@@ -98,7 +98,9 @@ case class ObsTabTiles(
   userPreferences:  View[UserPreferences],
   readonly:         Boolean
 ) extends ReactFnProps(ObsTabTiles.component):
-  val obsIsReadonly         = readonly || observation.get.isExecuted
+  val isStaffOrAdmin        = vault.isStaffOrAdmin
+  val obsIsReadonly         =
+    readonly || (observation.get.isExecuted && !isStaffOrAdmin) || observation.get.isCompleted
   val obsId: Observation.Id = observation.get.id
 
   val allConstraintSets: Set[ConstraintSet] = programSummaries.constraintGroups.map(_._2).toSet
@@ -501,8 +503,9 @@ object ObsTabTiles:
               props.attachments,
               props.vault.map(_.token),
               props.obsIsReadonly,
+              allowEditingOngoing = props.isStaffOrAdmin,
               // Any target changes invalidate the sequence
-              sequenceChanged.set(pending)
+              sequenceChanged = sequenceChanged.set(pending)
             )
 
           val constraintsSelector: VdomNode =
@@ -567,7 +570,7 @@ object ObsTabTiles:
               props.readonly, // execution status is taken care of in the configuration tile
               ObsIdSetEditInfo.of(props.observation.get),
               globalPreferences.get.wavelengthUnits,
-              props.vault.isStaff
+              props.isStaffOrAdmin
             )
 
           val alltiles =

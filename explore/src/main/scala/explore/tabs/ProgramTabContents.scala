@@ -120,7 +120,7 @@ object ProgramTabContents
             props.undoer,
             props.programDetailsUndoSetter.zoom(ProgramDetails.notes),
             props.userIsReadonlyCoi,
-            props.userVault.isStaff
+            props.userVault.isStaffOrAdmin
           )
 
         val configurationRequestsTile =
