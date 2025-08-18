@@ -55,6 +55,7 @@ object ElevationPlotTile:
     site:              Option[Site],
     obsTime:           Option[Instant],
     obsDuration:       Option[Duration],
+    hideLabels:        Boolean,
     timingWindows:     List[TimingWindow] = List.empty,
     globalPreferences: GlobalPreferences,
     emptyMessage:      String
@@ -72,6 +73,7 @@ object ElevationPlotTile:
             site,
             obsTime,
             obsDuration,
+            hideLabels,
             timingWindows,
             globalPreferences,
             emptyMessage
@@ -89,6 +91,7 @@ object ElevationPlotTile:
     site:              Option[Site],
     obsTime:           Option[Instant],
     obsDuration:       Option[Duration],
+    hideLabels:        Boolean,
     timingWindows:     List[TimingWindow],
     globalPreferences: GlobalPreferences,
     emptyMessage:      String
@@ -157,11 +160,12 @@ object ElevationPlotTile:
 
         val opt: ObjectPlotOptions = plotOptions.get
 
-        val siteView: View[Site]                              = plotOptions.zoom(ObjectPlotOptions.site)
-        val rangeView: View[PlotRange]                        = plotOptions.zoom(ObjectPlotOptions.range)
-        val dateView: View[LocalDate]                         = plotOptions.zoom(ObjectPlotOptions.date)
-        val semesterView: View[Semester]                      = plotOptions.zoom(ObjectPlotOptions.semester)
-        val timeDisplayView: View[TimeDisplay]                = plotOptions.zoom(ObjectPlotOptions.timeDisplay)
+        val siteView: View[Site]               = plotOptions.zoom(ObjectPlotOptions.site)
+        val rangeView: View[PlotRange]         = plotOptions.zoom(ObjectPlotOptions.range)
+        val dateView: View[LocalDate]          = plotOptions.zoom(ObjectPlotOptions.date)
+        val semesterView: View[Semester]       = plotOptions.zoom(ObjectPlotOptions.semester)
+        val timeDisplayView: View[TimeDisplay] = plotOptions.zoom(ObjectPlotOptions.timeDisplay)
+
         val visiblePlotsView: View[List[SeriesType]]          =
           plotOptions.zoom(ObjectPlotOptions.visiblePlots)
         val showSchedulingView: View[ElevationPlotScheduling] =
@@ -203,7 +207,8 @@ object ElevationPlotTile:
                   props.obsTime,
                   props.obsDuration,
                   plotOptions,
-                  props.emptyMessage
+                  props.emptyMessage,
+                  props.hideLabels
                 )
               case PlotRange.Semester                  =>
                 props.plotData.value.headOption.map { case (_, data) =>
@@ -273,8 +278,8 @@ object ElevationPlotTile:
               "elevation-plot-visible-series".refined,
               visiblePlotsView,
               buttonClass = LucumaPrimeStyles.Tiny |+| LucumaPrimeStyles.VeryCompact
-            ).when: // Only show series selector if it's a night plot
-              rangeView.get === PlotRange.Night
+            ).when: // Only show series selector if it's a night or full dy
+              rangeView.get === PlotRange.Night || rangeView.get === PlotRange.FullDay
             ,
             SelectButtonEnumView(
               "elevation-plot-time".refined,

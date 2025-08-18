@@ -444,6 +444,7 @@ object ObsTabTiles:
                 props.observation.get.observingMode.map(_.siteFor),
                 obsTimeView.get,
                 obsDuration.map(_.toDuration),
+                true,
                 props.observation.get.timingWindows,
                 globalPreferences.get,
                 Constants.NoTargetSelected
