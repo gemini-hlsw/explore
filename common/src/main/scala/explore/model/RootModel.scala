@@ -38,7 +38,7 @@ case class RootModel(
   undoStacks:           UndoStacks[IO, ProgramSummaries] = UndoStacks.empty[IO, ProgramSummaries],
   otherUndoStacks:      ModelUndoStacks[IO] = ModelUndoStacks[IO]()
 ) derives Eq:
-  lazy val isStaff = vault.isStaff
+  lazy val isStaffOrAdmin = vault.isStaffOrAdmin
 
 object RootModel:
   val vault                = Focus[RootModel](_.vault)

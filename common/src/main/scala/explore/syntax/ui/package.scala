@@ -70,7 +70,9 @@ extension (vault: UserVault)
     )
     request
 
-  def isStaff: Boolean = vault.user.role.access === Access.Staff
+  def isStaff: Boolean        = vault.user.role.access === Access.Staff
+  def isAdmin: Boolean        = vault.user.role.access === Access.Admin
+  def isStaffOrAdmin: Boolean = vault.user.role.access >= Access.Staff
 
 extension [F[_]: ApplicativeThrow: ToastCtx, A](f: F[A])
   def toastErrors: F[A] =
@@ -165,7 +167,7 @@ extension (tac: TimeAccountingCategory)
 extension (vault: Option[UserVault])
   def userId: Option[User.Id] = vault.map(_.user).map(_.id)
   def isGuest: Boolean        = vault.map(_.user).map(_.role === GuestRole).getOrElse(true)
-  def isStaff: Boolean        = vault.exists(_.isStaff)
+  def isStaffOrAdmin: Boolean = vault.exists(_.isStaffOrAdmin)
 
 extension [F[_], A](view: ViewF[F, A])
   def zoom[B](getAdjust: GetAdjust[A, B]): ViewF[F, B] =

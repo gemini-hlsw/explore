@@ -28,9 +28,10 @@ case class RootModelViews(
   def hasRole(role: ProgramUserRole): Boolean =
     userProgramRoles.exists(_ === role)
 
+  lazy val userIsStaffOrAdmin: Boolean = rootModel.get.isStaffOrAdmin
+
   lazy val userIsReadonlyCoi: Boolean =
-    val isStaff = rootModel.get.isStaff
-    !isStaff && hasRole(ProgramUserRole.CoiRO) && !(hasRole(
+    !userIsStaffOrAdmin && hasRole(ProgramUserRole.CoiRO) && !(hasRole(
       ProgramUserRole.SupportPrimary
     ) || hasRole(ProgramUserRole.SupportSecondary))
 

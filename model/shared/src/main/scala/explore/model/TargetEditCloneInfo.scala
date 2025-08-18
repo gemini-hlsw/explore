@@ -24,9 +24,6 @@ final case class TargetEditCloneInfo(
     (message, cloneForCurrentText, cloneForAllText) match
       case (Some(_), Some(current), Some(all)) => (current, all).some
       case _                                   => none
-  // if it is readonly, there should always be a message
-  def readonlyMsg: Option[NonEmptyString]              =
-    if (readonly) message else none
   def noMessages: Boolean                              =
     readonly === false && message.isEmpty
 
@@ -50,103 +47,178 @@ object TargetEditCloneInfo:
                         cloneForAll,
                         cloneForAllText.some
     )
-  def noMessages: TargetEditCloneInfo                                                        = TargetEditCloneInfo(false)
+  def noMessages: TargetEditCloneInfo                                                        =
+    TargetEditCloneInfo(false)
 
-  val onlyThisMsg: NonEmptyString             = "only this observation".refined
-  val onlyCurrentMsg: NonEmptyString          = "only the current observations".refined
-  val allCurrentExecutedMsg: NonEmptyString   =
-    "All the current observations have been executed. Target is readonly.".refined
-  val thisExecutedMsg: NonEmptyString         =
-    "The current observation has been executed. Target is readonly.".refined
-  val allForTargetExecutedMsg: NonEmptyString =
-    "All associated observations have been executed. Target is readonly".refined
-  val onlyUnexecutedMsg: NonEmptyString       =
-    "Target will only be modified for the un-executed observations.".refined
-  val someExecutedMsg: NonEmptyString         =
-    "Some of the observations being edited have been executed. Edits should apply to ".refined
-  val unexecutedOfCurrentMsg: NonEmptyString  =
-    "unexecuted observations of the current asterism".refined
-  val allUnexectedMsg: NonEmptyString         = "all unexecuted observations".refined
-  val allThisMsg: NonEmptyString              =
-    "Target will only be modified for this observation. All other observations have been executed.".refined
-  val allCurrentMsg: NonEmptyString           =
-    "Target will only be modified for the current observations. All other observations have been executed.".refined
+  enum BadType(val text: String):
+    case Executed  extends BadType("executed")
+    case Completed extends BadType("completed")
+
+  import BadType.*
+
+  val onlyThisMsg: NonEmptyString                             = "only this observation".refined
+  val onlyCurrentMsg: NonEmptyString                          = "only the current observations".refined
+  def allCurrentBadMsg(badType: BadType): NonEmptyString      =
+    NonEmptyString.unsafeFrom(
+      s"All the current observations have been ${badType.text}. Target is readonly."
+    )
+  def thisBadMsg(badType: BadType): NonEmptyString            =
+    NonEmptyString.unsafeFrom(
+      s"The current observation has been ${badType.text}. Target is readonly."
+    )
+  def allForTargetBadMsg(badType: BadType): NonEmptyString    =
+    NonEmptyString.unsafeFrom(
+      s"All associated observations have been ${badType.text}. Target is readonly"
+    )
+  def allNonBadOfCurrentMsg(badType: BadType): NonEmptyString =
+    NonEmptyString.unsafeFrom(
+      s"non-${badType.text} observations of the current asterism"
+    )
+  def onlyNonBadMsg(badType: BadType): NonEmptyString         =
+    NonEmptyString.unsafeFrom(
+      s"Target will only be modified for the non-${badType.text} observations."
+    )
+  def someBadMsg(badType: BadType): NonEmptyString            =
+    NonEmptyString.unsafeFrom(
+      s"Some of the observations being edited have been ${badType.text}. Edits should apply to "
+    )
+  def allNonBadMsg(badType: BadType): NonEmptyString          =
+    NonEmptyString.unsafeFrom(s"all non-${badType.text} observations")
+  def onlyThisGoodMsg(badType: BadType): NonEmptyString       =
+    NonEmptyString.unsafeFrom(
+      s"Target will only be modified for this observation. All other observations have been ${badType.text}."
+    )
+  def onlyTheseGoodMsg(badType: BadType): NonEmptyString      =
+    NonEmptyString.unsafeFrom(
+      s"Target will only be modified for the current observations. All other observations have been ${badType.text}."
+    )
 
   extension (obsIds: ObsIdSet)
-    def onlyCurrentText: NonEmptyString      =
+    def onlyCurrentText: NonEmptyString                   =
       if (obsIds.size === 1) onlyThisMsg
       else onlyCurrentMsg
-    def allOtherExecutedText: NonEmptyString =
-      if (obsIds.size === 1) allThisMsg
-      else allCurrentMsg
-    def allExecutedMsg: NonEmptyString       =
-      if (obsIds.size === 1) thisExecutedMsg
-      else allCurrentExecutedMsg
+    def allOtherBadText(badType: BadType): NonEmptyString =
+      if (obsIds.size === 1) onlyThisGoodMsg(badType)
+      else onlyTheseGoodMsg(badType)
+    def allBadMsg(badType: BadType): NonEmptyString       =
+      if (obsIds.size === 1) thisBadMsg(badType)
+      else allCurrentBadMsg(badType)
 
-  def otherMessage(otherCount: Long, hasExecuted: Boolean): NonEmptyString =
+  def otherMessage(otherCount: Long, hasBad: Boolean, badType: BadType): NonEmptyString =
     val plural = if (otherCount === 1) "" else "s"
-    val ex     = if (hasExecuted) "unexecuted " else ""
+    val ex     = if (hasBad) s"non-${badType.text} " else ""
     NonEmptyString.unsafeFrom(
       s"Target is in $otherCount other ${ex}observation$plural. Edits here should apply to "
     )
 
-  def allForTargetMsg(hasExecuted: Boolean): NonEmptyString =
-    val ex = if (hasExecuted) "unexecuted " else ""
+  def allForTargetMsg(hasBad: Boolean, badType: BadType): NonEmptyString =
+    val ex = if (hasBad) s"non-${badType.text} " else ""
     NonEmptyString.unsafeFrom(s"all ${ex}observations of this target")
 
-  def fromObsInfo(obsInfo: TargetEditObsInfo): TargetEditCloneInfo =
+  def fromObsInfo(
+    obsInfo:             TargetEditObsInfo,
+    allowEditingOngoing: Boolean
+  ): TargetEditCloneInfo =
     obsInfo.current match
-      // We're editing at the target level (not for an asterism)
-      case None                                                   =>
+      // We're editing at the target level (not for an asterism).
+      // right now, we don't honor the allowEditingOngoing flag for this case.
+      case None                                                                          =>
         if (obsInfo.allForTargetAreExecuted)
-          TargetEditCloneInfo.readonly(allForTargetExecutedMsg)
-        else if (obsInfo.allForTargetAreOK) TargetEditCloneInfo.noMessages
+          TargetEditCloneInfo.readonly(allForTargetBadMsg(Executed))
+        else if (obsInfo.allForTargetAreUnexecuted) TargetEditCloneInfo.noMessages
         else
           TargetEditCloneInfo.simple(
-            onlyUnexecutedMsg,
+            onlyNonBadMsg(Executed),
             obsInfo.unexecutedForTarget
           )
-      case Some(editing) if obsInfo.allCurrentAreExecuted         =>
-        TargetEditCloneInfo.readonly(editing.allExecutedMsg)
-      // There are no other unexecuted observations, but maybe there are others.
-      case Some(editing) if obsInfo.otherUnexecutedObsCount === 0 =>
-        if (obsInfo.allCurrentAreOK && obsInfo.otherObsCount === 0)
+      case Some(editing) if allowEditingOngoing && obsInfo.allCurrentAreCompleted        =>
+        TargetEditCloneInfo.readonly(editing.allBadMsg(Completed))
+      // There no other incomplete observations, but there may be other observations.
+      case Some(editing) if allowEditingOngoing && obsInfo.otherIncompleteObsCount === 0 =>
+        if (obsInfo.allCurrentAreIncomplete && obsInfo.otherObsCount === 0)
+          // TODO: Put a message here about the observation being executed????
           TargetEditCloneInfo.noMessages // We're editing all, and they're OK
-        else if (obsInfo.allCurrentAreOK)
-          // we're not editing all of them and they're OK, but the rest are executed.
+        else if (obsInfo.allCurrentAreIncomplete)
+          // we're not editing all of them and they're OK, but the rest are completed.
           TargetEditCloneInfo.simple(
-            editing.allOtherExecutedText,
+            editing.allOtherBadText(Completed),
             editing.some
           )
         else
           // We're not editing all of them, but some are executed, as are any others.
           TargetEditCloneInfo.simple(
-            onlyUnexecutedMsg,
-            obsInfo.unexecutedForTarget
+            onlyNonBadMsg(Completed),
+            obsInfo.incompleteForTarget
           )
-      // There are some other unexecuted observations
-      case Some(editing)                                          =>
-        if (obsInfo.allForTargetAreOK)
+      // There are some other non-completed observations
+      case (Some(editing)) if allowEditingOngoing                                        =>
+        if (obsInfo.allForTargetAreIncomplete)
           TargetEditCloneInfo.choice(
-            otherMessage(obsInfo.otherObsCount, false),
+            otherMessage(obsInfo.otherObsCount, false, Completed),
             editing.some,
             editing.onlyCurrentText,
             none,
-            allForTargetMsg(false)
+            allForTargetMsg(false, Completed)
           )
-        else if (obsInfo.allCurrentAreOK) // some of the other observations have been executed.
+        else if (obsInfo.allCurrentAreIncomplete)
+          // some of the other observations have been completed.
           TargetEditCloneInfo.choice(
-            otherMessage(obsInfo.otherUnexecutedObsCount, true),
+            otherMessage(obsInfo.otherIncompleteObsCount, true, Completed),
+            editing.some,
+            editing.onlyCurrentText,
+            obsInfo.incompleteForTarget,
+            allForTargetMsg(true, Completed)
+          )
+        else // some of the observations being edited have been completed, too
+          TargetEditCloneInfo.choice(
+            someBadMsg(Completed),
+            obsInfo.incompleteForCurrent,
+            allNonBadOfCurrentMsg(Completed),
+            obsInfo.incompleteForTarget,
+            allNonBadMsg(Completed)
+          )
+      case Some(editing) if obsInfo.allCurrentAreExecuted                                =>
+        TargetEditCloneInfo.readonly(editing.allBadMsg(Executed))
+      // There are no other unexecuted observations, but there may be other observations.
+      case Some(editing) if obsInfo.otherUnexecutedObsCount === 0                        =>
+        if (obsInfo.allCurrentAreUnexecuted && obsInfo.otherObsCount === 0)
+          TargetEditCloneInfo.noMessages // We're editing all, and they're OK
+        else if (obsInfo.allCurrentAreUnexecuted)
+          // we're not editing all of them and they're OK, but the rest are executed.
+          TargetEditCloneInfo.simple(
+            editing.allOtherBadText(Executed),
+            editing.some
+          )
+        else
+          // We're not editing all of them, but some are executed, as are any others.
+          TargetEditCloneInfo.simple(
+            onlyNonBadMsg(Executed),
+            obsInfo.unexecutedForTarget
+          )
+      // There are some other unexecuted observations
+      case Some(editing)                                                                 =>
+        if (obsInfo.allForTargetAreUnexecuted)
+          TargetEditCloneInfo.choice(
+            otherMessage(obsInfo.otherObsCount, false, Executed),
+            editing.some,
+            editing.onlyCurrentText,
+            none,
+            allForTargetMsg(false, Executed)
+          )
+        else if (obsInfo.allCurrentAreUnexecuted)
+          // some of the other observations have been executed.
+          TargetEditCloneInfo.choice(
+            otherMessage(obsInfo.otherUnexecutedObsCount, true, Executed),
             editing.some,
             editing.onlyCurrentText,
             obsInfo.unexecutedForTarget,
-            allForTargetMsg(true)
+            allForTargetMsg(true, Executed)
           )
-        else                              // some of observations being edited have been executed, too
+        else // some of the observations being edited have been executed, too
           TargetEditCloneInfo.choice(
-            someExecutedMsg,
+            someBadMsg(Executed),
             obsInfo.unexecutedForCurrent,
-            unexecutedOfCurrentMsg,
+            allNonBadOfCurrentMsg(Executed),
             obsInfo.unexecutedForTarget,
-            allUnexectedMsg
+            allNonBadMsg(Executed)
           )

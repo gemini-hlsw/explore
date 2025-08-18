@@ -117,190 +117,286 @@ class TargetEditCloneInfoSuite extends FunSuite with MyAssertions {
   val threeFour   = ObsIdSet.of(o3, o4)
   val allFour     = ObsIdSet.of(o1, o2, o3, o4)
 
+  import TargetEditCloneInfo.BadType.*
+
   test("at target level, no observations") {
-    val obsInfo   = TargetEditObsInfo(none, none, none)
-    val cloneInfo = TargetEditCloneInfo.fromObsInfo(obsInfo)
+    val obsInfo   = TargetEditObsInfo(none, none, none, none)
+    val cloneInfo = TargetEditCloneInfo.fromObsInfo(obsInfo, false)
     assertNoMessage(cloneInfo)
   }
 
   test("at target level, none are executed") {
-    val obsInfo   = TargetEditObsInfo(none, oneTwoThree.some, none)
-    val cloneInfo = TargetEditCloneInfo.fromObsInfo(obsInfo)
+    val obsInfo   = TargetEditObsInfo(none, oneTwoThree.some, none, none)
+    val cloneInfo = TargetEditCloneInfo.fromObsInfo(obsInfo, false)
     assertNoMessage(cloneInfo)
   }
   test("at target level, none are executed 2") {
-    val obsInfo   = TargetEditObsInfo(none, two.some, none)
-    val cloneInfo = TargetEditCloneInfo.fromObsInfo(obsInfo)
+    val obsInfo   = TargetEditObsInfo(none, two.some, none, none)
+    val cloneInfo = TargetEditCloneInfo.fromObsInfo(obsInfo, false)
     assertNoMessage(cloneInfo)
   }
 
   test("at target level, some are executed") {
-    val obsInfo   = TargetEditObsInfo(none, oneTwoThree.some, three.some)
-    val cloneInfo = TargetEditCloneInfo.fromObsInfo(obsInfo)
-    assertSimple(cloneInfo, TargetEditCloneInfo.onlyUnexecutedMsg, oneTwo.some)
+    val obsInfo   = TargetEditObsInfo(none, oneTwoThree.some, three.some, none)
+    val cloneInfo = TargetEditCloneInfo.fromObsInfo(obsInfo, false)
+    assertSimple(cloneInfo, TargetEditCloneInfo.onlyNonBadMsg(Executed), oneTwo.some)
   }
 
   test("at target level, some are executed 2") {
-    val obsInfo   = TargetEditObsInfo(none, oneTwoThree.some, oneThree.some)
-    val cloneInfo = TargetEditCloneInfo.fromObsInfo(obsInfo)
-    assertSimple(cloneInfo, TargetEditCloneInfo.onlyUnexecutedMsg, two.some)
+    val obsInfo   = TargetEditObsInfo(none, oneTwoThree.some, oneThree.some, three.some)
+    val cloneInfo = TargetEditCloneInfo.fromObsInfo(obsInfo, false)
+    assertSimple(cloneInfo, TargetEditCloneInfo.onlyNonBadMsg(Executed), two.some)
+  }
+
+  test("at target level, some are executed and allowEditingOngoing not respected") {
+    val obsInfo   = TargetEditObsInfo(none, oneTwoThree.some, oneThree.some, none)
+    val cloneInfo = TargetEditCloneInfo.fromObsInfo(obsInfo, true)
+    assertSimple(cloneInfo, TargetEditCloneInfo.onlyNonBadMsg(Executed), two.some)
   }
 
   test("at target level, all are executed") {
-    val obsInfo   = TargetEditObsInfo(none, oneThree.some, oneThree.some)
-    val cloneInfo = TargetEditCloneInfo.fromObsInfo(obsInfo)
-    assertReadonly(cloneInfo, TargetEditCloneInfo.allForTargetExecutedMsg)
+    val obsInfo   = TargetEditObsInfo(none, oneThree.some, oneThree.some, oneThree.some)
+    val cloneInfo = TargetEditCloneInfo.fromObsInfo(obsInfo, false)
+    assertReadonly(cloneInfo, TargetEditCloneInfo.allForTargetBadMsg(Executed))
   }
 
   test("at target level, all are executed 2") {
-    val obsInfo   = TargetEditObsInfo(none, three.some, three.some)
-    val cloneInfo = TargetEditCloneInfo.fromObsInfo(obsInfo)
-    assertReadonly(cloneInfo, TargetEditCloneInfo.allForTargetExecutedMsg)
+    val obsInfo   = TargetEditObsInfo(none, three.some, three.some, none)
+    val cloneInfo = TargetEditCloneInfo.fromObsInfo(obsInfo, false)
+    assertReadonly(cloneInfo, TargetEditCloneInfo.allForTargetBadMsg(Executed))
+  }
+
+  test("at target level, all are executed and allowEditingOngoing not respected") {
+    val obsInfo   = TargetEditObsInfo(none, three.some, three.some, none)
+    val cloneInfo = TargetEditCloneInfo.fromObsInfo(obsInfo, true)
+    assertReadonly(cloneInfo, TargetEditCloneInfo.allForTargetBadMsg(Executed))
   }
 
   test("none are executed, all are being edited") {
-    val obsInfo   = TargetEditObsInfo(one.some, one.some, none)
-    val cloneInfo = TargetEditCloneInfo.fromObsInfo(obsInfo)
+    val obsInfo   = TargetEditObsInfo(one.some, one.some, none, none)
+    val cloneInfo = TargetEditCloneInfo.fromObsInfo(obsInfo, false)
     assertNoMessage(cloneInfo)
   }
 
   test("none are executed, all are being edited 2") {
-    val obsInfo   = TargetEditObsInfo(oneThree.some, oneThree.some, none)
-    val cloneInfo = TargetEditCloneInfo.fromObsInfo(obsInfo)
+    val obsInfo   = TargetEditObsInfo(oneThree.some, oneThree.some, none, none)
+    val cloneInfo = TargetEditCloneInfo.fromObsInfo(obsInfo, false)
+    assertNoMessage(cloneInfo)
+  }
+
+  test("none are executed, all are being edited - works same with allowEditingOngoing") {
+    val obsInfo   = TargetEditObsInfo(oneThree.some, oneThree.some, none, none)
+    val cloneInfo = TargetEditCloneInfo.fromObsInfo(obsInfo, true)
     assertNoMessage(cloneInfo)
   }
 
   test("none are executed, not all are being edited") {
-    val obsInfo   = TargetEditObsInfo(one.some, oneTwo.some, none)
-    val cloneInfo = TargetEditCloneInfo.fromObsInfo(obsInfo)
+    val obsInfo   = TargetEditObsInfo(one.some, oneTwo.some, none, none)
+    val cloneInfo = TargetEditCloneInfo.fromObsInfo(obsInfo, false)
     assertChoice(
       cloneInfo,
-      TargetEditCloneInfo.otherMessage(1L, false),
+      TargetEditCloneInfo.otherMessage(1L, false, Executed),
       one,
       TargetEditCloneInfo.onlyThisMsg,
       none,
-      TargetEditCloneInfo.allForTargetMsg(false)
+      TargetEditCloneInfo.allForTargetMsg(false, Executed)
     )
   }
 
   test("none are executed, not all are being edited 2") {
-    val obsInfo   = TargetEditObsInfo(oneTwoThree.some, allFour.some, none)
-    val cloneInfo = TargetEditCloneInfo.fromObsInfo(obsInfo)
+    val obsInfo   = TargetEditObsInfo(oneTwoThree.some, allFour.some, none, none)
+    val cloneInfo = TargetEditCloneInfo.fromObsInfo(obsInfo, false)
     assertChoice(
       cloneInfo,
-      TargetEditCloneInfo.otherMessage(1L, false),
+      TargetEditCloneInfo.otherMessage(1L, false, Executed),
       oneTwoThree,
       TargetEditCloneInfo.onlyCurrentMsg,
       none,
-      TargetEditCloneInfo.allForTargetMsg(false)
+      TargetEditCloneInfo.allForTargetMsg(false, Executed)
     )
   }
 
   test("some are executed, all are being edited") {
-    val obsInfo   = TargetEditObsInfo(allFour.some, allFour.some, oneThree.some)
-    val cloneInfo = TargetEditCloneInfo.fromObsInfo(obsInfo)
-    assertSimple(cloneInfo, TargetEditCloneInfo.onlyUnexecutedMsg, twoFour.some)
+    val obsInfo   = TargetEditObsInfo(allFour.some, allFour.some, oneThree.some, one.some)
+    val cloneInfo = TargetEditCloneInfo.fromObsInfo(obsInfo, false)
+    assertSimple(cloneInfo, TargetEditCloneInfo.onlyNonBadMsg(Executed), twoFour.some)
   }
 
   test("some are executed, all are being edited 2") {
-    val obsInfo   = TargetEditObsInfo(oneTwo.some, oneTwo.some, one.some)
-    val cloneInfo = TargetEditCloneInfo.fromObsInfo(obsInfo)
-    assertSimple(cloneInfo, TargetEditCloneInfo.onlyUnexecutedMsg, two.some)
+    val obsInfo   = TargetEditObsInfo(oneTwo.some, oneTwo.some, one.some, one.some)
+    val cloneInfo = TargetEditCloneInfo.fromObsInfo(obsInfo, false)
+    assertSimple(cloneInfo, TargetEditCloneInfo.onlyNonBadMsg(Executed), two.some)
   }
 
   test("some of other executed") {
-    val obsInfo   = TargetEditObsInfo(one.some, oneTwoThree.some, three.some)
-    val cloneInfo = TargetEditCloneInfo.fromObsInfo(obsInfo)
+    val obsInfo   = TargetEditObsInfo(one.some, oneTwoThree.some, three.some, none)
+    val cloneInfo = TargetEditCloneInfo.fromObsInfo(obsInfo, false)
     assertChoice(
       cloneInfo,
-      TargetEditCloneInfo.otherMessage(1L, true),
+      TargetEditCloneInfo.otherMessage(1L, true, Executed),
       one,
       TargetEditCloneInfo.onlyThisMsg,
       oneTwo.some,
-      TargetEditCloneInfo.allForTargetMsg(true)
+      TargetEditCloneInfo.allForTargetMsg(true, Executed)
     )
   }
 
   test("some of other executed 2") {
-    val obsInfo   = TargetEditObsInfo(one.some, allFour.some, four.some)
-    val cloneInfo = TargetEditCloneInfo.fromObsInfo(obsInfo)
+    val obsInfo   = TargetEditObsInfo(one.some, allFour.some, four.some, none)
+    val cloneInfo = TargetEditCloneInfo.fromObsInfo(obsInfo, false)
     assertChoice(
       cloneInfo,
-      TargetEditCloneInfo.otherMessage(2L, true),
+      TargetEditCloneInfo.otherMessage(2L, true, Executed),
       one,
       TargetEditCloneInfo.onlyThisMsg,
       oneTwoThree.some,
-      TargetEditCloneInfo.allForTargetMsg(true)
+      TargetEditCloneInfo.allForTargetMsg(true, Executed)
     )
   }
 
   test("some of other executed 3") {
-    val obsInfo   = TargetEditObsInfo(oneTwo.some, allFour.some, four.some)
-    val cloneInfo = TargetEditCloneInfo.fromObsInfo(obsInfo)
+    val obsInfo   = TargetEditObsInfo(oneTwo.some, allFour.some, four.some, four.some)
+    val cloneInfo = TargetEditCloneInfo.fromObsInfo(obsInfo, false)
     assertChoice(
       cloneInfo,
-      TargetEditCloneInfo.otherMessage(1L, true),
+      TargetEditCloneInfo.otherMessage(1L, true, Executed),
       oneTwo,
       TargetEditCloneInfo.onlyCurrentMsg,
       oneTwoThree.some,
-      TargetEditCloneInfo.allForTargetMsg(true)
+      TargetEditCloneInfo.allForTargetMsg(true, Executed)
     )
   }
 
   test("some of current and other executed") {
-    val obsInfo   = TargetEditObsInfo(oneThree.some, allFour.some, three.some)
-    val cloneInfo = TargetEditCloneInfo.fromObsInfo(obsInfo)
+    val obsInfo   = TargetEditObsInfo(oneThree.some, allFour.some, three.some, none)
+    val cloneInfo = TargetEditCloneInfo.fromObsInfo(obsInfo, false)
     assertChoice(
       cloneInfo,
-      TargetEditCloneInfo.someExecutedMsg,
+      TargetEditCloneInfo.someBadMsg(Executed),
       one,
-      TargetEditCloneInfo.unexecutedOfCurrentMsg,
+      TargetEditCloneInfo.allNonBadOfCurrentMsg(Executed),
       oneTwoFour.some,
-      TargetEditCloneInfo.allUnexectedMsg
+      TargetEditCloneInfo.allNonBadMsg(Executed)
     )
   }
 
   test("some of current and other executed 2") {
-    val obsInfo   = TargetEditObsInfo(oneTwo.some, allFour.some, oneThree.some)
-    val cloneInfo = TargetEditCloneInfo.fromObsInfo(obsInfo)
+    val obsInfo   = TargetEditObsInfo(oneTwo.some, allFour.some, oneThree.some, oneThree.some)
+    val cloneInfo = TargetEditCloneInfo.fromObsInfo(obsInfo, false)
     assertChoice(
       cloneInfo,
-      TargetEditCloneInfo.someExecutedMsg,
+      TargetEditCloneInfo.someBadMsg(Executed),
       two,
-      TargetEditCloneInfo.unexecutedOfCurrentMsg,
+      TargetEditCloneInfo.allNonBadOfCurrentMsg(Executed),
       twoFour.some,
-      TargetEditCloneInfo.allUnexectedMsg
+      TargetEditCloneInfo.allNonBadMsg(Executed)
     )
   }
 
   test("all besides current are executed") {
-    val obsInfo   = TargetEditObsInfo(oneThree.some, allFour.some, twoFour.some)
-    val cloneInfo = TargetEditCloneInfo.fromObsInfo(obsInfo)
-    assertSimple(cloneInfo, TargetEditCloneInfo.allCurrentMsg, oneThree.some)
+    val obsInfo   = TargetEditObsInfo(oneThree.some, allFour.some, twoFour.some, twoFour.some)
+    val cloneInfo = TargetEditCloneInfo.fromObsInfo(obsInfo, false)
+    assertSimple(cloneInfo, TargetEditCloneInfo.onlyTheseGoodMsg(Executed), oneThree.some)
   }
 
   test("all besides current are executed 2") {
-    val obsInfo   = TargetEditObsInfo(three.some, allFour.some, oneTwoFour.some)
-    val cloneInfo = TargetEditCloneInfo.fromObsInfo(obsInfo)
-    assertSimple(cloneInfo, TargetEditCloneInfo.allThisMsg, three.some)
+    val obsInfo   = TargetEditObsInfo(three.some, allFour.some, oneTwoFour.some, two.some)
+    val cloneInfo = TargetEditCloneInfo.fromObsInfo(obsInfo, false)
+    assertSimple(cloneInfo, TargetEditCloneInfo.onlyThisGoodMsg(Executed), three.some)
   }
 
   test("all of current are executed") {
-    val obsInfo   = TargetEditObsInfo(two.some, oneTwo.some, two.some)
-    val cloneInfo = TargetEditCloneInfo.fromObsInfo(obsInfo)
-    assertReadonly(cloneInfo, TargetEditCloneInfo.thisExecutedMsg)
+    val obsInfo   = TargetEditObsInfo(two.some, oneTwo.some, two.some, none)
+    val cloneInfo = TargetEditCloneInfo.fromObsInfo(obsInfo, false)
+    assertReadonly(cloneInfo, TargetEditCloneInfo.thisBadMsg(Executed))
   }
 
   test("all of current are executed 2") {
-    val obsInfo   = TargetEditObsInfo(twoThree.some, allFour.some, oneTwoThree.some)
-    val cloneInfo = TargetEditCloneInfo.fromObsInfo(obsInfo)
-    assertReadonly(cloneInfo, TargetEditCloneInfo.allCurrentExecutedMsg)
+    val obsInfo   = TargetEditObsInfo(twoThree.some, allFour.some, oneTwoThree.some, none)
+    val cloneInfo = TargetEditCloneInfo.fromObsInfo(obsInfo, false)
+    assertReadonly(cloneInfo, TargetEditCloneInfo.allCurrentBadMsg(Executed))
   }
 
   test("all of current are executed 3") {
-    val obsInfo   = TargetEditObsInfo(twoThree.some, allFour.some, allFour.some)
-    val cloneInfo = TargetEditCloneInfo.fromObsInfo(obsInfo)
-    assertReadonly(cloneInfo, TargetEditCloneInfo.allCurrentExecutedMsg)
+    val obsInfo   = TargetEditObsInfo(twoThree.some, allFour.some, allFour.some, none)
+    val cloneInfo = TargetEditCloneInfo.fromObsInfo(obsInfo, false)
+    assertReadonly(cloneInfo, TargetEditCloneInfo.allCurrentBadMsg(Executed))
+  }
+
+  test("allowEditingOngoing - some are ongoing, none are complete, all are being edited") {
+    val obsInfo   = TargetEditObsInfo(one.some, one.some, one.some, none)
+    val cloneInfo = TargetEditCloneInfo.fromObsInfo(obsInfo, true)
+    assertNoMessage(cloneInfo)
+  }
+
+  test("allowEditingOngoing - some are ongoing, none are complete, all are being edited 2") {
+    val obsInfo   = TargetEditObsInfo(oneThree.some, oneThree.some, oneThree.some, none)
+    val cloneInfo = TargetEditCloneInfo.fromObsInfo(obsInfo, true)
+    assertNoMessage(cloneInfo)
+  }
+
+  test("allowEditingOngoing - some of other completed") {
+    val obsInfo   = TargetEditObsInfo(one.some, oneTwoThree.some, twoThree.some, three.some)
+    val cloneInfo = TargetEditCloneInfo.fromObsInfo(obsInfo, true)
+    assertChoice(
+      cloneInfo,
+      TargetEditCloneInfo.otherMessage(1L, true, Completed),
+      one,
+      TargetEditCloneInfo.onlyThisMsg,
+      oneTwo.some,
+      TargetEditCloneInfo.allForTargetMsg(true, Completed)
+    )
+  }
+
+  test("allowEditingOngoing - some of other completed 2") {
+    val obsInfo   = TargetEditObsInfo(oneTwo.some, allFour.some, twoFour.some, four.some)
+    val cloneInfo = TargetEditCloneInfo.fromObsInfo(obsInfo, true)
+    assertChoice(
+      cloneInfo,
+      TargetEditCloneInfo.otherMessage(1L, true, Completed),
+      oneTwo,
+      TargetEditCloneInfo.onlyCurrentMsg,
+      oneTwoThree.some,
+      TargetEditCloneInfo.allForTargetMsg(true, Completed)
+    )
+  }
+
+  test("allowEditingOngoing - some of current and other completed") {
+    val obsInfo   = TargetEditObsInfo(oneTwo.some, allFour.some, allFour.some, twoFour.some)
+    val cloneInfo = TargetEditCloneInfo.fromObsInfo(obsInfo, true)
+    assertChoice(
+      cloneInfo,
+      TargetEditCloneInfo.someBadMsg(Completed),
+      one,
+      TargetEditCloneInfo.allNonBadOfCurrentMsg(Completed),
+      oneThree.some,
+      TargetEditCloneInfo.allNonBadMsg(Completed)
+    )
+  }
+
+  test("allowEditingOngoing - all besides current are completed") {
+    val obsInfo   = TargetEditObsInfo(oneThree.some, oneTwoThree.some, twoThree.some, two.some)
+    val cloneInfo = TargetEditCloneInfo.fromObsInfo(obsInfo, true)
+    assertSimple(cloneInfo, TargetEditCloneInfo.onlyTheseGoodMsg(Completed), oneThree.some)
+  }
+
+  test("allowEditingOngoing - all besides current are completed 2") {
+    val obsInfo   = TargetEditObsInfo(one.some, oneTwoThree.some, twoThree.some, twoThree.some)
+    val cloneInfo = TargetEditCloneInfo.fromObsInfo(obsInfo, true)
+    assertSimple(cloneInfo, TargetEditCloneInfo.onlyThisGoodMsg(Completed), one.some)
+  }
+
+  test("allowEditingOngoing - all of current are completed") {
+    val obsInfo   = TargetEditObsInfo(one.some, oneTwoThree.some, oneTwoThree.some, one.some)
+    val cloneInfo = TargetEditCloneInfo.fromObsInfo(obsInfo, true)
+    assertReadonly(cloneInfo, TargetEditCloneInfo.thisBadMsg(Completed))
+  }
+
+  test("allowEditingOngoing - all of current are completed 2") {
+    val obsInfo   =
+      TargetEditObsInfo(oneTwo.some, oneTwoThree.some, oneTwoThree.some, oneTwoThree.some)
+    val cloneInfo = TargetEditCloneInfo.fromObsInfo(obsInfo, true)
+    assertReadonly(cloneInfo, TargetEditCloneInfo.allCurrentBadMsg(Completed))
   }
 
 }

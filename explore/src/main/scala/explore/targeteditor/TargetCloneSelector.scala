@@ -20,8 +20,10 @@ import lucuma.ui.primereact.BooleanRadioButtons
 import lucuma.ui.primereact.given
 
 final case class TargetCloneSelector(
-  obsInfo:    TargetEditObsInfo,
-  toCloneFor: View[Option[ObsIdSet]]
+  obsInfo:             TargetEditObsInfo,
+  toCloneFor:          View[Option[ObsIdSet]],
+  readonly:            View[Boolean],
+  allowEditingOngoing: Boolean
 ) extends ReactFnProps(TargetCloneSelector.component)
 
 object TargetCloneSelector:
@@ -39,15 +41,17 @@ object TargetCloneSelector:
       if (scope === EditScope.CurrentOnly) cloneInfo.cloneForCurrent else cloneInfo.cloneForAll
 
   private val component =
-    ScalaFnComponent
-      .withHooks[Props]
-      .useMemoBy(props => props.obsInfo)(_ => TargetEditCloneInfo.fromObsInfo)
-      .useStateView(EditScope.CurrentOnly)
-      .useEffectWithDepsBy((_, info, scope) => (info, scope.get)) {
-        (props, _, _) => (info, scope) =>
-          props.toCloneFor.set(info.cloneForScope(scope))
-      }
-      .render: (_, info, editScope) =>
+    ScalaFnComponent[Props](props =>
+      for {
+        info      <- useMemo((props.obsInfo, props.allowEditingOngoing)):
+                       (obsInfo, allowEditingOngoing) =>
+                         TargetEditCloneInfo.fromObsInfo(obsInfo, allowEditingOngoing)
+        editScope <- useStateView(EditScope.CurrentOnly)
+
+        _ <-
+          useEffectWithDeps((info, editScope.get)): (info, scope) =>
+            props.toCloneFor.set(info.cloneForScope(scope)) >> props.readonly.set(info.readonly)
+      } yield
         if (info.noMessages) <.div()
         else
           <.div(
@@ -65,3 +69,4 @@ object TargetCloneSelector:
               )
               .getOrElse(TagMod.empty)
           )
+    )

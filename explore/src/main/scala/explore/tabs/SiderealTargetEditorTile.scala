@@ -73,7 +73,9 @@ object SiderealTargetEditorTile:
               guideStarSelection = guideStarSelection,
               attachments = attachments,
               authToken = authToken,
-              readonly = readonly
+              readonly = readonly,
+              allowEditingOngoing =
+                false // don't allow this when editing non-specifically for an observation
             )
           )
         )

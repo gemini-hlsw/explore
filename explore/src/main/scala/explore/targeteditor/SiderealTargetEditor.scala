@@ -59,23 +59,24 @@ import org.typelevel.log4cats.Logger
 import java.time.Instant
 
 case class SiderealTargetEditor(
-  programId:          Program.Id,
-  userId:             User.Id,
-  target:             UndoSetter[Target.Sidereal],
-  obsAndTargets:      UndoSetter[ObservationsAndTargets],
-  asterism:           Asterism, // This is passed through to Aladin, to plot the entire Asterism.
-  obsTime:            Option[Instant],
-  obsConf:            Option[ObsConfiguration],
-  searching:          View[Set[Target.Id]],
-  obsInfo:            TargetEditObsInfo,
-  onClone:            OnCloneParameters => Callback,
-  fullScreen:         View[AladinFullScreen],
-  userPreferences:    View[UserPreferences],
-  guideStarSelection: View[GuideStarSelection],
-  attachments:        View[AttachmentList],
-  authToken:          Option[NonEmptyString],
-  readonly:           Boolean,
-  invalidateSequence: Callback = Callback.empty
+  programId:           Program.Id,
+  userId:              User.Id,
+  target:              UndoSetter[Target.Sidereal],
+  obsAndTargets:       UndoSetter[ObservationsAndTargets],
+  asterism:            Asterism, // This is passed through to Aladin, to plot the entire Asterism.
+  obsTime:             Option[Instant],
+  obsConf:             Option[ObsConfiguration],
+  searching:           View[Set[Target.Id]],
+  obsInfo:             TargetEditObsInfo,
+  onClone:             OnCloneParameters => Callback,
+  fullScreen:          View[AladinFullScreen],
+  userPreferences:     View[UserPreferences],
+  guideStarSelection:  View[GuideStarSelection],
+  attachments:         View[AttachmentList],
+  authToken:           Option[NonEmptyString],
+  readonly:            Boolean,
+  allowEditingOngoing: Boolean,
+  invalidateSequence:  Callback = Callback.empty
 ) extends ReactFnProps(SiderealTargetEditor.component)
 
 object SiderealTargetEditor:
@@ -137,6 +138,8 @@ object SiderealTargetEditor:
         ctx                   <- useContext(AppContext.ctx)
         cloning               <- useStateView(false)
         obsToCloneTo          <- useStateView(none[ObsIdSet]) // obs ids to clone to.
+        // flag for readonly based on the execution status of the observation(s)
+        readonlyForStatuses   <- useStateView(false)
         // If obsTime is not set, change it to now
         obsTime               <- useEffectKeepResultWithDeps(props.obsTime): obsTime =>
                                    IO(obsTime.getOrElse(Instant.now()))
@@ -254,12 +257,16 @@ object SiderealTargetEditor:
         val disabled: Boolean =
           props.searching.get.exists(
             _ === props.asterism.focus.id
-          ) || cloning.get || props.readonly || props.obsInfo.isReadonly
+          ) || cloning.get || props.readonly || readonlyForStatuses.get
 
         val oid = props.obsInfo.current.map(_.head)
 
         React.Fragment(
-          TargetCloneSelector(props.obsInfo, obsToCloneTo),
+          TargetCloneSelector(props.obsInfo,
+                              obsToCloneTo,
+                              readonlyForStatuses,
+                              props.allowEditingOngoing
+          ),
           <.div(ExploreStyles.TargetGrid)(
             obsTime.value.renderPot(ot =>
               AladinCell(
@@ -283,7 +290,7 @@ object SiderealTargetEditor:
                 nameView,
                 allView.set,
                 props.searching,
-                props.readonly || props.obsInfo.isReadonly,
+                props.readonly || readonlyForStatuses.get,
                 cloning.get
               ),
               FormInputTextView(

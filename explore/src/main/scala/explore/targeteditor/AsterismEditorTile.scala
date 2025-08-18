@@ -54,29 +54,30 @@ import java.time.Instant
 
 object AsterismEditorTile:
   def apply(
-    userId:             Option[User.Id],
-    tileId:             Tile.TileId,
-    programId:          Program.Id,
-    obsIds:             ObsIdSet,
-    obsAndTargets:      UndoSetter[ObservationsAndTargets],
-    obsTime:            View[Option[Instant]],
-    obsDuration:        View[Option[TimeSpan]],
-    obsConf:            ObsConfiguration,
-    digest:             CalculatedValue[Option[ExecutionDigest]],
-    currentTarget:      Option[Target.Id],
-    setTarget:          (Option[Target.Id], SetRouteVia) => Callback,
-    onCloneTarget:      OnCloneParameters => Callback,
-    onAsterismUpdate:   OnAsterismUpdateParams => Callback,
-    obsInfo:            Target.Id => TargetEditObsInfo,
-    searching:          View[Set[Target.Id]],
-    title:              String,
-    userPreferences:    View[UserPreferences],
-    guideStarSelection: View[GuideStarSelection],
-    attachments:        View[AttachmentList],
-    authToken:          Option[NonEmptyString],
-    readonly:           Boolean,
-    sequenceChanged:    Callback = Callback.empty,
-    backButton:         Option[VdomNode] = None
+    userId:              Option[User.Id],
+    tileId:              Tile.TileId,
+    programId:           Program.Id,
+    obsIds:              ObsIdSet,
+    obsAndTargets:       UndoSetter[ObservationsAndTargets],
+    obsTime:             View[Option[Instant]],
+    obsDuration:         View[Option[TimeSpan]],
+    obsConf:             ObsConfiguration,
+    digest:              CalculatedValue[Option[ExecutionDigest]],
+    currentTarget:       Option[Target.Id],
+    setTarget:           (Option[Target.Id], SetRouteVia) => Callback,
+    onCloneTarget:       OnCloneParameters => Callback,
+    onAsterismUpdate:    OnAsterismUpdateParams => Callback,
+    obsInfo:             Target.Id => TargetEditObsInfo,
+    searching:           View[Set[Target.Id]],
+    title:               String,
+    userPreferences:     View[UserPreferences],
+    guideStarSelection:  View[GuideStarSelection],
+    attachments:         View[AttachmentList],
+    authToken:           Option[NonEmptyString],
+    readonly:            Boolean,
+    allowEditingOngoing: Boolean,
+    sequenceChanged:     Callback = Callback.empty,
+    backButton:          Option[VdomNode] = None
   )(using odbApi: OdbObservationApi[IO])(using Logger[IO]): Tile[TileState] = {
     // Save the time here. this works for the obs and target tabs
     // It's OK to save the viz time for executed observations, I think.
@@ -139,6 +140,7 @@ object AsterismEditorTile:
             attachments,
             authToken,
             readonly,
+            allowEditingOngoing,
             sequenceChanged,
             tileState.zoom(TileState.columnVisibility),
             tileState.zoom(TileState.obsEditInfo)
@@ -175,26 +177,27 @@ object AsterismEditorTile:
       Focus[TileState](_.obsEditInfo)
 
   private case class Body(
-    programId:          Program.Id,
-    userId:             User.Id,
-    obsIds:             ObsIdSet,
-    obsAndTargets:      UndoSetter[ObservationsAndTargets],
-    obsTime:            Option[Instant],
-    obsConf:            ObsConfiguration,
-    focusedTargetId:    Option[Target.Id],
-    setTarget:          (Option[Target.Id], SetRouteVia) => Callback,
-    onCloneTarget:      OnCloneParameters => Callback,
-    onAsterismUpdate:   OnAsterismUpdateParams => Callback,
-    obsInfo:            Target.Id => TargetEditObsInfo,
-    searching:          View[Set[Target.Id]],
-    userPreferences:    View[UserPreferences],
-    guideStarSelection: View[GuideStarSelection],
-    attachments:        View[AttachmentList],
-    authToken:          Option[NonEmptyString],
-    readonly:           Boolean,
-    sequenceChanged:    Callback,
-    columnVisibility:   View[ColumnVisibility],
-    obsEditInfo:        View[Option[ObsIdSetEditInfo]]
+    programId:           Program.Id,
+    userId:              User.Id,
+    obsIds:              ObsIdSet,
+    obsAndTargets:       UndoSetter[ObservationsAndTargets],
+    obsTime:             Option[Instant],
+    obsConf:             ObsConfiguration,
+    focusedTargetId:     Option[Target.Id],
+    setTarget:           (Option[Target.Id], SetRouteVia) => Callback,
+    onCloneTarget:       OnCloneParameters => Callback,
+    onAsterismUpdate:    OnAsterismUpdateParams => Callback,
+    obsInfo:             Target.Id => TargetEditObsInfo,
+    searching:           View[Set[Target.Id]],
+    userPreferences:     View[UserPreferences],
+    guideStarSelection:  View[GuideStarSelection],
+    attachments:         View[AttachmentList],
+    authToken:           Option[NonEmptyString],
+    readonly:            Boolean,
+    allowEditingOngoing: Boolean,
+    sequenceChanged:     Callback,
+    columnVisibility:    View[ColumnVisibility],
+    obsEditInfo:         View[Option[ObsIdSetEditInfo]]
   ) extends ReactFnProps(Body.component):
     val allTargets: UndoSetter[TargetList] = obsAndTargets.zoom(ObservationsAndTargets.targets)
 
@@ -291,6 +294,7 @@ object AsterismEditorTile:
                         attachments = props.attachments,
                         authToken = props.authToken,
                         readonly = props.readonly,
+                        allowEditingOngoing = props.allowEditingOngoing,
                         invalidateSequence = props.sequenceChanged
                       )
                     )

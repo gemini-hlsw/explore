@@ -84,7 +84,7 @@ object ConfigurationTile:
     readonly:                 Boolean,
     obsIdSetEditInfo:         ObsIdSetEditInfo,          // for the Position Angle Editor
     units:                    WavelengthUnits,
-    isStaff:                  Boolean
+    isStaffOrAdmin:           Boolean
   ) =
     Tile(
       ObsTabTileIds.ConfigurationId.id,
@@ -109,15 +109,16 @@ object ConfigurationTile:
           readonly,
           obsIdSetEditInfo,
           units,
-          isStaff
+          isStaffOrAdmin
         ),
       (_, _) =>
-        Title(obsId,
-              pacAndMode,
-              observingModeGroups,
-              selectedConfig,
-              revertedInstrumentConfig,
-              readonly || obsIdSetEditInfo.hasExecuted
+        Title(
+          obsId,
+          pacAndMode,
+          observingModeGroups,
+          selectedConfig,
+          revertedInstrumentConfig,
+          readonly || obsIdSetEditInfo.hasExecuted // even staff can't choose a new config if it is executed
         )
     )
 
@@ -212,13 +213,14 @@ object ConfigurationTile:
     readonly:                 Boolean,
     obsIdSetEditInfo:         ObsIdSetEditInfo, // for the Position Angle Editor
     units:                    WavelengthUnits,
-    isStaff:                  Boolean
+    isStaffOrAdmin:           Boolean
   ) extends ReactFnProps(Body.component):
     val mode: UndoSetter[Option[ObservingMode]]  =
       pacAndMode.zoom(PosAngleConstraintAndObsMode.observingMode)
     val posAngle: UndoSetter[PosAngleConstraint] =
       pacAndMode.zoom(PosAngleConstraintAndObsMode.posAngleConstraint)
-    val obsIsReadonly                            = readonly || obsIdSetEditInfo.hasExecuted
+    val obsIsReadonly                            =
+      readonly || (obsIdSetEditInfo.hasExecuted && !isStaffOrAdmin) || obsIdSetEditInfo.hasCompleted
 
   private object Body:
     private type Props = Body
@@ -393,7 +395,7 @@ object ConfigurationTile:
                     agsState,
                     props.readonly, // readonly status is more complicated here...
                     props.obsIdSetEditInfo,
-                    props.isStaff
+                    props.isStaffOrAdmin
                   )
                 ),
               if (optModeView.get.isEmpty)
@@ -503,7 +505,7 @@ object ConfigurationTile:
                       props.sequenceChanged,
                       props.obsIsReadonly,
                       props.units,
-                      props.isStaff
+                      props.isStaffOrAdmin
                     )
                   )
                 )
