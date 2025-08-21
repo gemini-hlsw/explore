@@ -3,7 +3,7 @@
 
 package explore.services
 
-import explore.model.SequenceData
+import lucuma.ui.sequence.SequenceData
 import lucuma.core.model.Observation
 
 trait OdbSequenceApi[F[_]]:

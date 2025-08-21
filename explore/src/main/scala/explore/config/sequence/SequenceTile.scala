@@ -16,7 +16,7 @@ import explore.model.AsterismIds
 import explore.model.Execution
 import explore.model.ObsTabTileIds
 import explore.model.Observation
-import explore.model.SequenceData
+import lucuma.ui.sequence.SequenceData
 import explore.model.reusability.given
 import explore.model.syntax.all.*
 import explore.syntax.ui.*

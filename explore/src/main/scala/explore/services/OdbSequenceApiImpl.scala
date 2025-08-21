@@ -7,7 +7,7 @@ import cats.MonadThrow
 import cats.syntax.all.*
 import clue.FetchClient
 import clue.syntax.*
-import explore.model.SequenceData
+import lucuma.ui.sequence.SequenceData
 import lucuma.core.model.Observation
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.odb.SequenceQueriesGQL.*

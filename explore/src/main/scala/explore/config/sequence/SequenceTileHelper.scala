@@ -12,7 +12,7 @@ import crystal.react.hooks.*
 import explore.*
 import explore.model.AppContext
 import explore.model.Observation
-import explore.model.SequenceData
+import lucuma.ui.sequence.SequenceData
 import japgolly.scalajs.react.*
 import lucuma.core.model.Target
 import lucuma.core.util.Timestamp
