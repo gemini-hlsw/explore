@@ -33,13 +33,10 @@ import lucuma.itc.SingleSN
 import lucuma.itc.TotalSN
 import lucuma.react.common.ReactFnComponent
 import lucuma.react.common.ReactFnProps
-import lucuma.react.primereact.Dropdown
-import lucuma.react.primereact.SelectItem
 import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
-import queries.schemas.itc.syntax.*
 
 object ItcImagingTile extends ModesTableCommon:
   case class ImagingFilterRow(
@@ -197,61 +194,10 @@ object ItcImagingTile extends ModesTableCommon:
     tileState:           View[ItcTileState]
   ) extends ReactFnProps(Title)
 
+  given Reusability[ImagingTargetAndResults] = Reusability.byEq
+
   private object Title
-      extends ReactFnComponent[Title](props =>
-        for {
-          _ <- useEffectWithDeps(
-                 props.observation.scienceTargetIds
-                   .toItcTargets(props.obsTargets)
-                   .toOption
-                   .map(_.toList)
-               ): _ =>
-                 props.tileState
-                   .zoom(ItcTileState.selectedImagingTarget)
-                   .set(props.tileState.get.imagingBrightest)
-          _ <- // Auto-select brightest target when calculation results change
-            useEffectWithDeps(
-              props.tileState.get.imagingBrightest
-            ):
-              props.tileState.zoom(ItcTileState.selectedImagingTarget).set
-          _ <- // if the targets change, make sure the selected target is still available
-            useEffectWithDeps(
-              props.tileState.get.calculationTargets
-            ): targets =>
-              val selected = props.tileState.zoom(ItcTileState.selectedImagingTarget)
-              if (selected.get.exists(targets.contains))
-                Callback.empty
-              else
-                selected.set(props.tileState.get.imagingBrightest)
-        } yield {
-          val targets               = props.observation.scienceTargetIds.toItcTargets(props.obsTargets)
-          val selectedImagingTarget = props.tileState.get.selectedImagingTarget
-
-          println(targets)
-          println(props.tileState.get.imagingBrightest)
-
-          <.div(
-            ExploreStyles.ItcTileTitle,
-            targets.toOption match {
-              case Some(targetList) =>
-                <.div(
-                  <.label("Target:"),
-                  if (targetList.length > 1) {
-                    Dropdown(
-                      clazz = ExploreStyles.ItcTileTargetSelector,
-                      value = selectedImagingTarget.orNull,
-                      onChange = (target: ItcTarget) =>
-                        props.tileState.zoom(ItcTileState.selectedImagingTarget).set(target.some),
-                      options =
-                        targetList.toList.map(t => SelectItem(label = t.name.value, value = t))
-                    )
-                  } else {
-                    <.span(selectedImagingTarget.map(_.name.value).getOrElse("-"))
-                  }
-                )
-              case None             =>
-                EmptyVdom
-            }
-          )
-        }
+      extends ReactFnComponent[Title](_ =>
+        // TODO: Add target selector
+        EmptyVdom
       )

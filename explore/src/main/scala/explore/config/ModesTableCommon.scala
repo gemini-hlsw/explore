@@ -51,6 +51,7 @@ import lucuma.ui.primereact.*
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import lucuma.ui.utils.*
+import workers.WorkerClient
 
 import scala.collection.decorators.*
 import scala.concurrent.duration.*
@@ -315,14 +316,14 @@ trait ModesTableCommon:
                   for {
                     _       <- Resource.eval(itcProgress.set(progressZero).to[IO])
                     request <-
-                      ItcClient[IO]
-                        .request:
-                          ItcMessage.Query(expTimeMode,
-                                           constraints,
-                                           asterism,
-                                           customSedTimestamps,
-                                           modes.map(_.config)
-                          )
+                      ModesTableCommon
+                        .requestItcQuery(
+                          expTimeMode,
+                          constraints,
+                          asterism,
+                          customSedTimestamps,
+                          modes.map(_.config)
+                        )
                         .map:
                           // Avoid rerendering on every single result, it's slow.
                           _.groupWithin(100, 500.millis)
@@ -360,3 +361,23 @@ trait ModesTableCommon:
       .flatMap(_.brightestIndex)
       .flatMap(brightestIndex => validTargets.flatMap(_.get(brightestIndex)))
       .map(t => <.label(ExploreStyles.ModesTableTarget)(s"on ${t.name.value}"))
+
+object ModesTableCommon:
+  def requestItcQuery[F[_]](
+    expTimeMode:         ExposureTimeMode,
+    constraints:         ConstraintSet,
+    asterism:            NonEmptyList[ItcTarget],
+    customSedTimestamps: List[Timestamp],
+    configs:             List[ItcInstrumentConfig]
+  )(using
+    WorkerClient[F, ItcMessage.Request]
+  ): Resource[F, fs2.Stream[F, Map[ItcRequestParams, EitherNec[ItcTargetProblem, ItcResult]]]] =
+    ItcClient[F].request(
+      ItcMessage.Query(
+        expTimeMode,
+        constraints,
+        asterism,
+        customSedTimestamps,
+        configs
+      )
+    )
