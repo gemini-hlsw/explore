@@ -7,10 +7,10 @@ import cats.MonadThrow
 import cats.syntax.all.*
 import clue.FetchClient
 import clue.syntax.*
-import lucuma.ui.sequence.SequenceData
 import lucuma.core.model.Observation
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.odb.SequenceQueriesGQL.*
+import lucuma.ui.sequence.SequenceData
 
 trait OdbSequenceApiImpl[F[_]: MonadThrow](using FetchClient[F, ObservationDB])
     extends OdbSequenceApi[F]:

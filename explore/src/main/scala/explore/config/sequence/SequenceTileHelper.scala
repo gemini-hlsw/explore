@@ -12,13 +12,13 @@ import crystal.react.hooks.*
 import explore.*
 import explore.model.AppContext
 import explore.model.Observation
-import lucuma.ui.sequence.SequenceData
 import japgolly.scalajs.react.*
 import lucuma.core.model.Target
 import lucuma.core.util.Timestamp
 import lucuma.schemas.ObservationDB
 import lucuma.schemas.model.ExecutionVisits
 import lucuma.ui.reusability.given
+import lucuma.ui.sequence.SequenceData
 
 import scala.concurrent.duration.*
 
