@@ -16,7 +16,6 @@ import explore.model.AsterismIds
 import explore.model.Execution
 import explore.model.ObsTabTileIds
 import explore.model.Observation
-import explore.model.SequenceData
 import explore.model.reusability.given
 import explore.model.syntax.all.*
 import explore.syntax.ui.*
@@ -32,6 +31,7 @@ import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Message
 import lucuma.refined.*
 import lucuma.schemas.model.ExecutionVisits
+import lucuma.ui.sequence.SequenceData
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 
