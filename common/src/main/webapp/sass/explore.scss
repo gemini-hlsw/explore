@@ -717,6 +717,7 @@ thead tr th.sticky-header {
   }
 }
 
+.explore-itc-imaging-tile-body,
 .explore-itc-tile-body {
   display: flex;
 
@@ -724,6 +725,10 @@ thead tr th.sticky-header {
     justify-content: center;
     flex-grow: 0;
   }
+}
+
+.explore-itc-imaging-tile-body {
+  flex-grow: 0;
 }
 
 .explore-itc-tile-title {

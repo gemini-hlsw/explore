@@ -164,14 +164,14 @@ object ImagingModesTable extends ModesTableCommon:
       column(TimeColumnId, _.totalItcTime)
         .withHeader(progressingCellHeader("Time"))
         .withCell: cell =>
-          itcCell(cell.row.original.result, TimeOrSNColumn.Time)
+          itcCell(cell.row.original.result, ItcColumns.Time)
         .withColumnSize(FixedSize(85.toPx))
         .withSortUndefined(UndefinedPriority.Last)
         .sortable,
       column(SNColumnId, _.totalSN)
         .withHeader(progressingCellHeader("S/N"))
         .withCell: cell =>
-          itcCell(cell.row.original.result, TimeOrSNColumn.SN)
+          itcCell(cell.row.original.result, ItcColumns.SN)
         .withColumnSize(FixedSize(85.toPx))
         .withSortUndefined(UndefinedPriority.Last)
         .sortable,
