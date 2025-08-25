@@ -23,7 +23,6 @@ import fs2.Pull
 import fs2.Stream
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.react.datepicker.*
 import lucuma.react.fa.IconSize
 import lucuma.react.primereact.Button
 import lucuma.react.primereact.Message
@@ -34,12 +33,7 @@ import lucuma.ui.LucumaStyles
 import org.http4s.Uri
 import org.typelevel.log4cats.Logger
 
-import java.time.Instant
-import java.time.ZoneOffset
-import java.time.ZonedDateTime
 import scala.concurrent.duration.*
-
-import scalajs.js
 
 extension (uri: Uri)
   def addPath(p: Uri.Path): Uri =
@@ -190,40 +184,6 @@ extension (toastRef: ToastRef)
         sticky = true
       )
     )
-
-// TODO Move these to react-datetime
-extension (instant:  Instant)
-  // DatePicker only works in local timezone, so we trick it by adding the timezone offset.
-  // See https://github.com/Hacker0x01/react-datepicker/issues/1787
-  def toDatePickerJsDate: js.Date                                 =
-    val zdt: ZonedDateTime = ZonedDateTime.ofInstant(instant, ZoneOffset.UTC)
-    // init removes the Z timezone
-    new js.Date(js.Date.parse(zdt.toString.init))
-
-extension (zdt: ZonedDateTime)
-  // DatePicker only works in local timezone, so we trick it by adding the timezone offset.
-  // See https://github.com/Hacker0x01/react-datepicker/issues/1787
-  def toDatePickerJsDate: js.Date =
-    zdt.toInstant.toDatePickerJsDate
-
-extension [A](value: js.UndefOr[DateOrRange])
-  def fromDatePickerToInstantEitherOpt(using
-    A <:< js.Date
-  ): Option[Either[(Instant, Instant), Instant]] =
-    value.toEitherOpt.map { (e: Either[(js.Date, js.Date), js.Date]) =>
-      e match {
-        case Left((d1, d2)) =>
-          Left((fromDatePickerJsDate(d1), fromDatePickerJsDate(d2)))
-        case Right(d)       =>
-          Right(fromDatePickerJsDate(d))
-      }
-    }.widen
-
-  def fromDatePickerToInstantOpt(using ev: A <:< js.Date): Option[Instant] =
-    fromDatePickerToInstantEitherOpt.flatMap(_.toOption)
-
-  def fromDatePickerToZDTOpt(using ev: A <:< js.Date): Option[ZonedDateTime] =
-    fromDatePickerToInstantOpt.map(i => ZonedDateTime.ofInstant(i, ZoneOffset.UTC))
 
 extension (s: NonNegShort)
   def |+|(i: Int): NonNegShort =

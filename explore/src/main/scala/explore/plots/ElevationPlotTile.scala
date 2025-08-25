@@ -245,11 +245,11 @@ object ElevationPlotTile:
               opt.range match
                 case PlotRange.Night | PlotRange.FullDay =>
                   Datepicker(
-                    onChange = (newValue, _) => dateView.set(newValue.toLocalDateOpt.get)
+                    onChange = _.map(_.fromJsDate).foldMap(dateView.set),
+                    selected = opt.date.toJsDate.some,
+                    dateFormat = "yyyy-MM-dd",
+                    className = ExploreStyles.ElevationPlotDateInput
                   )
-                    .selected(opt.date.toJsDate)
-                    .dateFormat("yyyy-MM-dd")
-                    .className(ExploreStyles.ElevationPlotDateInput.htmlClass)
                 case PlotRange.Semester                  =>
                   FormInputText(
                     id = "semester".refined,

@@ -32,7 +32,6 @@ import lucuma.ui.utils.versionDateFormatter
 import org.scalajs.dom
 
 import java.time.Instant
-import scala.scalajs.js
 
 val canvasWidth  = VdomAttr("width")
 val canvasHeight = VdomAttr("height")
@@ -71,11 +70,6 @@ def forceAssign[T, S](mod: Endo[Input[S]] => Endo[T])(base: S): Endo[S] => Endo[
     mod:
       case Assign(edit) => modS(edit).assign
       case _            => modS(base).assign
-
-// DatePicker only works in local timezone, so we trick it by adding the timezone offset.
-// See https://github.com/Hacker0x01/react-datepicker/issues/1787
-private def fromDatePickerJsDate(jsDate: js.Date): Instant =
-  Instant.ofEpochMilli((jsDate.getTime() - jsDate.getTimezoneOffset() * 60000).toLong)
 
 // TODO Should we move this to lucuma-ui?
 val HMPartialRegEx                  = "\\d*(:\\d{0,2})?".r
