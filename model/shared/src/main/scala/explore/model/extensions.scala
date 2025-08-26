@@ -40,7 +40,7 @@ object extensions:
       Target.sidereal.getOption(target)
 
   extension (targets: NonEmptyList[TargetWithId])
-    def baseTracking: ObjectTracking =
+    def baseTracking: Option[ObjectTracking] =
       ObjectTracking.fromAsterism(targets.map(_.target))
 
     def toSidereal: List[SiderealTargetWithId] =

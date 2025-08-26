@@ -133,7 +133,7 @@ case class ObsTabTiles(
 
   def targetCoords(obsTime: Instant): Option[CoordinatesAtVizTime] =
     asterismAsNel
-      .flatMap(asterismNel => asterismNel.baseTracking.at(obsTime))
+      .flatMap(asterismNel => asterismNel.baseTracking.flatMap(_.at(obsTime)))
 
   def site: Option[Site] = observation.get.observingMode.map(_.siteFor)
 
@@ -325,8 +325,12 @@ object ObsTabTiles:
             else angle
 
           val averagePA: Option[AveragePABasis] =
-            (basicConfiguration.map(_.siteFor), props.asterismAsNel, obsDuration, setupTime)
-              .flatMapN: (site, asterism, fullDuration, setupDuration) =>
+            (basicConfiguration.map(_.siteFor),
+             props.asterismAsNel.flatMap(_.baseTracking),
+             obsDuration,
+             setupTime
+            )
+              .flatMapN: (site, baseTracking, fullDuration, setupDuration) =>
                 // science duration is the obsDuration - setup time
                 fullDuration
                   .subtract(setupDuration)
@@ -340,7 +344,7 @@ object ObsTabTiles:
                       case PosAngleConstraint.AverageParallactic =>
                         averageParallacticAngle(
                           site.place,
-                          asterism.baseTracking,
+                          baseTracking,
                           scienceStartTime,
                           scienceDuration
                         ).map(AveragePABasis(scienceStartTime, scienceDuration, _))
@@ -438,7 +442,7 @@ object ObsTabTiles:
               props.acqOffset,
               averagePA,
               obsDuration.map(_.toDuration),
-              props.observation.get.needsAGS,
+              props.observation.get.needsAGS(props.obsTargets),
               props.observation.get.selectedGSName,
               props.observation.get.calibrationRole
             )

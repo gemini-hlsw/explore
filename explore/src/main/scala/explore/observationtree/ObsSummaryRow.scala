@@ -42,6 +42,7 @@ enum ObsSummaryRow:
     _ => none
   )
 
+  // TODO: Update to handle ToOs/Regions
   def coordsAtVizTime: Option[Coordinates] =
     this match
       case r: ExpandedTargetRow => targetCoords(r.targetWithId, r.vizTime)
@@ -59,5 +60,5 @@ enum ObsSummaryRow:
     vizTime:  Option[Instant]
   ): Option[Coordinates] =
     asterism
-      .map(_.baseTracking)
+      .flatMap(_.baseTracking)
       .flatMap(bt => vizTime.fold(bt.baseCoordinates.some)(v => bt.at(v).map(_.value)))

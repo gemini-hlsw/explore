@@ -22,9 +22,23 @@ object ConfigurationSubquery
         skyBackground
         waterVapor
       }
-      referenceCoordinates {
-        ra $RASubquery
-        dec $DecSubquery
+      target {
+        coordinates {
+          ra $RASubquery
+          dec $DecSubquery
+        }
+        region {
+          rightAscensionArc {
+            type
+            start $RASubquery
+            end $RASubquery
+          }
+          declinationArc {
+            type
+            start $DecSubquery
+            end $DecSubquery
+          }
+        }
       }
       observingMode {
         instrument
