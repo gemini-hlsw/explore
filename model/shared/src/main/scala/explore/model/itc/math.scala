@@ -7,14 +7,16 @@ import cats.data.NonEmptyChain
 import cats.syntax.all.*
 import lucuma.core.math.Wavelength
 import lucuma.itc.ItcCcd
+import lucuma.itc.SingleSN
+import lucuma.itc.TotalSN
 
 import scala.math.*
 
 extension (ccds: NonEmptyChain[ItcCcd])
-  def maxPeakPixelFlux: Int    = ccds.maximumBy(_.peakPixelFlux).peakPixelFlux.toInt
-  def maxSingleSNRatio: Double = ccds.maximumBy(_.singleSNRatio).singleSNRatio
-  def maxTotalSNRatio: Double  = ccds.maximumBy(_.totalSNRatio).totalSNRatio
-  def maxADU: Int              = ccds.maximumBy(_.adu).adu
+  def maxPeakPixelFlux: Int      = ccds.maximumBy(_.peakPixelFlux).peakPixelFlux.toInt
+  def maxSingleSNRatio: SingleSN = ccds.maximumBy(_.singleSNRatio).singleSNRatio
+  def maxTotalSNRatio: TotalSN   = ccds.maximumBy(_.totalSNRatio).totalSNRatio
+  def maxADU: Int                = ccds.maximumBy(_.adu).adu
 
 /**
  * Returns a "nice" number approximately equal to range Rounds the number if round = true Takes the
