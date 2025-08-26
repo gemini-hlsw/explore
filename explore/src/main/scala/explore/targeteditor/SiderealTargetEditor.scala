@@ -268,18 +268,21 @@ object SiderealTargetEditor:
                               props.allowEditingOngoing
           ),
           <.div(ExploreStyles.TargetGrid)(
-            obsTime.value.renderPot(ot =>
-              AladinCell(
-                props.userId,
-                oid,
-                props.asterism,
-                ot,
-                props.obsConf,
-                props.fullScreen,
-                props.userPreferences,
-                props.guideStarSelection
-              )
-            ),
+            // If there is a ToO in the asterism, we won't have a baseTracking and will skip visualization.
+            props.asterism.baseTracking.map: tracking =>
+              obsTime.value.renderPot(ot =>
+                AladinCell(
+                  props.userId,
+                  oid,
+                  props.asterism,
+                  tracking,
+                  ot,
+                  props.obsConf,
+                  props.fullScreen,
+                  props.userPreferences,
+                  props.guideStarSelection
+                )
+              ),
             <.div(LucumaPrimeStyles.FormColumnVeryCompact, ExploreStyles.TargetForm)(
               // Keep the search field and the coords always together
               SearchForm(

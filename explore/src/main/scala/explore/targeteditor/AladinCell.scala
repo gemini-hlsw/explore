@@ -39,6 +39,7 @@ import lucuma.core.enums.PortDisposition
 import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Offset
+import lucuma.core.model.ObjectTracking
 import lucuma.core.model.User
 import lucuma.core.model.sequence.flamingos2.Flamingos2FpuMask
 import lucuma.react.common.*
@@ -63,6 +64,7 @@ case class AladinCell(
   uid:                User.Id,
   obsId:              Option[Observation.Id],
   asterism:           Asterism,
+  asterismTracking:   ObjectTracking,
   obsTime:            Instant,
   obsConf:            Option[ObsConfiguration],
   fullScreen:         View[AladinFullScreen],
@@ -217,7 +219,7 @@ object AladinCell extends ModelOptics with AladinCommon:
       // Request guide star candidates if obsTime changes more than a month or the base moves
       candidates        <- useEffectResultWithDeps(
                              (props.siderealDiscretizedObsTime,
-                              props.asterism.baseTracking,
+                              props.asterismTracking,
                               props.obsConf.flatMap(_.obsModeType)
                              )
                            ): (siderealDiscretizedObsTime, baseTracking, obsModeType) =>
@@ -269,7 +271,7 @@ object AladinCell extends ModelOptics with AladinCommon:
                                n.fold(AgsSelection(agsResults.value.value.headOption.tupleLeft(0))):
                                  agsResults.value.value.pick
       // mouse coordinates, starts on the base
-      mouseCoords       <- useState(props.asterism.baseTracking.baseCoordinates)
+      mouseCoords       <- useState(props.asterismTracking.baseCoordinates)
       // Reset offset and gs if asterism change
       _                 <- useEffectWithDeps(props.asterism): _ =>
                              val (_, offsetOnCenter) = offsetViews(props, options)(ctx)
@@ -279,7 +281,7 @@ object AladinCell extends ModelOptics with AladinCommon:
                                _ <- props.guideStarSelection.set(GuideStarSelection.Default)
                                _ <- agsResults.setState(List.empty)
                                _ <- offsetOnCenter.set(Offset.Zero)
-                               _ <- mouseCoords.setState(props.asterism.baseTracking.baseCoordinates)
+                               _ <- mouseCoords.setState(props.asterismTracking.baseCoordinates)
                              yield ()
       // Reset selection if pos angle changes except for manual selection changes
       _                 <- useEffectWithDeps(props.obsConf.flatMap(_.posAngleConstraint)): _ =>
@@ -292,7 +294,7 @@ object AladinCell extends ModelOptics with AladinCommon:
                                .whenA(props.needsAGS && candidates.value.toOption.flatten.nonEmpty)
       // Request ags calculation
       _                 <- useEffectWithDeps(
-                             (props.asterism.baseTracking,
+                             (props.asterismTracking,
                               props.asterism.focus.id,
                               props.positions,
                               props.obsConf.flatMap(_.posAngleConstraint),
@@ -455,6 +457,7 @@ object AladinCell extends ModelOptics with AladinCommon:
         (t: AsterismVisualOptions) =>
           AladinContainer(
             props.asterism,
+            props.asterismTracking,
             props.obsTime,
             props.obsConf.flatMap(ConfigurationForVisualization.fromObsConfiguration),
             globalPreferences.get,

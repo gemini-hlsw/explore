@@ -329,12 +329,15 @@ object TargetTabContents extends TwoPanels:
                 .flatMap: targetId =>
                   props.targets.get
                     .get(targetId)
-                    .map: target =>
-                      ObjectPlotData.Id(targetId.asRight) -> ObjectPlotData(
-                        target.name,
-                        ObjectTracking.fromTarget(target),
-                        props.sitesForTarget(targetId)
-                      )
+                    .flatMap: target =>
+                      ObjectTracking
+                        .fromTarget(target)
+                        .map: tracking =>
+                          ObjectPlotData.Id(targetId.asRight) -> ObjectPlotData(
+                            target.name,
+                            tracking,
+                            props.sitesForTarget(targetId)
+                          )
                 .toMap
 
           /**
@@ -427,7 +430,12 @@ object TargetTabContents extends TwoPanels:
                           _,
                           _
                         ) if obsId === id =>
-                      (const, conf.toBasicConfiguration, posAngle, wavelength, o.needsAGS)
+                      (const,
+                       conf.toBasicConfiguration,
+                       posAngle,
+                       wavelength,
+                       o.needsAGS(props.targets.get)
+                      )
                   .headOption
               case _        => None
             }

@@ -89,8 +89,6 @@ case class Observation(
 
   val site: Option[Site] = observingMode.map(_.siteFor)
 
-  val needsAGS: Boolean = calibrationRole.forall(_.needsAGS)
-
   lazy val observingModeSummary: Option[ObservingModeSummary] =
     observingMode.map(ObservingModeSummary.fromObservingMode)
 
@@ -292,7 +290,16 @@ case class Observation(
         scienceTargetIds.toList
           .map(id => allTargets.get(id))
           .flattenOption
-      .map(ObjectTracking.fromAsterism(_))
+      .flatMap(ObjectTracking.fromAsterism(_))
+
+  def hasTargetOfOpportunity(allTargets: TargetList): Boolean =
+    scienceTargetIds.toList
+      .map(id => allTargets.get(id).flatMap(Target.opportunity.getOption))
+      .flattenOption
+      .nonEmpty
+
+  def needsAGS(allTargets: TargetList): Boolean =
+    calibrationRole.forall(_.needsAGS) && hasTargetOfOpportunity(allTargets)
 
 object Observation:
   type Id = lucuma.core.model.Observation.Id

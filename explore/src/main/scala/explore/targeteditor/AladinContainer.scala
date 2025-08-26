@@ -32,6 +32,7 @@ import lucuma.core.math.Coordinates
 import lucuma.core.math.Offset
 import lucuma.core.math.Wavelength
 import lucuma.core.model.CoordinatesAtVizTime
+import lucuma.core.model.ObjectTracking
 import lucuma.react.common.Css
 import lucuma.react.common.ReactFnProps
 import lucuma.react.resizeDetector.hooks.*
@@ -47,6 +48,7 @@ import scala.concurrent.duration.*
 
 case class AladinContainer(
   asterism:               Asterism,
+  asterismTracking:       ObjectTracking,
   obsTime:                Instant,
   vizConf:                Option[ConfigurationForVisualization],
   globalPreferences:      GlobalPreferences,
@@ -81,9 +83,9 @@ object AladinContainer extends AladinCommon {
         ExploreStyles.GuideSpeedSlow
 
   private def baseAndScience(p: Props) = {
-    val base: CoordinatesAtVizTime = p.asterism.baseTracking
+    val base: CoordinatesAtVizTime = p.asterismTracking
       .at(p.obsTime)
-      .getOrElse(CoordinatesAtVizTime(p.asterism.baseTracking.baseCoordinates))
+      .getOrElse(CoordinatesAtVizTime(p.asterismTracking.baseCoordinates))
 
     val science = p.asterism.toSidereal
       .map(t =>
@@ -345,7 +347,7 @@ object AladinContainer extends AladinCommon {
             SVGTarget.CircleTarget(baseCoordinates.value, ExploreStyles.BaseTarget, 3),
             SVGTarget.LineTo(
               baseCoordinates.value,
-              props.asterism.baseTracking.baseCoordinates,
+              props.asterismTracking.baseCoordinates,
               ExploreStyles.PMCorrectionLine
             )
           )

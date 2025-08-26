@@ -13,8 +13,7 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.math.validation.MathValidators
 import lucuma.core.model.Configuration
-import lucuma.core.model.Configuration.ObservingMode.GmosNorthLongSlit
-import lucuma.core.model.Configuration.ObservingMode.GmosSouthLongSlit
+import lucuma.core.model.Configuration.ObservingMode.*
 import lucuma.core.model.Program
 import lucuma.core.syntax.display.*
 import lucuma.react.syntax.*
@@ -30,12 +29,13 @@ case class ConfigurationTableColumnBuilder[D, TM, CM, TF](colDef: ColumnDef.Appl
     ) = colDef(id, r => accessor(getConfiguration(r)), ColumnNames(id))
 
     List(
-      configurationColumn(RAColumnId, _.refererenceCoordinates.ra)
-        .withCell(c => MathValidators.truncatedRA.reverseGet(c.value))
+      // TODO: Update first two columns to handle Regions
+      configurationColumn(RAColumnId, _.target.swap.toOption.map(_.ra))
+        .withCell(c => c.value.map(MathValidators.truncatedRA.reverseGet).orEmpty)
         .withSize(110.toPx)
         .sortable,
-      configurationColumn(DecColumnId, _.refererenceCoordinates.dec)
-        .withCell(c => MathValidators.truncatedDec.reverseGet(c.value))
+      configurationColumn(DecColumnId, _.target.swap.toOption.map(_.dec))
+        .withCell(c => c.value.map(MathValidators.truncatedDec.reverseGet).orEmpty)
         .withSize(110.toPx)
         .sortable,
       configurationColumn(InstrumentColumnId, _.observingMode.tpe.instrument.shortName)
@@ -118,11 +118,17 @@ object ConfigurationTableColumnBuilder {
 
   extension (mode: Configuration.ObservingMode)
     def fpu: String       = mode match
-      case GmosNorthLongSlit(_) => "LongSlit"
-      case GmosSouthLongSlit(_) => "LongSlit"
+      case GmosNorthLongSlit(_)  => "LongSlit"
+      case GmosSouthLongSlit(_)  => "LongSlit"
+      case Flamingos2LongSlit(_) => "LongSlit"
+      case GmosNorthImaging(_)   => "Imaging"
+      case GmosSouthImaging(_)   => "Imaging"
     def disperser: String = mode match
-      case GmosNorthLongSlit(grating) => grating.shortName
-      case GmosSouthLongSlit(grating) => grating.shortName
+      case GmosNorthLongSlit(grating)    => grating.shortName
+      case GmosSouthLongSlit(grating)    => grating.shortName
+      case Flamingos2LongSlit(disperser) => disperser.shortName
+      case GmosNorthImaging(filters)     => filters.map(_.shortName).mkString(",")
+      case GmosSouthImaging(filters)     => filters.map(_.shortName).mkString(",")
 
   def targetName(observations: List[Observation], targets: TargetList): String =
     val targetNames =
