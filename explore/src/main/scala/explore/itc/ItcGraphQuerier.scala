@@ -13,7 +13,6 @@ import cats.effect.IO
 import cats.syntax.all.*
 import explore.events.ItcMessage
 import explore.model.Constants
-import explore.model.InstrumentConfigAndItcResult
 import explore.model.Observation
 import explore.model.TargetList
 import explore.model.WorkerClients.ItcClient
@@ -32,7 +31,7 @@ import workers.WorkerClient
 
 case class ItcGraphQuerier(
   observation:         Observation,
-  selectedConfig:      Option[InstrumentConfigAndItcResult], // selected row in spectroscopy modes table
+  configs:             List[ItcInstrumentConfig], // configs for imaging or single config for spectroscopy
   allTargets:          TargetList,
   customSedTimestamps: List[Timestamp]
 ) derives Eq:
@@ -43,23 +42,18 @@ case class ItcGraphQuerier(
   // The remote configuration is read in a different query than the itc results.
   // This will work even in the case the user has overriden some parameters.
   // When we use the remote configuration we don't need the exposure time.
-  private val remoteConfig: Option[InstrumentConfigAndItcResult] =
+  private val remoteConfig: Option[ItcInstrumentConfig] =
     observation
       .toInstrumentConfig(allTargets)
       .headOption
-      .map: row =>
-        InstrumentConfigAndItcResult(row, none)
 
   // If the observation has an assigned configuration, we use that one.
-  // Otherwise, we use the one selected in the table.
-  private val finalConfig: Option[InstrumentConfigAndItcResult] =
-    remoteConfig.orElse(selectedConfig)
+  // Otherwise, we use the first one from the provided configs (for spectroscopy compatibility).
+  private val finalConfig: Option[ItcInstrumentConfig] =
+    remoteConfig.orElse(configs.headOption)
 
   private val exposureTimeMode: Option[ExposureTimeMode] =
     observation.scienceRequirements.exposureTimeMode
-
-  private val instrumentConfig: Option[ItcInstrumentConfig] =
-    finalConfig.map(_.instrumentConfig)
 
   private val itcTargets: EitherNec[ItcTargetProblem, NonEmptyList[ItcTarget]] =
     asterismIds.toItcTargets(allTargets)
@@ -70,7 +64,7 @@ case class ItcGraphQuerier(
       exp <- exposureTimeMode.toRightNec(
                ItcQueryProblem.MissingExposureTimeMode.toTargetProblem
              )
-      i   <- instrumentConfig.toRightNec(
+      i   <- finalConfig.toRightNec(
                ItcQueryProblem.GenericError(Constants.MissingMode).toTargetProblem
              )
     } yield ItcGraphQuerier.QueryProps(exp, constraints, t, i, customSedTimestamps)
