@@ -14,6 +14,7 @@ import eu.timepit.refined.types.string.NonEmptyString
 import explore.components.Tile
 import explore.components.ui.ExploreStyles
 import explore.config.ModesTableCommon
+import explore.model.AppContext
 import explore.model.ObsTabTileIds
 import explore.model.Observation
 import explore.model.Progress
@@ -33,12 +34,15 @@ import lucuma.itc.SingleSN
 import lucuma.itc.TotalSN
 import lucuma.react.common.ReactFnComponent
 import lucuma.react.common.ReactFnProps
+import lucuma.react.primereact.Dropdown
+import lucuma.react.primereact.SelectItem
 import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.ui.syntax.all.given
 import lucuma.ui.table.*
 
 object ItcImagingTile extends ModesTableCommon:
+
   case class ImagingFilterRow(
     id:         Int,
     instrument: ItcInstrumentConfig,
@@ -69,7 +73,8 @@ object ItcImagingTile extends ModesTableCommon:
     selectedConfigs:     ConfigSelection,
     observation:         Observation,
     obsTargets:          TargetList,
-    customSedTimestamps: List[Timestamp]
+    customSedTimestamps: List[Timestamp],
+    selectedTarget:      View[Option[ItcTarget]]
   ) =
     Tile(
       ObsTabTileIds.ItcId.id,
@@ -94,6 +99,7 @@ object ItcImagingTile extends ModesTableCommon:
           selectedConfigs,
           obsTargets,
           customSedTimestamps,
+          selectedTarget,
           s
         )
     )
@@ -191,13 +197,64 @@ object ItcImagingTile extends ModesTableCommon:
     selectedConfigs:     ConfigSelection,
     obsTargets:          TargetList,
     customSedTimestamps: List[Timestamp],
+    selectedTarget:      View[Option[ItcTarget]],
     tileState:           View[ItcTileState]
   ) extends ReactFnProps(Title)
 
   given Reusability[ImagingTargetAndResults] = Reusability.byEq
 
   private object Title
-      extends ReactFnComponent[Title](_ =>
-        // TODO: Add target selector
-        EmptyVdom
+      extends ReactFnComponent[Title](props =>
+        for {
+          // Even though this is just the title it is always visible thus it is better for it to control processing
+          ctx <- useContext(AppContext.ctx)
+          // Update calculationResults for the selected configs
+          _   <- useEffectWithDeps(props.selectedConfigs): configs =>
+                   import ctx.given
+
+                   props.tileState
+                     .zoom(ItcTileState.calculationResults)
+                     .set(Pot.pending)
+                     .toAsync >>
+                     ItcImagingQuerier(
+                       props.observation,
+                       configs.configs.map(_.instrumentConfig),
+                       props.obsTargets,
+                       props.customSedTimestamps
+                     ).requestCalculations
+                       .flatMap { result =>
+                         props.tileState
+                           .zoom(ItcTileState.calculationResults)
+                           .set(result.ready)
+                           .toAsync
+                       }
+          // Initialize selected target if none is set
+          _   <-
+            useEffectWithDeps((props.selectedTarget.get, props.tileState.get.imagingTargetResults)):
+              (selectedTarget, availableTargets) =>
+                selectedTarget match
+                  case None => props.selectedTarget.set(availableTargets.headOption.map(_.target))
+                  case _    => Callback.empty
+        } yield
+          val selectedTarget =
+            props.selectedTarget.get.flatMap(props.tileState.get.selectedImagingTargetFor)
+          // Display target selector if we have targets and results
+          selectedTarget.map: (gr: ImagingTargetAndResults) =>
+            val options =
+              props.tileState.get.imagingTargetResults.map(t =>
+                SelectItem(label = t.target.name.value, value = t)
+              )
+
+            <.div(
+              ExploreStyles.ItcTileTitle,
+              <.label(s"Target:"),
+              Dropdown(
+                clazz = ExploreStyles.ItcTileTargetSelector,
+                value = gr,
+                onChange = (o: ImagingTargetAndResults) => props.selectedTarget.set(Some(o.target)),
+                options = options
+              ).when(options.length > 1),
+              <.span(gr.target.name.value)
+                .when(options.length === 1)
+            )
       )

@@ -84,7 +84,8 @@ object ConfigurationTile:
     readonly:                 Boolean,
     obsIdSetEditInfo:         ObsIdSetEditInfo,          // for the Position Angle Editor
     units:                    WavelengthUnits,
-    isStaffOrAdmin:           Boolean
+    isStaffOrAdmin:           Boolean,
+    targetView:               View[Option[ItcTarget]]
   ) =
     Tile(
       ObsTabTileIds.ConfigurationId.id,
@@ -109,7 +110,8 @@ object ConfigurationTile:
           readonly,
           obsIdSetEditInfo,
           units,
-          isStaffOrAdmin
+          isStaffOrAdmin,
+          targetView
         ),
       (_, _) =>
         Title(
@@ -213,7 +215,8 @@ object ConfigurationTile:
     readonly:                 Boolean,
     obsIdSetEditInfo:         ObsIdSetEditInfo, // for the Position Angle Editor
     units:                    WavelengthUnits,
-    isStaffOrAdmin:           Boolean
+    isStaffOrAdmin:           Boolean,
+    targetView:               View[Option[ItcTarget]]
   ) extends ReactFnProps(Body.component):
     val mode: UndoSetter[Option[ObservingMode]]  =
       pacAndMode.zoom(PosAngleConstraintAndObsMode.observingMode)
@@ -422,7 +425,8 @@ object ConfigurationTile:
                       props.modes,
                       props.customSedTimestamps,
                       props.obsIsReadonly,
-                      props.units
+                      props.units,
+                      props.targetView
                     )
                   )
               else
