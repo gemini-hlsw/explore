@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Usage: promote.sh <source_env> <target_env> [--dry-run] [--skip-slack]
 # Example: promote.sh dev staging
@@ -223,29 +223,6 @@ send_slack_notification() {
   fi
 }
 
-# Change detection functions
-check_pipeline_changes() {
-  local service=$1
-  local source_app=$2
-  local target_app=$3
-
-  echo "Checking for changes in $service..."
-
-  # Get current release info for both environments
-  local source_release=$(heroku releases:info --json --app "$source_app" | jq -r '.version')
-  local target_release=$(heroku releases:info --json --app "$target_app" | jq -r '.version')
-  local source_slug=$(heroku releases:info --json --app "$source_app" | jq -r '.slug.id // "none"')
-  local target_slug=$(heroku releases:info --json --app "$target_app" | jq -r '.slug.id // "none"')
-
-  if [ "$source_slug" != "$target_slug" ]; then
-    echo "  ✓ $service has changes (source: $source_release/$source_slug, target: $target_release/$target_slug)"
-    return 0
-  else
-    echo "  ✗ $service has no changes (both at $target_release/$target_slug)"
-    return 1
-  fi
-}
-
 check_docker_changes() {
   local service=$1
   local source_app=$2
@@ -379,11 +356,104 @@ check_hasura_changes() {
   fi
 }
 
+# Function to promote Docker images between environments in Heroku
+# Uses associative array for image names and separate arrays for process types
+# Example usage:
+#   image_name_ITC="lucuma-itc"
+#   process_types_ITC=("web")
+#   backup_ITC=false
+#   image_name_ODB="lucuma-postgres-odb"
+#   process_types_ODB=("web" "calibration" "obscalc")
+#   backup_ODB=true
+#   promote_heroku_docker_images ("ITC" "ODB")
+promote_heroku_docker_images() {
+  local -a systems=("${@:1}")
+  
+  # Login to Heroku container registry once (for all images)
+  if ! heroku container:login; then
+    echo "  ! Failed to login to Heroku container registry"
+    exit 1
+  fi
+  
+  # Process each entry in the array
+  for display_name in "${systems[@]}"; do
+    local promote_var="PROMOTE_${display_name}"
+    
+    # Check if this service should be promoted
+    if [ "${!promote_var}" = true ]; then
+      echo "## Promote ${display_name} to $TARGET_ENV"
+      
+      # Get image name from the associative array
+      local image_name_var="image_name_${display_name}"
+      local image_name="${!image_name_var}"
+
+      echo "Capturing ${display_name} target environment state before promotion..."
+      local TARGET_SHA_BEFORE=$(heroku releases:info --json --app "${image_name}-${TARGET_ENV}" 2>/dev/null | jq -r '.description' | sed -n 's/Deployed \(.*\)/\1/p' || echo "unknown")
+      echo "${display_name} target environment SHA before promotion: ${TARGET_SHA_BEFORE}"
+
+      local do_backup_var="backup_${display_name}"
+      local backup_id="omited"
+      if [ "${!do_backup_var}" = true ]; then
+        echo "Capturing database backup before ${display_name} promotion..."
+        local backup_output=$(heroku pg:backups:capture --app ${image_name}-${TARGET_ENV} 2>&1)
+        local backup_id=$(echo "$backup_output" | grep -o 'b[0-9]\{3\}' | head -1 || echo "unknown")
+        if [ "$backup_id" != "unknown" ]; then
+          echo "${display_name} database backup created: ${backup_id}"
+        else
+          echo "${display_name} database backup created (ID not captured)"
+        fi
+      fi
+      
+      # Get process types from the corresponding array variable
+      # We use indirect reference with the display_name to access the array
+      local process_types_var="process_types_${display_name}[@]"
+      local process_types=("${!process_types_var}")
+      
+      # Pull, tag, and push all process types for this image
+      for process_type in "${process_types[@]}"; do
+        echo "  Processing ${image_name}/${process_type}"
+        
+        # Pull the source image
+        if ! docker pull "registry.heroku.com/${image_name}-${SOURCE_ENV}/${process_type}:latest"; then
+          echo "  ! Failed to pull ${image_name}-${SOURCE_ENV}/${process_type}:latest"
+          exit 1
+        fi
+        
+        # Tag with target environment
+        if ! docker tag "registry.heroku.com/${image_name}-${SOURCE_ENV}/${process_type}:latest" "registry.heroku.com/${image_name}-${TARGET_ENV}/${process_type}:latest"; then
+          echo "  ! Failed to tag ${image_name}-${TARGET_ENV}/${process_type}:latest"
+          exit 1
+        fi
+        
+        # Push to target environment
+        if ! docker push "registry.heroku.com/${image_name}-${TARGET_ENV}/${process_type}:latest"; then
+          echo "  ! Failed to push ${image_name}-${TARGET_ENV}/${process_type}:latest"
+          exit 1
+        fi
+      done
+      
+      # Release all process types for this image in a single command
+      echo "  Releasing all process types for ${image_name}-${TARGET_ENV}..."
+      if heroku container:release "${process_types[@]}" --app "${image_name}-${TARGET_ENV}"; then
+        echo "  ✓ ${display_name} promotion successful"
+        send_slack_notification "${display_name}" "$SOURCE_ENV" "$TARGET_ENV" "$backup_id" "$TARGET_SHA_BEFORE"
+      else
+        echo "  ! ${display_name} promotion FAILED at release stage"
+        exit 1
+      fi
+      
+      echo
+    else
+      echo "## Skipping ${display_name} promotion (no changes)"
+      echo
+    fi
+  done
+}
 
 echo "##### Checking for changes between $SOURCE_ENV and $TARGET_ENV"
 echo
 
-if check_pipeline_changes "SSO" "lucuma-sso-${SOURCE_ENV}" "lucuma-sso-${TARGET_ENV}"; then
+if check_docker_changes "SSO" "lucuma-sso-${SOURCE_ENV}" "lucuma-sso-${TARGET_ENV}"; then
   PROMOTE_SSO=true
 fi
 
@@ -391,7 +461,7 @@ if check_docker_changes "ITC" "itc-${SOURCE_ENV}" "itc-${TARGET_ENV}"; then
   PROMOTE_ITC=true
 fi
 
-if check_pipeline_changes "ODB" "lucuma-postgres-odb-${SOURCE_ENV}" "lucuma-postgres-odb-${TARGET_ENV}"; then
+if check_docker_changes "ODB" "lucuma-postgres-odb-${SOURCE_ENV}" "lucuma-postgres-odb-${TARGET_ENV}"; then
   PROMOTE_ODB=true
 fi
 
@@ -451,71 +521,21 @@ else
 fi
 echo
 
-# Promote SSO
-if [ "$PROMOTE_SSO" = true ]; then
-  echo "## Promote SSO to $TARGET_ENV"
-  if heroku pipelines:promote -a "lucuma-sso-${SOURCE_ENV}" -t "lucuma-sso-${TARGET_ENV}"; then
-    echo "  ✓ SSO promotion successful"
-    send_slack_notification "SSO" "$SOURCE_ENV" "$TARGET_ENV"
-  else
-    echo "  ! SSO promotion FAILED"
-    exit 1
-  fi
-  echo
-else
-  echo "## Skipping SSO promotion (no changes)"
-  echo
-fi
+image_name_SSO="lucuma-sso"
+process_types_SSO=("web")
+backup_SSO=true
 
-# Promote ITC
-if [ "$PROMOTE_ITC" = true ]; then
-  echo "## Promote ITC to $TARGET_ENV"
-  if heroku container:login && \
-     docker pull "registry.heroku.com/itc-${SOURCE_ENV}/web:latest" && \
-     docker tag "registry.heroku.com/itc-${SOURCE_ENV}/web:latest" "registry.heroku.com/itc-${TARGET_ENV}/web:latest" && \
-     docker push "registry.heroku.com/itc-${TARGET_ENV}/web:latest" && \
-     heroku container:release web --app "itc-${TARGET_ENV}"; then
-    echo "  ✓ ITC promotion successful"
-    send_slack_notification "ITC" "$SOURCE_ENV" "$TARGET_ENV"
-  else
-    echo "  ! ITC promotion FAILED"
-    exit 1
-  fi
-  echo
-else
-  echo "## Skipping ITC promotion (no changes)"
-  echo
-fi
+image_name_ITC="itc"
+process_types_ITC=("web")
+backup_ITC=false
 
-# Promote ODB
-if [ "$PROMOTE_ODB" = true ]; then
-  echo "## Promote ODB to $TARGET_ENV"
+image_name_ODB="lucuma-postgres-odb"
+process_types_ODB=("web" "calibration" "obscalc")
+backup_ODB=true
 
-  echo "Capturing target environment state before promotion..."
-  ODB_TARGET_SHA_BEFORE=$(heroku releases:info --json --app "lucuma-postgres-odb-${TARGET_ENV}" 2>/dev/null | jq -r '.description' | sed -n 's/Deploy \([a-f0-9]\{7,\}\).*/\1/p' || echo "unknown")
-  echo "Target environment SHA before promotion: $ODB_TARGET_SHA_BEFORE"
+systems=("SSO" "ITC" "ODB")
 
-  echo "Capturing database backup before ODB promotion..."
-  backup_output=$(heroku pg:backups:capture --app lucuma-postgres-odb-${TARGET_ENV} 2>&1)
-  backup_id=$(echo "$backup_output" | grep -o 'b[0-9]\{3\}' | head -1 || echo "unknown")
-  if [ "$backup_id" != "unknown" ]; then
-    echo "Database backup created: $backup_id"
-  else
-    echo "Database backup created (ID not captured)"
-  fi
-  echo
-  if heroku pipelines:promote -a "lucuma-postgres-odb-${SOURCE_ENV}" -t "lucuma-postgres-odb-${TARGET_ENV}"; then
-    echo "  ✓ ODB promotion successful"
-    send_slack_notification "ODB" "$SOURCE_ENV" "$TARGET_ENV" "$backup_id" "$ODB_TARGET_SHA_BEFORE"
-  else
-    echo "  ! ODB promotion FAILED"
-    exit 1
-  fi
-  echo
-else
-  echo "## Skipping ODB promotion (no changes)"
-  echo
-fi
+promote_heroku_docker_images "${systems[@]}"
 
 # Update user preferences
 if [ "$PROMOTE_HASURA" = true ]; then
@@ -538,8 +558,8 @@ if [ "$PROMOTE_HASURA" = true ]; then
     cd hasura/user-prefs || exit 1
     unset NODE_OPTIONS
     if hasura migrate apply --endpoint "$HASURA_ENDPOINT" --database-name default && \
-       hasura metadata apply --endpoint "$HASURA_ENDPOINT" && \
-       hasura metadata reload --endpoint "$HASURA_ENDPOINT"; then
+      hasura metadata apply --endpoint "$HASURA_ENDPOINT" && \
+      hasura metadata reload --endpoint "$HASURA_ENDPOINT"; then
       echo "  ✓ Hasura migration successful"
     else
       echo "  ! Hasura migration FAILED"
