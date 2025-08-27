@@ -134,12 +134,12 @@ object ItcSpectroscopyTile:
               ItcSpectroscopyPlotDescription(
                 selectedTargetBrightness,
                 graphResult.itcExposureTime,
-                graphResult.ccds,
+                graphResult.graphCcds,
                 graphResult.finalSNRatio,
                 graphResult.singleSNRatio
               ),
               ItcSpectroscopyPlot(
-                graphResult.ccds,
+                graphResult.graphCcds,
                 graphResult.graphData,
                 graphTypeView.get,
                 graphResult.target.name.value,
