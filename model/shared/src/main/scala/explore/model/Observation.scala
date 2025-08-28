@@ -299,7 +299,9 @@ case class Observation(
       .nonEmpty
 
   def needsAGS(allTargets: TargetList): Boolean =
-    calibrationRole.forall(_.needsAGS) && hasTargetOfOpportunity(allTargets)
+    // revert logic, question should we run ags for asterisms with a combination
+    // of sidereal and ToOs?
+    calibrationRole.forall(_.needsAGS) && !hasTargetOfOpportunity(allTargets)
 
 object Observation:
   type Id = lucuma.core.model.Observation.Id
