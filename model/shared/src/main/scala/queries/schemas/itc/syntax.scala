@@ -74,12 +74,9 @@ trait syntax:
 
   extension (target: Target)
     def itcTarget: EitherNec[ItcTargetProblem, ItcTarget] =
-      TargetRV
-        .getOption(target)
-        .toRightNec(ItcTargetProblem(target.name.some, ItcQueryProblem.MissingTargetInfo))
-        .flatMap(r =>
-          ItcTarget(target.name, TargetInput(Target.sourceProfile.get(target), r)).orItcProblem
-        )
+      // ToOs have source profiles, but no RV, so we'll just use Zero
+      val rv: RadialVelocity = TargetRV.getOption(target).getOrElse(RadialVelocity.Zero)
+      ItcTarget(target.name, TargetInput(Target.sourceProfile.get(target), rv)).orItcProblem
 
   extension (asterism: List[Target])
     def toItcTargets: EitherNec[ItcTargetProblem, NonEmptyList[ItcTarget]] =
