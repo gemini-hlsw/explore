@@ -19,7 +19,6 @@ import explore.targets.TargetSource
 import explore.undo.UndoSetter
 import japgolly.scalajs.react.*
 import lucuma.core.model.Program
-import lucuma.core.model.Target
 import lucuma.react.common.Css
 import lucuma.react.primereact.Button
 import lucuma.schemas.model.TargetWithId
@@ -29,38 +28,34 @@ import org.typelevel.log4cats.Logger
 
 trait AsterismModifier:
 
-  protected def insertSiderealTarget(
+  protected def insertTarget(
     programId:        Program.Id,
     obsIds:           ObsIdSet,
     obsAndTargets:    UndoSetter[ObservationsAndTargets],
     targetWithOptId:  TargetWithOptId,
     onAsterismUpdate: OnAsterismUpdateParams => Callback
   )(using odbApi: OdbTargetApi[IO] & OdbAsterismApi[IO]): IO[Unit] =
-    targetWithOptId match
-      case TargetWithOptId(oTargetId, target @ Target.Sidereal(_, _, _, _)) =>
-        oTargetId
-          .fold(
-            odbApi
-              .insertTarget(programId, target)
-              .map((_, true))
-          )(id => IO((id, false)))
-          .flatMap((id, created) =>
-            (AsterismActions
-              .addTargetToAsterisms(
-                TargetWithId(id, targetWithOptId.target),
-                obsIds,
-                created,
-                onAsterismUpdate
-              )
-              .set(obsAndTargets)(false) >>
-              // Do the first onAsterismUpdate here so it is synchronous with the setter in the Action.
-              // the ".async.toCallback" seems to let the model update before we try changing the UI
-              onAsterismUpdate(
-                OnAsterismUpdateParams(id, obsIds, true, true)
-              ).async.toCallback).toAsync
+    targetWithOptId.optId
+      .fold(
+        odbApi
+          .insertTarget(programId, targetWithOptId.target)
+          .map((_, true))
+      )(id => IO((id, false)))
+      .flatMap((id, created) =>
+        (AsterismActions
+          .addTargetToAsterisms(
+            TargetWithId(id, targetWithOptId.target),
+            obsIds,
+            created,
+            onAsterismUpdate
           )
-      case _                                                                =>
-        IO.unit
+          .set(obsAndTargets)(false) >>
+          // Do the first onAsterismUpdate here so it is synchronous with the setter in the Action.
+          // the ".async.toCallback" seems to let the model update before we try changing the UI
+          onAsterismUpdate(
+            OnAsterismUpdateParams(id, obsIds, true, true)
+          ).async.toCallback).toAsync
+      )
 
   def targetSelectionPopup(
     label:            String,
@@ -90,7 +85,7 @@ trait AsterismModifier:
         clazz = buttonClass |+| ExploreStyles.Hidden.when_(readOnly)
       ).tiny.compact,
       onSelected = targetWithOptId =>
-        insertSiderealTarget(
+        insertTarget(
           programId,
           obsIds,
           obsAndTargets,
