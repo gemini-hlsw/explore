@@ -18,9 +18,9 @@ import explore.model.extensions.*
 import explore.model.formats.*
 import explore.optics.all.*
 import japgolly.scalajs.react.vdom.html_<^.*
-import lucuma.core.math.Arc
 import lucuma.core.enums.Band
 import lucuma.core.math.ApparentRadialVelocity
+import lucuma.core.math.Arc
 import lucuma.core.math.BrightnessValue
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Declination

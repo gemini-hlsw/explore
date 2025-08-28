@@ -10,8 +10,8 @@ import lucuma.core.math.Arc
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Declination
 import lucuma.core.math.Epoch
-import lucuma.core.math.RightAscension
 import lucuma.core.math.Region
+import lucuma.core.math.RightAscension
 import lucuma.core.model.ObjectTracking
 import lucuma.core.model.SiderealTracking
 import lucuma.core.model.Target
@@ -21,7 +21,6 @@ import lucuma.schemas.model.TargetWithId
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneOffset
-
 import scala.annotation.targetName
 
 object extensions:
