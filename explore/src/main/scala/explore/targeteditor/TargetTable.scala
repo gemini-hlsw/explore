@@ -34,7 +34,6 @@ import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Button
 import lucuma.react.syntax.*
 import lucuma.react.table.*
-import lucuma.schemas.model.SiderealTargetWithId
 import lucuma.schemas.model.TargetWithId
 import lucuma.ui.LucumaStyles
 import lucuma.ui.primereact.*
@@ -70,7 +69,7 @@ object TargetTable extends AsterismModifier:
     onAsterismUpdate: OnAsterismUpdateParams => Callback
   )
 
-  private val ColDef = ColumnDef[SiderealTargetWithId].WithTableMeta[TableMeta]
+  private val ColDef = ColumnDef[TargetWithId].WithTableMeta[TableMeta]
 
   private val DeleteColumnId: ColumnId = ColumnId("delete")
 
@@ -82,7 +81,7 @@ object TargetTable extends AsterismModifier:
     TargetColumns.NameColumnId -> (ExploreStyles.StickyColumn |+| ExploreStyles.TargetSummaryName)
   )
 
-  private def deleteSiderealTarget(
+  private def deleteTarget(
     obsIds:           ObsIdSet,
     obsAndTargets:    UndoSetter[ObservationsAndTargets],
     target:           TargetWithId,
@@ -117,10 +116,10 @@ object TargetTable extends AsterismModifier:
                                  e.preventDefaultCB >>
                                    e.stopPropagationCB >>
                                    cell.table.options.meta.foldMap(m =>
-                                     deleteSiderealTarget(
+                                     deleteTarget(
                                        m.obsIds,
                                        m.obsAndTargets,
-                                       cell.row.original.toTargetWithId,
+                                       cell.row.original,
                                        m.onAsterismUpdate
                                      )
                                    )
@@ -130,7 +129,7 @@ object TargetTable extends AsterismModifier:
                          )
                        )
                        .toList ++
-                       TargetColumns.Builder.ForProgram(ColDef, _.target.some).AllColumns
+                       TargetColumns.Builder.ForProgram(ColDef, _.target).AllColumns
         vizTime <- useEffectKeepResultWithDeps(props.vizTime): vizTime =>
                      IO(vizTime.getOrElse(Instant.now()))
         rows    <- useMemo((props.targetIds, props.obsAndTargets.get._2, vizTime.value)):
@@ -139,8 +138,8 @@ object TargetTable extends AsterismModifier:
                          .map(id =>
                            targetInfo
                              .get(id)
-                             .flatMap(_.toSiderealAt(vizTime))
-                             .map(st => SiderealTargetWithId(id, st))
+                             .map(_.at(vizTime))
+                             .map(st => TargetWithId(id, st))
                          )
                          .flattenOption
                      case _                                           => Nil
