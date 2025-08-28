@@ -35,7 +35,7 @@ object Versions {
   val mUnitCatsEffect        = "2.1.0"
   val refinedAlgebra         = "0.1.1"
   val sbtBuildInfo           = "0.13.1"
-  val sbtLucuma              = "0.14.0"
+  val sbtLucuma              = "0.14.1"
   val scalaCollectionContrib = "0.4.0"
   val scalaJsDom             = "2.8.1"
   val scalaJsReact           = "3.0.0-beta12"
