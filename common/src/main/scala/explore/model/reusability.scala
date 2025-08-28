@@ -13,6 +13,7 @@ import explore.model.enums.AgsState
 import explore.model.enums.GroupWarning
 import explore.model.enums.SelectedPanel
 import explore.model.itc.ItcExposureTime
+import explore.model.itc.ItcQueryProblem
 import explore.model.itc.ItcTarget
 import explore.model.itc.ItcTargetProblem
 import explore.modes.ConfigSelection
@@ -57,6 +58,7 @@ object reusability:
   given Reusability[ProgramSummaries]                                         = Reusability.byEq
   given Reusability[ItcTarget]                                                = Reusability.byEq
   given Reusability[ItcTargetProblem]                                         = Reusability.byEq
+  given Reusability[ItcQueryProblem]                                          = Reusability.byEq
   given Reusability[PersistentClientStatus]                                   = Reusability.byEq
   given Reusability[AsterismVisualOptions]                                    = Reusability.byEq
   given Reusability[ExpandedIds]                                              = Reusability.byEq

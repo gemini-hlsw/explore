@@ -4,6 +4,7 @@
 package explore.model.itc
 
 import cats.Eq
+import cats.data.EitherNec
 import cats.derived.*
 import cats.syntax.all.*
 import eu.timepit.refined.cats.refTypeEq
@@ -124,3 +125,6 @@ case class ItcAsterismGraphResults(
   brightestTarget: Option[ItcTarget],
   signalToNoiseAt: Wavelength
 )
+
+type ImagingResults =
+  EitherNec[ItcQueryProblem, Map[ItcRequestParams, EitherNec[ItcTargetProblem, ItcResult]]]

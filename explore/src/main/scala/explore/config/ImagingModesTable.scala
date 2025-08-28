@@ -46,6 +46,8 @@ import lucuma.core.util.Display
 import lucuma.core.util.TimeSpan
 import lucuma.core.util.Timestamp
 import lucuma.react.common.ReactFnProps
+import lucuma.react.primereact.Dropdown
+import lucuma.react.primereact.SelectItem
 import lucuma.react.syntax.*
 import lucuma.react.table.*
 import lucuma.refined.*
@@ -64,7 +66,8 @@ final case class ImagingModesTable(
   targets:             EitherNec[ItcTargetProblem, NonEmptyList[ItcTarget]],
   baseCoordinates:     Option[CoordinatesAtVizTime],
   customSedTimestamps: List[Timestamp],
-  units:               WavelengthUnits
+  units:               WavelengthUnits,
+  targetView:          View[Option[ItcTarget]]
 ) extends ReactFnProps(ImagingModesTable.component)
 
 object ImagingModesTable extends ModesTableCommon:
@@ -209,108 +212,164 @@ object ImagingModesTable extends ModesTableCommon:
 
   private val component = ScalaFnComponent[ImagingModesTable]: props =>
     for {
-      ctx             <- useContext(AppContext.ctx)
-      itcResults      <- useStateView(ItcResultsCache.Empty)
-      itcProgress     <- useStateView(none[Progress])
-      rows            <- useMemo(
-                           props.matrix,
-                           props.exposureTimeMode,
-                           props.targets,
-                           props.constraints,
-                           props.customSedTimestamps,
-                           props.imaging.minimumFov,
-                           props.imaging.allowedFilterTypes,
-                           itcResults.get.cache.size
-                         ): (matrix, etm, targets, constraints, customSedTimestamps, minimumFov, fts, _) =>
-                           matrix
-                             .filtered(minimumFov, fts)
-                             .map: row =>
-                               val result: Option[EitherNec[ItcTargetProblem, ItcResult]] =
-                                 etm.map: exposureMode =>
-                                   targets.flatMap: asterism =>
-                                     itcResults.get.forRow(
-                                       exposureMode,
-                                       constraints,
-                                       asterism.some,
-                                       customSedTimestamps,
-                                       row
-                                     )
-                               ImagingModeRowWithResult(
-                                 row,
-                                 Pot.fromOption(result)
-                               )
-      cols            <- useMemo((props.exposureTimeMode.map(_.modeType), props.units)): (m, u) =>
-                           m match
-                             case Some(ExposureTimeModeType.SignalToNoise) | None =>
-                               columns(u).filterNot(_.id.value === SNColumnId.value)
-                             case Some(ExposureTimeModeType.TimeAndCount)         =>
-                               columns(u).filterNot(_.id.value === TimeColumnId.value)
-      table           <- useReactTableWithStateStore:
-                           import ctx.given
+      ctx              <- useContext(AppContext.ctx)
+      itcResults       <- useStateView(ItcResultsCache.Empty)
+      itcProgress      <- useStateView(none[Progress])
+      rows             <- useMemo(
+                            props.matrix,
+                            props.exposureTimeMode,
+                            props.targets,
+                            props.constraints,
+                            props.customSedTimestamps,
+                            props.imaging.minimumFov,
+                            props.imaging.allowedFilterTypes,
+                            props.targetView.get,
+                            itcResults.get.cache.size
+                          ):
+                            (
+                              matrix,
+                              etm,
+                              targets,
+                              constraints,
+                              customSedTimestamps,
+                              minimumFov,
+                              fts,
+                              selectedTarget,
+                              _
+                            ) =>
+                              matrix
+                                .filtered(minimumFov, fts)
+                                .map: row =>
+                                  val result: Option[EitherNec[ItcTargetProblem, ItcResult]] =
+                                    etm.map: exposureMode =>
+                                      targets.flatMap: asterism =>
+                                        // Use selected target if specified, otherwise use full asterism
+                                        val calcAstersim = selectedTarget match
+                                          case Some(target) if asterism.exists(_ === target) =>
+                                            NonEmptyList.of(target)
+                                          case _                                             =>
+                                            asterism
 
-                           TableOptionsWithStateStore(
-                             TableOptions(
-                               cols,
-                               rows,
-                               getRowId = (row, _, _) => row.rowId,
-                               enableSorting = true,
-                               meta = TableMeta(itcProgress.get)
-                             ),
-                             TableStore(props.userId, TableId.ImagingModes, cols)
-                           )
+                                        itcResults.get.forRow(
+                                          exposureMode,
+                                          constraints,
+                                          calcAstersim.some,
+                                          customSedTimestamps,
+                                          row
+                                        )
+                                  ImagingModeRowWithResult(
+                                    row,
+                                    Pot.fromOption(result)
+                                  )
+      cols             <- useMemo((props.exposureTimeMode.map(_.modeType), props.units)): (m, u) =>
+                            m match
+                              case Some(ExposureTimeModeType.SignalToNoise) | None =>
+                                columns(u).filterNot(_.id.value === SNColumnId.value)
+                              case Some(ExposureTimeModeType.TimeAndCount)         =>
+                                columns(u).filterNot(_.id.value === TimeColumnId.value)
+      table            <- useReactTableWithStateStore:
+                            import ctx.given
+
+                            TableOptionsWithStateStore(
+                              TableOptions(
+                                cols,
+                                rows,
+                                getRowId = (row, _, _) => row.rowId,
+                                enableSorting = true,
+                                meta = TableMeta(itcProgress.get)
+                              ),
+                              TableStore(props.userId, TableId.ImagingModes, cols)
+                            )
       // We need to have an indicator of whether we need to scrollTo the selectedIndex as
       // a state because otherwise the scrollTo effect below would often run in the same "hook cyle"
       // as the index change, and it would use the old index so it would scroll to the wrong location.
       // By having it as state with the following `useEffectWithDepsBy`, the scrollTo effect will run
       // in the following "hook cycle" and get the proper index.
-      scrollTo        <- useStateView(ScrollTo.Scroll)
-      _               <- useEffectWithDeps(table.getState().sorting)(_ => scrollTo.set(ScrollTo.Scroll))
-      sortedRows      <- useMemo((rows, table.getState().sorting))(_ =>
-                           table.getSortedRowModel().rows.map(_.original).toList
-                         )
-      itcHookData     <- useItc(
-                           itcResults,
-                           itcProgress,
-                           scrollTo.set(ScrollTo.Scroll),
-                           props.exposureTimeMode,
-                           props.constraints,
-                           props.targets.toOption,
-                           props.customSedTimestamps,
-                           sortedRows
-                         )
+      scrollTo         <- useStateView(ScrollTo.Scroll)
+      _                <- useEffectWithDeps(table.getState().sorting)(_ => scrollTo.set(ScrollTo.Scroll))
+      sortedRows       <- useMemo((rows, table.getState().sorting))(_ =>
+                            table.getSortedRowModel().rows.map(_.original).toList
+                          )
+      // Use selected target for ITC calculations if specified, otherwise use full asterism
+      effectiveTargets <- useMemo(props.targets.toOption, props.targetView.get):
+                            (targets, selectedTarget) =>
+                              selectedTarget match
+                                case Some(target) if targets.exists(_.toList.contains(target)) =>
+                                  NonEmptyList.of(target).some
+                                case _                                                         =>
+                                  targets
+      itcHookData      <- useItc(
+                            itcResults,
+                            itcProgress,
+                            scrollTo.set(ScrollTo.Scroll),
+                            props.exposureTimeMode,
+                            props.constraints,
+                            effectiveTargets,
+                            props.customSedTimestamps,
+                            sortedRows
+                          )
+      // Notify parent of target selection
+      _                <- useEffectWithDeps((props.targetView.get, props.targets.toOption)):
+                            (selectedTarget, targets) =>
+                              selectedTarget match
+                                case None => props.targetView.set(targets.map(_.head))
+                                case _    => Callback.empty
       // Set the selected config if the rows change because the new rows may no longer contain
       // one or more of the selected rows or the itc results may have changed.
       // Note, we use rows for the dependency, not sorted rows, because sorted rows also changes with sort.
-      _               <- useEffectWithDeps(rows): rs =>
-                           val oldCfgs = props.selectedConfigs.get.configs
-                           val newCfgs =
-                             oldCfgs
-                               .map(cfg => rs.find(_.entry.instrument === cfg.instrumentConfig))
-                               .flattenOption
-                               .map(_.configAndResult)
-                           if (oldCfgs =!= newCfgs)
-                             props.selectedConfigs.set(ConfigSelection.fromList(newCfgs))
-                           else Callback.empty
-      selectedIndices <- useMemo((sortedRows, props.selectedConfigs.get)):
-                           (sortRows, selectedConfigs) =>
-                             selectedConfigs.configs
-                               .map: c =>
-                                 sortRows.indexWhere(_.entry.instrument === c.instrumentConfig)
-                               .sorted
-      visibleRows     <- useStateView(none[Range.Inclusive])
-      atTop           <- useStateView(false)
-      virtualizerRef  <- useRef(none[HTMLTableVirtualizer])
+      _                <- useEffectWithDeps(rows): rs =>
+                            val oldCfgs = props.selectedConfigs.get.configs
+                            val newCfgs =
+                              oldCfgs
+                                .map(cfg => rs.find(_.entry.instrument === cfg.instrumentConfig))
+                                .flattenOption
+                                .map(_.configAndResult)
+                            if (oldCfgs =!= newCfgs)
+                              props.selectedConfigs.set(ConfigSelection.fromList(newCfgs))
+                            else Callback.empty
+      selectedIndices  <- useMemo((sortedRows, props.selectedConfigs.get)):
+                            (sortRows, selectedConfigs) =>
+                              selectedConfigs.configs
+                                .map: c =>
+                                  sortRows.indexWhere(_.entry.instrument === c.instrumentConfig)
+                                .sorted
+      visibleRows      <- useStateView(none[Range.Inclusive])
+      atTop            <- useStateView(false)
+      virtualizerRef   <- useRef(none[HTMLTableVirtualizer])
       // scroll to the top selected row.
-      _               <- useEffectWithDeps((scrollTo.reuseByValue, selectedIndices.value.headOption, rows)):
-                           (scrollTo, optFirstIdx, _) =>
-                             Callback.when(scrollTo.get === ScrollTo.Scroll)(
-                               optFirstIdx.traverse_(scrollToVirtualizedIndex(_, virtualizerRef)) >>
-                                 scrollTo.set(ScrollTo.NoScroll)
-                             )
+      _                <- useEffectWithDeps((scrollTo.reuseByValue, selectedIndices.value.headOption, rows)):
+                            (scrollTo, optFirstIdx, _) =>
+                              Callback.when(scrollTo.get === ScrollTo.Scroll)(
+                                optFirstIdx.traverse_(scrollToVirtualizedIndex(_, virtualizerRef)) >>
+                                  scrollTo.set(ScrollTo.NoScroll)
+                              )
     } yield
-      val errlabel       = itcHookData.errorLabel(true)
-      val selectedTarget = findSelectedTarget(rows.value, props.targets.toOption)
-      val selectedCount  = props.selectedConfigs.get.count
+      val errlabel      = itcHookData.errorLabel(true)
+      val selectedCount = props.selectedConfigs.get.count
+
+      // Target selector
+      val targetSelector = props.targets.toOption.map { targets =>
+        val currentTarget = props.targetView.get
+          .flatMap(selected => targets.find(_ === selected))
+          .getOrElse(targets.head)
+
+        if (targets.length > 1) {
+          val options = targets.map(t => SelectItem(label = t.name.value, value = t))
+
+          <.div(ExploreStyles.ModesTableTarget)(
+            <.label("Target: "),
+            Dropdown(
+              value = currentTarget,
+              onChange = (target: ItcTarget) => props.targetView.set(Some(target)),
+              options = options.toList
+            )
+          )
+        } else {
+          <.div(ExploreStyles.ModesTableTarget)(
+            <.label(s"Target: ${currentTarget.name.value}")
+          )
+        }
+      }
 
       val upIndex   = visibleRows.get.flatMap(vr => selectedIndices.value.findLast(_ < vr.start))
       val downIndex = visibleRows.get.flatMap(vr => selectedIndices.value.find(_ > vr.end))
@@ -332,7 +391,7 @@ object ImagingModesTable extends ModesTableCommon:
           <.div(
             ExploreStyles.ModesTableInfo,
             errlabel.toTagMod,
-            selectedTarget
+            targetSelector.toTagMod
           )
         ),
         <.div(

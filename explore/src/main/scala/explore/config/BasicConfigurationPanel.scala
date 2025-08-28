@@ -57,7 +57,8 @@ case class BasicConfigurationPanel(
   confMatrix:          ScienceModes,
   customSedTimestamps: List[Timestamp],
   readonly:            Boolean,
-  units:               WavelengthUnits
+  units:               WavelengthUnits,
+  targetView:          View[Option[ItcTarget]]
 ) extends ReactFnProps(BasicConfigurationPanel.component)
 
 private object BasicConfigurationPanel:
@@ -169,7 +170,8 @@ private object BasicConfigurationPanel:
               props.itcTargets,
               props.baseCoordinates,
               props.customSedTimestamps,
-              props.units
+              props.units,
+              props.targetView
             )
           ),
           <.div(ExploreStyles.BasicConfigurationButtons)(

@@ -32,6 +32,7 @@ import explore.model.enums.AppTab
 import explore.model.enums.GridLayoutSection
 import explore.model.extensions.*
 import explore.model.formats.formatPercentile
+import explore.model.itc.ItcTarget
 import explore.model.layout.*
 import explore.model.reusability.given
 import explore.model.syntax.all.*
@@ -79,6 +80,7 @@ import lucuma.ui.reusability.given
 import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
+import queries.schemas.itc.syntax.itcTarget
 
 import java.time.Instant
 import scala.collection.immutable.SortedMap
@@ -225,6 +227,10 @@ object ObsTabTiles:
         agsState            <- useStateView[AgsState](AgsState.Idle)
         // the configuration the user has selected from the spectroscopy modes table, if any
         selectedConfig      <- useStateView(ConfigSelection.Empty)
+        // selected target for imaging, shared between the itc tile and the modes table
+        selectedItcTarget   <- useStateView[Option[ItcTarget]](
+                                 props.obsTargets.values.flatMap(_.itcTarget.toOption).headOption
+                               )
         customSedTimestamps <-
           // The updatedAt timestamps for any custom seds.
           useMemo((props.asterismAsNel, props.attachments.get)): (asterism, attachments) =>
@@ -416,7 +422,8 @@ object ObsTabTiles:
                   selectedConfig.get,
                   props.observation.get,
                   props.obsTargets,
-                  customSedTimestamps
+                  customSedTimestamps,
+                  selectedItcTarget
                 ).some
               case Some(_: BasicConfiguration.GmosNorthLongSlit) |
                   Some(_: BasicConfiguration.GmosSouthLongSlit) |
@@ -592,7 +599,8 @@ object ObsTabTiles:
               props.readonly, // execution status is taken care of in the configuration tile
               ObsIdSetEditInfo.of(props.observation.get),
               globalPreferences.get.wavelengthUnits,
-              props.isStaffOrAdmin
+              props.isStaffOrAdmin,
+              selectedItcTarget
             )
 
           val alltiles =

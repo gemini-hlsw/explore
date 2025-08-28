@@ -25,12 +25,9 @@ case class ImagingTargetAndResults(
 
 // we need to share this across all the ITC tiles
 case class ItcTileState(
-  asterismResults:       Pot[EitherNec[ItcTargetProblem, ItcAsterismGraphResults]],
-  calculationResults:    Pot[
-    EitherNec[ItcTargetProblem, Map[ItcRequestParams, EitherNec[ItcTargetProblem, ItcResult]]]
-  ],
-  selectedTarget:        Option[TargetAndResults],
-  selectedImagingTarget: Option[ImagingTargetAndResults] = None
+  asterismResults:    Pot[EitherNec[ItcTargetProblem, ItcAsterismGraphResults]],
+  calculationResults: Pot[ImagingResults],
+  selectedTarget:     Option[TargetAndResults]
 ):
   def graphResults: Option[ItcAsterismGraphResults] = asterismResults.toOption.flatMap(_.toOption)
 
@@ -85,47 +82,14 @@ case class ItcTileState(
         }
       case None          => List.empty
 
-  def findImagingResults(target: ItcTarget): Option[ImagingTargetAndResults] =
-    calculationResults.toOption.flatMap(_.toOption).map { results =>
-      // For imaging, we want any successful result for this target across all configurations
-      val targetResults = results
-        .collectFirst {
-          case (params, result) if params.asterism.toList.contains(target) && result.isRight =>
-            result
-        }
-        .orElse {
-          // If no successful results, take any result (including errors) for this target
-          results.collectFirst {
-            case (params, result) if params.asterism.toList.contains(target) => result
-          }
-        }
-      ImagingTargetAndResults(target, targetResults)
-    }
-
-  private def imagingBrightestTarget: Option[ImagingTargetAndResults] =
-    // TODO: Find the brightest target for imaging, I think it depends on the filter too
-    // For now, just pick the first target with successful results
-    imagingTargetResults.find(_.result.exists(_.isRight))
-
-  def imagingBrightestOrFirst: Option[ImagingTargetAndResults] =
-    imagingBrightestTarget
-      .orElse(imagingTargetResults.headOption)
-
-  def imagingBrightestOrFirstFromTargets(
-    targets: List[ItcTarget]
-  ): Option[ImagingTargetAndResults] =
-    imagingBrightestOrFirst.orElse {
-      // If no calculation results yet, create from observation targets
-      targets.headOption.map(target => ImagingTargetAndResults(target, None))
-    }
+  def selectedImagingTargetFor(target: ItcTarget): Option[ImagingTargetAndResults] =
+    imagingTargetResults.find(_.target.name.value === target.name.value)
 
 object ItcTileState:
-  def Empty: ItcTileState = ItcTileState(Pot.pending, Pot.pending, none, none)
+  def Empty: ItcTileState = ItcTileState(Pot.pending, Pot.pending, none)
 
   val asterismResults = Focus[ItcTileState](_.asterismResults)
 
   val selectedTarget = Focus[ItcTileState](_.selectedTarget)
 
   val calculationResults = Focus[ItcTileState](_.calculationResults)
-
-  val selectedImagingTarget = Focus[ItcTileState](_.selectedImagingTarget)
