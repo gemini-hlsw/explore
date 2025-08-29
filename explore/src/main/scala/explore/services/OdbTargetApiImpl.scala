@@ -31,7 +31,7 @@ trait OdbTargetApiImpl[F[_]: Sync](using
 ) extends OdbTargetApi[F]:
   self: OdbApiHelper[F] =>
 
-  def insertTarget(programId: Program.Id, target: Target.Sidereal): F[Target.Id] =
+  def insertTarget(programId: Program.Id, target: Target): F[Target.Id] =
     CreateTargetMutation[F]
       .execute(target.toCreateTargetInput(programId))
       .processErrors

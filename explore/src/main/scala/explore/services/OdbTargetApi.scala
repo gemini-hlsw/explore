@@ -15,7 +15,7 @@ import lucuma.schemas.model.TargetWithId
 import queries.common.TargetQueriesGQL.ProgramTargetsDelta
 
 trait OdbTargetApi[F[_]]:
-  def insertTarget(programId:      Program.Id, target:         Target.Sidereal): F[Target.Id]
+  def insertTarget(programId:      Program.Id, target:         Target): F[Target.Id]
   def updateTarget(targetId:       Target.Id, input:           UpdateTargetsInput): F[Unit]
   def setTargetExistence(
     programId: Program.Id,

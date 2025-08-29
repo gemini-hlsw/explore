@@ -15,6 +15,7 @@ import lucuma.core.math.Epoch
 import lucuma.core.math.Parallax
 import lucuma.core.math.ProperMotion
 import lucuma.core.math.RadialVelocity
+import lucuma.core.math.Region
 import lucuma.core.model.ConfigurationRequest
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Group
@@ -57,6 +58,13 @@ val EmptySiderealTarget =
     NewTargetSiderealTracking,
     SourceProfile.Point(SpectralDefinition.BandNormalized(none, SortedMap.empty)),
     none
+  )
+
+val EmptyOpportunityTarget =
+  Target.Opportunity(
+    NewTargetName,
+    Region.Full,
+    SourceProfile.Point(SpectralDefinition.BandNormalized(none, SortedMap.empty))
   )
 
 type AsterismIds = SortedSet[Target.Id]
