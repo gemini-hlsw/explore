@@ -37,6 +37,7 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.math.*
 import lucuma.core.math.validation.MathValidators
+import lucuma.core.model.CatalogInfo
 import lucuma.core.model.Program
 import lucuma.core.model.SourceProfile
 import lucuma.core.model.Target
@@ -54,14 +55,15 @@ import lucuma.ui.primereact.given
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
+import monocle.Prism
 import org.typelevel.log4cats.Logger
 
 import java.time.Instant
 
-case class SiderealTargetEditor(
+case class TargetEditor(
   programId:           Program.Id,
   userId:              User.Id,
-  target:              UndoSetter[Target.Sidereal],
+  target:              UndoSetter[Target],
   obsAndTargets:       UndoSetter[ObservationsAndTargets],
   asterism:            Asterism, // This is passed through to Aladin, to plot the entire Asterism.
   obsTime:             Option[Instant],
@@ -77,10 +79,10 @@ case class SiderealTargetEditor(
   readonly:            Boolean,
   allowEditingOngoing: Boolean,
   invalidateSequence:  Callback = Callback.empty
-) extends ReactFnProps(SiderealTargetEditor.component)
+) extends ReactFnProps(TargetEditor.component)
 
-object SiderealTargetEditor:
-  private type Props = SiderealTargetEditor
+object TargetEditor:
+  private type Props = TargetEditor
 
   private def cloneTarget(
     programId:     Program.Id,
@@ -135,16 +137,16 @@ object SiderealTargetEditor:
   private val component =
     ScalaFnComponent[Props]: props =>
       for
-        ctx                   <- useContext(AppContext.ctx)
-        cloning               <- useStateView(false)
-        obsToCloneTo          <- useStateView(none[ObsIdSet]) // obs ids to clone to.
+        ctx                 <- useContext(AppContext.ctx)
+        cloning             <- useStateView(false)
+        obsToCloneTo        <- useStateView(none[ObsIdSet]) // obs ids to clone to.
         // flag for readonly based on the execution status of the observation(s)
-        readonlyForStatuses   <- useStateView(false)
+        readonlyForStatuses <- useStateView(false)
         // If obsTime is not set, change it to now
-        obsTime               <- useEffectKeepResultWithDeps(props.obsTime): obsTime =>
-                                   IO(obsTime.getOrElse(Instant.now()))
+        obsTime             <- useEffectKeepResultWithDeps(props.obsTime): obsTime =>
+                                 IO(obsTime.getOrElse(Instant.now()))
         // select the aligner to use based on whether a clone will be created or not.
-        siderealTargetAligner <-
+        targetAligner       <-
           useMemo(
             (props.programId, props.target.get, props.asterism.focus.id, obsToCloneTo.get)
           ): (pid, target, tid, toCloneTo) =>
@@ -180,86 +182,186 @@ object SiderealTargetEditor:
       yield
         import ctx.given
 
-        val nameLens          = UpdateTargetsInput.SET.andThen(TargetPropertiesInput.name)
-        val siderealLens      = UpdateTargetsInput.SET.andThen(TargetPropertiesInput.sidereal)
-        val sourceProfileLens =
-          UpdateTargetsInput.SET.andThen(TargetPropertiesInput.sourceProfile)
-
-        val allView: View[Target.Sidereal] =
-          siderealTargetAligner.viewMod(t =>
-            nameLens.replace(t.name.assign) >>>
-              siderealLens.replace(t.toInput.assign) >>>
-              sourceProfileLens.replace(t.sourceProfile.toInput.assign)
-          )
-
-        val siderealToTargetEndo: Endo[SiderealInput] => Endo[UpdateTargetsInput] =
-          forceAssign(siderealLens.modify)(SiderealInput())
-
-        val coordsRAView: View[RightAscension] =
-          siderealTargetAligner
-            .zoom(Target.Sidereal.baseRA, siderealToTargetEndo.compose(SiderealInput.ra.modify))
-            .view(_.toInput.assign)
-
-        val coordsDecView: View[Declination] =
-          siderealTargetAligner
-            .zoom(Target.Sidereal.baseDec, siderealToTargetEndo.compose(SiderealInput.dec.modify))
-            .view(_.toInput.assign)
-
-        val epochView: View[Epoch] =
-          siderealTargetAligner
-            .zoom(Target.Sidereal.epoch, siderealToTargetEndo.compose(SiderealInput.epoch.modify))
-            .view(Epoch.fromString.reverseGet.andThen(_.assign))
-
-        val nameView: View[NonEmptyString] =
-          siderealTargetAligner
-            .zoom(Target.Sidereal.name, nameLens.modify)
-            .view(_.assign)
-
-        val properMotionView: View[ProperMotion] =
-          siderealTargetAligner
-            .zoom(
-              Target.Sidereal.properMotion,
-              siderealToTargetEndo.compose(SiderealInput.properMotion.modify)
-            )
-            .view(_.map(_.toInput).orUnassign)
-            .removeOptionality(ProperMotion.Zero)
-
-        val properMotionRAView: View[ProperMotion.RA] =
-          properMotionView.zoom(ProperMotion.ra)
-
-        val properMotionDecView: View[ProperMotion.Dec] =
-          properMotionView.zoom(ProperMotion.dec)
-
-        val parallaxView: View[Parallax] =
-          siderealTargetAligner
-            .zoom(
-              Target.Sidereal.parallax,
-              siderealToTargetEndo.compose(SiderealInput.parallax.modify)
-            )
-            .view(_.map(_.toInput).orUnassign)
-            .removeOptionality(Parallax.Zero)
-
-        val radialVelocityView: View[RadialVelocity] =
-          siderealTargetAligner
-            .zoom(
-              Target.Sidereal.radialVelocity,
-              siderealToTargetEndo.compose(SiderealInput.radialVelocity.modify)
-            )
-            .view(_.map(_.toInput).orUnassign)
-            .removeOptionality(RadialVelocity.Zero)
-
-        val sourceProfileAligner: Aligner[SourceProfile, SourceProfileInput] =
-          siderealTargetAligner.zoom(
-            Target.Sidereal.sourceProfile,
-            forceAssign(sourceProfileLens.modify)(SourceProfileInput())
-          )
-
         val disabled: Boolean =
           props.searching.get.exists(
             _ === props.asterism.focus.id
           ) || cloning.get || props.readonly || readonlyForStatuses.get
 
         val oid = props.obsInfo.current.map(_.head)
+
+        val catalogInfo: Option[CatalogInfo] =
+          Target.catalogInfo.getOption(props.target.get).flatten
+
+        val nameLens          = UpdateTargetsInput.SET.andThen(TargetPropertiesInput.name)
+        val siderealLens      = UpdateTargetsInput.SET.andThen(TargetPropertiesInput.sidereal)
+        val nonsideralLens    = UpdateTargetsInput.SET.andThen(TargetPropertiesInput.nonsidereal)
+        val opportunityLens   = UpdateTargetsInput.SET.andThen(TargetPropertiesInput.opportunity)
+        val sourceProfileLens =
+          UpdateTargetsInput.SET.andThen(TargetPropertiesInput.sourceProfile)
+
+        extension [A, B](prism: Prism[A, B])
+          def optReplace[I](a: A, f: B => (I => I)): I => I =
+            i => prism.getOption(a).fold(i)(b => f(b)(i))
+
+        val allView: View[Target] =
+          targetAligner.viewMod(t =>
+            nameLens.replace(t.name.assign) >>>
+              Target.sidereal.optReplace(t, s => siderealLens.replace(s.toInput.assign)) >>>
+              Target.nonsidereal.optReplace(t, ns => nonsideralLens.replace(ns.toInput.assign)) >>>
+              Target.opportunity.optReplace(t, o => opportunityLens.replace(o.toInput.assign)) >>>
+              sourceProfileLens.replace(t.sourceProfile.toInput.assign)
+          )
+
+        val siderealToTargetEndo: Endo[SiderealInput] => Endo[UpdateTargetsInput] =
+          forceAssign(siderealLens.modify)(SiderealInput())
+
+        val optSiderealAligner: Option[Aligner[Target.Sidereal, SiderealInput]] =
+          targetAligner.value.zoomOpt(
+            Target.sidereal,
+            siderealToTargetEndo
+          )
+
+        val nameView: View[NonEmptyString] =
+          targetAligner
+            .zoom(Target.name, nameLens.modify)
+            .view(_.assign)
+
+        val sourceProfileAligner: Aligner[SourceProfile, SourceProfileInput] =
+          targetAligner.zoom(
+            Target.sourceProfile,
+            forceAssign(sourceProfileLens.modify)(SourceProfileInput())
+          )
+
+        def siderealCoordinates(
+          siderealTargetAligner: Aligner[Target.Sidereal, SiderealInput]
+        ): VdomElement = {
+
+          val coordsRAView: View[RightAscension] =
+            siderealTargetAligner
+              .zoom(Target.Sidereal.baseRA, SiderealInput.ra.modify)
+              .view(_.toInput.assign)
+
+          val coordsDecView: View[Declination] =
+            siderealTargetAligner
+              .zoom(Target.Sidereal.baseDec, SiderealInput.dec.modify)
+              .view(_.toInput.assign)
+
+          React.Fragment(
+            FormInputTextView(
+              id = "ra".refined,
+              value = coordsRAView,
+              label = React.Fragment("RA", HelpIcon("target/main/coordinates.md".refined)),
+              disabled = disabled,
+              validFormat = MathValidators.truncatedRA,
+              changeAuditor = ChangeAuditor.truncatedRA
+            ),
+            FormInputTextView(
+              id = "dec".refined,
+              value = coordsDecView,
+              label = React.Fragment("Dec", HelpIcon("target/main/coordinates.md".refined)),
+              disabled = disabled,
+              validFormat = MathValidators.truncatedDec,
+              changeAuditor = ChangeAuditor.truncatedDec
+            )
+          )
+        }
+
+        def siderealTracking(
+          siderealTargetAligner: Aligner[Target.Sidereal, SiderealInput]
+        ): VdomElement = {
+          val epochView: View[Epoch] =
+            siderealTargetAligner
+              .zoom(Target.Sidereal.epoch, SiderealInput.epoch.modify)
+              .view(Epoch.fromString.reverseGet.andThen(_.assign))
+
+          val properMotionView: View[ProperMotion] =
+            siderealTargetAligner
+              .zoom(Target.Sidereal.properMotion, SiderealInput.properMotion.modify)
+              .view(_.map(_.toInput).orUnassign)
+              .removeOptionality(ProperMotion.Zero)
+
+          val properMotionRAView: View[ProperMotion.RA] =
+            properMotionView.zoom(ProperMotion.ra)
+
+          val properMotionDecView: View[ProperMotion.Dec] =
+            properMotionView.zoom(ProperMotion.dec)
+
+          val parallaxView: View[Parallax] =
+            siderealTargetAligner
+              .zoom(
+                Target.Sidereal.parallax,
+                SiderealInput.parallax.modify
+              )
+              .view(_.map(_.toInput).orUnassign)
+              .removeOptionality(Parallax.Zero)
+
+          val radialVelocityView: View[RadialVelocity] =
+            siderealTargetAligner
+              .zoom(
+                Target.Sidereal.radialVelocity,
+                SiderealInput.radialVelocity.modify
+              )
+              .view(_.map(_.toInput).orUnassign)
+              .removeOptionality(RadialVelocity.Zero)
+
+          <.div(
+            LucumaPrimeStyles.FormColumnVeryCompact,
+            ExploreStyles.TargetProperMotionForm,
+            FormInputTextView(
+              id = "epoch".refined,
+              value = epochView,
+              label = React.Fragment("Epoch", HelpIcon("target/main/epoch.md".refined)),
+              disabled = disabled,
+              validFormat = MathValidators.epochNoScheme,
+              changeAuditor = ChangeAuditor.maxLength(8.refined).decimal(3.refined).denyNeg,
+              units = "years"
+            ),
+            FormInputTextView(
+              id = "raPM".refined,
+              value = properMotionRAView,
+              label = "µ RA",
+              disabled = disabled,
+              validFormat = ExploreModelValidators.pmRAValidWedge,
+              changeAuditor = ChangeAuditor.bigDecimal(3.refined),
+              units = "mas/y",
+              groupClass = ExploreStyles.ZeroValue.when_(
+                properMotionRAView.get === ProperMotion.Zero.ra
+              )
+            ),
+            FormInputTextView(
+              id = "raDec".refined,
+              value = properMotionDecView,
+              label = "µ Dec",
+              disabled = disabled,
+              validFormat = ExploreModelValidators.pmDecValidWedge,
+              changeAuditor = ChangeAuditor.bigDecimal(3.refined),
+              units = "mas/y",
+              groupClass = ExploreStyles.ZeroValue.when_(
+                properMotionDecView.get === ProperMotion.Zero.dec
+              )
+            ),
+            FormInputTextView(
+              id = "parallax".refined,
+              value = parallaxView,
+              label = "Parallax",
+              disabled = disabled,
+              validFormat = ExploreModelValidators.pxValidWedge,
+              changeAuditor = ChangeAuditor.bigDecimal(3.refined),
+              units = "mas",
+              groupClass = ExploreStyles.ZeroValue.when_(
+                parallaxView.get === Parallax.Zero
+              )
+            ),
+            RVInput(
+              radialVelocityView,
+              disabled,
+              props.obsConf.flatMap(_.calibrationRole),
+              props.asterism.focus.id,
+              props.userPreferences,
+              props.userId
+            )
+          )
+        }
 
         React.Fragment(
           TargetCloneSelector(props.obsInfo,
@@ -296,80 +398,16 @@ object SiderealTargetEditor:
                 props.readonly || readonlyForStatuses.get,
                 cloning.get
               ),
-              FormInputTextView(
-                id = "ra".refined,
-                value = coordsRAView,
-                label = React.Fragment("RA", HelpIcon("target/main/coordinates.md".refined)),
-                disabled = disabled,
-                validFormat = MathValidators.truncatedRA,
-                changeAuditor = ChangeAuditor.truncatedRA
-              ),
-              FormInputTextView(
-                id = "dec".refined,
-                value = coordsDecView,
-                label = React.Fragment("Dec", HelpIcon("target/main/coordinates.md".refined)),
-                disabled = disabled,
-                validFormat = MathValidators.truncatedDec,
-                changeAuditor = ChangeAuditor.truncatedDec
-              )
+              optSiderealAligner.map(siderealCoordinates),
+              Target.opportunity
+                .getOption(props.target.get)
+                .map(_ =>
+                  <.div("Target of Opportunity Region Editor Coming Soon!",
+                        LucumaPrimeStyles.FormField
+                  )
+                )
             ),
-            <.div(
-              LucumaPrimeStyles.FormColumnVeryCompact,
-              ExploreStyles.TargetProperMotionForm,
-              FormInputTextView(
-                id = "epoch".refined,
-                value = epochView,
-                label = React.Fragment("Epoch", HelpIcon("target/main/epoch.md".refined)),
-                disabled = disabled,
-                validFormat = MathValidators.epochNoScheme,
-                changeAuditor = ChangeAuditor.maxLength(8.refined).decimal(3.refined).denyNeg,
-                units = "years"
-              ),
-              FormInputTextView(
-                id = "raPM".refined,
-                value = properMotionRAView,
-                label = "µ RA",
-                disabled = disabled,
-                validFormat = ExploreModelValidators.pmRAValidWedge,
-                changeAuditor = ChangeAuditor.bigDecimal(3.refined),
-                units = "mas/y",
-                groupClass = ExploreStyles.ZeroValue.when_(
-                  properMotionRAView.get === ProperMotion.Zero.ra
-                )
-              ),
-              FormInputTextView(
-                id = "raDec".refined,
-                value = properMotionDecView,
-                label = "µ Dec",
-                disabled = disabled,
-                validFormat = ExploreModelValidators.pmDecValidWedge,
-                changeAuditor = ChangeAuditor.bigDecimal(3.refined),
-                units = "mas/y",
-                groupClass = ExploreStyles.ZeroValue.when_(
-                  properMotionDecView.get === ProperMotion.Zero.dec
-                )
-              ),
-              FormInputTextView(
-                id = "parallax".refined,
-                value = parallaxView,
-                label = "Parallax",
-                disabled = disabled,
-                validFormat = ExploreModelValidators.pxValidWedge,
-                changeAuditor = ChangeAuditor.bigDecimal(3.refined),
-                units = "mas",
-                groupClass = ExploreStyles.ZeroValue.when_(
-                  parallaxView.get === Parallax.Zero
-                )
-              ),
-              RVInput(
-                radialVelocityView,
-                disabled,
-                props.obsConf.flatMap(_.calibrationRole),
-                props.asterism.focus.id,
-                props.userPreferences,
-                props.userId
-              )
-            ),
+            optSiderealAligner.map(siderealTracking),
             <.div(
               ExploreStyles.Grid,
               ExploreStyles.Compact,
@@ -378,7 +416,7 @@ object SiderealTargetEditor:
               ExploreStyles.WithGaussian
                 .when(SourceProfile.gaussian.getOption(sourceProfileAligner.get).isDefined),
               ExploreStyles.WithCatalogInfo
-                .when(props.target.get.catalogInfo.flatMap(_.objectType).isDefined)
+                .when(catalogInfo.flatMap(_.objectType).isDefined)
             )(
               // The `withKey` is important because React wasn't updating the BrightnessesEditor
               // or the EmissionsLineEditor when the obsIdSubset changed, resulting in targets always
@@ -386,7 +424,7 @@ object SiderealTargetEditor:
               SourceProfileEditor(
                 props.programId,
                 sourceProfileAligner,
-                props.target.get.catalogInfo,
+                catalogInfo,
                 props.attachments,
                 props.authToken,
                 props.obsConf.flatMap(_.calibrationRole),

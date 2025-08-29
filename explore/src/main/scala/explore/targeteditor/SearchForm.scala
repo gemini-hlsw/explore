@@ -34,7 +34,7 @@ import scalajs.js.JSConverters.*
 case class SearchForm(
   id:            Target.Id,
   targetName:    View[NonEmptyString],
-  targetSet:     Target.Sidereal => Callback,
+  targetSet:     Target => Callback,
   searching:     View[Set[Target.Id]],
   readonly:      Boolean,
   cloningTarget: Boolean
@@ -112,11 +112,7 @@ object SearchForm:
                 onClick = onButtonClick,
                 modifiers = List(^.untypedRef := buttonRef)
               ).tiny.compact,
-              onSelected = targetWithId =>
-                (targetWithId.target match
-                  case t @ Target.Sidereal(_, _, _, _) => props.targetSet(t)
-                  case _                               => Callback.empty
-                ) >> searchComplete,
+              onSelected = targetWithId => props.targetSet(targetWithId.target) >> searchComplete,
               onCancel = updateNameIfNeeded >> searchComplete,
               initialSearch = term.get.some,
               showCreateEmpty = false

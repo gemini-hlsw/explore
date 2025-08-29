@@ -267,22 +267,18 @@ object AsterismEditorTile:
             // corrected, but we need to not render the target editor before it is corrected.
             (Asterism.fromIdsAndTargets(asterismIds, props.allTargets.get), props.focusedTargetId)
               .mapN: (asterism, focusedTargetId) =>
-                val selectedTargetOpt: Option[UndoSetter[Target]]                  =
+                val selectedTargetOpt: Option[UndoSetter[Target]] =
                   props.allTargets.zoom(Iso.id[TargetList].index(focusedTargetId))
-                val selectedSiderealTargetOpt: Option[UndoSetter[Target.Sidereal]] =
-                  selectedTargetOpt.flatMap(_.zoom(Target.sidereal))
-                val selectedOpportunityOpt: Option[UndoSetter[Target.Opportunity]] =
-                  selectedTargetOpt.flatMap(_.zoom(Target.opportunity))
-                val obsInfo                                                        = props.obsInfo(focusedTargetId)
+                val obsInfo                                       = props.obsInfo(focusedTargetId)
 
-                selectedSiderealTargetOpt
-                  .map: siderealTarget =>
+                selectedTargetOpt
+                  .map: target =>
                     <.div(
                       ExploreStyles.TargetTileEditor,
-                      SiderealTargetEditor(
+                      TargetEditor(
                         props.programId,
                         props.userId,
-                        siderealTarget,
+                        target,
                         props.obsAndTargets,
                         asterism.focusOn(focusedTargetId),
                         props.obsTime,
@@ -300,10 +296,6 @@ object AsterismEditorTile:
                         invalidateSequence = props.sequenceChanged
                       )
                     )
-                  .orElse(selectedOpportunityOpt.map: _ =>
-                    <.div("Targets of Opportunity coming soon..."))
-                  .getOrElse[VdomElement]:
-                    <.div("Non-sidereal targets not supported")
           )
 
   private case class Title(

@@ -17,7 +17,7 @@ import explore.model.OnCloneParameters
 import explore.model.TargetEditObsInfo
 import explore.model.TargetTabTileIds
 import explore.model.UserPreferences
-import explore.targeteditor.SiderealTargetEditor
+import explore.targeteditor.TargetEditor
 import explore.undo.UndoSetter
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -26,13 +26,13 @@ import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.schemas.model.TargetWithId
 
-object SiderealTargetEditorTile:
+object TargetEditorTile:
 
-  def noObsSiderealTargetEditorTile(
+  def noObsTargetEditorTile(
     programId:          Program.Id,
     userId:             Option[User.Id],
     targetId:           Target.Id,
-    target:             UndoSetter[Target.Sidereal],
+    target:             UndoSetter[Target],
     obsAndTargets:      UndoSetter[ObservationsAndTargets],
     searching:          View[Set[Target.Id]],
     title:              String,
@@ -57,7 +57,7 @@ object SiderealTargetEditorTile:
         <.div(
           ExploreStyles.TargetTileEditor,
           userId.map(uid =>
-            SiderealTargetEditor(
+            TargetEditor(
               programId,
               uid,
               target,

@@ -587,9 +587,9 @@ object TargetTabContents extends TwoPanels:
                   (AppTab.Targets, props.programId, Focused.target(params.idToAdd)).some
 
             props.targets
-              .zoom(Iso.id[TargetList].index(targetId).andThen(Target.sidereal))
+              .zoom(Iso.id[TargetList].index(targetId))
               .map: target =>
-                SiderealTargetEditorTile.noObsSiderealTargetEditorTile(
+                TargetEditorTile.noObsTargetEditorTile(
                   props.programId,
                   props.userId,
                   targetId,
