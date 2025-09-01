@@ -65,6 +65,11 @@ inline def showCount(count: Int, unit: String, plural: String): String =
 inline def showCount(count: Int, unit: String): String =
   showCount(count, unit, unit + "s")
 
+inline def wordCount(text: String): Int =
+  val trimmed = text.trim
+  if (trimmed.isEmpty) 0
+  else trimmed.split("\\s+").filter(_.nonEmpty).length
+
 def forceAssign[T, S](mod: Endo[Input[S]] => Endo[T])(base: S): Endo[S] => Endo[T] =
   modS =>
     mod:
