@@ -28,13 +28,17 @@ case class ItcSpectroscopyPlotDescription(
 
 object ItcSpectroscopyPlotDescription
     extends ReactFnComponent[ItcSpectroscopyPlotDescription](props =>
-      val finalSN: String    = formatSN(props.finalSN.value)
-      val singleSN: String   = formatSN(props.singleSN.value)
-      val brightness: String = props.brightness.fold("-")(_.toString)
+      val finalSN: String                      = formatSN(props.finalSN.value)
+      val singleSN: String                     = formatSN(props.singleSN.value)
+      val brightness: String                   = props.brightness.fold("-")(_.toString)
       val exposureTime: String =
         // Not ideal, it needs a fix on lucuma-ui
         format(props.exposureTime.time, PosInt.unsafeFrom(props.exposureTime.count.value))
-      val ccds: String       = s"${props.ccds.maxPeakPixelFlux} 𝐞⁻ (${props.ccds.maxADU} ADU)"
+      val ccds: String                         = s"${props.ccds.maxPeakPixelFlux} 𝐞⁻ (${props.ccds.maxADU} ADU)"
+      val warningsWithCcd: List[(Int, String)] =
+        props.ccds.toNonEmptyList.toList.zipWithIndex.flatMap { case (ccd, index) =>
+          ccd.warnings.map(w => (index + 1, w.msg))
+        }.distinct
 
       <.div(
         ExploreStyles.ItcPlotDescription,
@@ -47,6 +51,14 @@ object ItcSpectroscopyPlotDescription
         <.label("Peak (signal + background):"),
         <.span(ccds),
         <.label("Input brightness:"),
-        <.span(brightness)
+        <.span(brightness),
+        <.label(ExploreStyles.ItcPlotDescriptionWarnings, "Warnings:")
+          .when(warningsWithCcd.nonEmpty),
+        <.span(
+          ExploreStyles.ItcPlotDescriptionWarnings,
+          warningsWithCcd.map { case (ccdIndex, msg) =>
+            <.div(ExploreStyles.WarningIcon, s"CCD $ccdIndex: $msg")
+          }.toReactFragment
+        )
       )
     )
