@@ -19,14 +19,6 @@ object VisitQueriesGQL:
           execution $ExecutionVisitsSubquery
         }
       }
-
-      fragment nodAndShuffleFields on GmosNodAndShuffle {
-        posA $OffsetSubquery
-        posB $OffsetSubquery
-        eOffset
-        shuffleOffset
-        shuffleCycles
-      }
     """
     // ${ExecutionVisitsSubquery.Fragments}
 
