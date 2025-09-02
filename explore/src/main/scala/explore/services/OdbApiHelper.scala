@@ -24,7 +24,7 @@ trait OdbApiHelper[F[_]: Sync: Logger](
     private def asOdbError: Option[OdbError] =
       for
         extensions <- graphQlError.extensions
-        json       <- extensions.get(OdbError.Key)
+        json       <- extensions(OdbError.Key)
         odbError   <- json.as[OdbError].toOption
       yield odbError
 
