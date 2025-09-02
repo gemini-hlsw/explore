@@ -49,9 +49,6 @@ echo "GPP_GITHUB_TOKEN: $([ -n "$GPP_GITHUB_TOKEN" ] && echo "✓ Set" || echo "
 echo
 
 # Global variables to track what needs promotion
-PROMOTE_SSO=false
-PROMOTE_ITC=false
-PROMOTE_ODB=false
 PROMOTE_HASURA=false
 PROMOTE_FIREBASE=false
 
@@ -223,31 +220,6 @@ send_slack_notification() {
   fi
 }
 
-check_docker_changes() {
-  local service=$1
-  local source_app=$2
-  local target_app=$3
-
-  echo "Checking for Docker image changes in $service..."
-
-  # Get image digests
-  local source_digest=$(heroku container:login > /dev/null 2>&1 && docker manifest inspect "registry.heroku.com/$source_app/web:latest" 2>/dev/null | jq -r '.config.digest // "none"' || echo "none")
-  
-  # TODO we must check all process types, not just web
-  # Better to do it in the publish loop.
-  # Or just skip it with the optimization.
-
-  local target_digest=$(docker manifest inspect "registry.heroku.com/$target_app/web:latest" 2>/dev/null | jq -r '.config.digest // "none"' || echo "none")
-
-  if [ "$source_digest" != "$target_digest" ]; then
-    echo "  ✓ $service has changes (source: $source_digest, target: $target_digest)"
-    return 0  # Changes detected
-  else
-    echo "  ✗ $service has no changes (both at $target_digest)"
-    return 1  # No changes
-  fi
-}
-
 check_firebase_changes() {
   local source_env=$1
   local target_env=$2
@@ -382,93 +354,50 @@ promote_heroku_docker_images() {
   
   # Process each entry in the array
   for display_name in "${systems[@]}"; do
-    local promote_var="PROMOTE_${display_name}"
+    echo "## Promote ${display_name} to $TARGET_ENV"
     
-    # Check if this service should be promoted
-    if [ "${!promote_var}" = true ]; then
-      echo "## Promote ${display_name} to $TARGET_ENV"
-      
-      # Get image name from the associative array
-      local image_name_var="image_name_${display_name}"
-      local image_name="${!image_name_var}"
+    # Get image name from the associative array
+    local image_name_var="image_name_${display_name}"
+    local image_name="${!image_name_var}"
 
-      echo "Capturing ${display_name} target environment state before promotion..."
-      local TARGET_SHA_BEFORE=$(heroku releases:info --json --app "${image_name}-${TARGET_ENV}" 2>/dev/null | jq -r '.description' | sed -n 's/Deployed \(.*\)/\1/p' || echo "unknown")
-      echo "${display_name} target environment SHA before promotion: ${TARGET_SHA_BEFORE}"
+    echo "Capturing ${display_name} target environment state before promotion..."
+    local TARGET_SHA_BEFORE=$(heroku releases:info --json --app "${image_name}-${TARGET_ENV}" 2>/dev/null | jq -r '.description' | sed -n 's/Deployed \(.*\)/\1/p' || echo "unknown")
+    echo "${display_name} target environment SHA before promotion: ${TARGET_SHA_BEFORE}"
 
-      local do_backup_var="backup_${display_name}"
-      local backup_id="omited"
-      if [ "${!do_backup_var}" = true ]; then
-        echo "Capturing database backup before ${display_name} promotion..."
-        local backup_output=$(heroku pg:backups:capture --app ${image_name}-${TARGET_ENV} 2>&1)
-        local backup_id=$(echo "$backup_output" | grep -o 'b[0-9]\{3\}' | head -1 || echo "unknown")
-        if [ "$backup_id" != "unknown" ]; then
-          echo "${display_name} database backup created: ${backup_id}"
-        else
-          echo "${display_name} database backup created (ID not captured)"
-        fi
-      fi
-      
-      # Get process types from the corresponding array variable
-      # We use indirect reference with the display_name to access the array
-      local process_types_var="process_types_${display_name}[@]"
-      local process_types=("${!process_types_var}")
-      
-      # Pull, tag, and push all process types for this image
-      for process_type in "${process_types[@]}"; do
-        echo "  Processing ${image_name}/${process_type}"
-        
-        # Pull the source image
-        if ! docker pull "registry.heroku.com/${image_name}-${SOURCE_ENV}/${process_type}:latest"; then
-          echo "  ! Failed to pull ${image_name}-${SOURCE_ENV}/${process_type}:latest"
-          exit 1
-        fi
-        
-        # Tag with target environment
-        if ! docker tag "registry.heroku.com/${image_name}-${SOURCE_ENV}/${process_type}:latest" "registry.heroku.com/${image_name}-${TARGET_ENV}/${process_type}:latest"; then
-          echo "  ! Failed to tag ${image_name}-${TARGET_ENV}/${process_type}:latest"
-          exit 1
-        fi
-        
-        # Push to target environment
-        if ! docker push "registry.heroku.com/${image_name}-${TARGET_ENV}/${process_type}:latest"; then
-          echo "  ! Failed to push ${image_name}-${TARGET_ENV}/${process_type}:latest"
-          exit 1
-        fi
-      done
-      
-      # Release all process types for this image in a single command
-      echo "  Releasing all process types for ${image_name}-${TARGET_ENV}..."
-      if heroku container:release "${process_types[@]}" --app "${image_name}-${TARGET_ENV}"; then
-        echo "  ✓ ${display_name} promotion successful"
-        send_slack_notification "${display_name}" "$SOURCE_ENV" "$TARGET_ENV" "$backup_id" "$TARGET_SHA_BEFORE"
+    local do_backup_var="backup_${display_name}"
+    local backup_id="omited"
+    if [ "${!do_backup_var}" = true ]; then
+      echo "Capturing database backup before ${display_name} promotion..."
+      local backup_output=$(heroku pg:backups:capture --app ${image_name}-${TARGET_ENV} 2>&1)
+      local backup_id=$(echo "$backup_output" | grep -o 'b[0-9]\{3\}' | head -1 || echo "unknown")
+      if [ "$backup_id" != "unknown" ]; then
+        echo "${display_name} database backup created: ${backup_id}"
       else
-        echo "  ! ${display_name} promotion FAILED at release stage"
-        exit 1
+        echo "${display_name} database backup created (ID not captured)"
       fi
-      
-      echo
-    else
-      echo "## Skipping ${display_name} promotion (no changes)"
-      echo
     fi
+    
+    # Get process types from the corresponding array variable
+    # We use indirect reference with the display_name to access the array
+    local process_types_var="process_types_${display_name}[@]"
+    local process_types=("${!process_types_var}")
+    
+    # Release all process types for this image in a single command
+    echo "  Releasing all process types for ${image_name}-${TARGET_ENV}..."
+    if heroku container:release "${process_types[@]}" --app "${image_name}-${TARGET_ENV}"; then
+      echo "  ✓ ${display_name} promotion successful"
+      send_slack_notification "${display_name}" "$SOURCE_ENV" "$TARGET_ENV" "$backup_id" "$TARGET_SHA_BEFORE"
+    else
+      echo "  ! ${display_name} promotion FAILED at release stage"
+      exit 1
+    fi
+    
+    echo
   done
 }
 
 echo "##### Checking for changes between $SOURCE_ENV and $TARGET_ENV"
 echo
-
-if check_docker_changes "SSO" "lucuma-sso-${SOURCE_ENV}" "lucuma-sso-${TARGET_ENV}"; then
-  PROMOTE_SSO=true
-fi
-
-if check_docker_changes "ITC" "itc-${SOURCE_ENV}" "itc-${TARGET_ENV}"; then
-  PROMOTE_ITC=true
-fi
-
-# if check_docker_changes "ODB" "lucuma-postgres-odb-${SOURCE_ENV}" "lucuma-postgres-odb-${TARGET_ENV}"; then
-  PROMOTE_ODB=true
-# fi
 
 if check_hasura_changes; then
   PROMOTE_HASURA=true
@@ -492,17 +421,8 @@ esac
 
 echo
 
-if [ "$PROMOTE_SSO" = false ] && [ "$PROMOTE_ITC" = false ] && [ "$PROMOTE_ODB" = false ] && [ "$PROMOTE_HASURA" = false ] && [ "$PROMOTE_FIREBASE" = false ]; then
-  echo "##### No changes detected - nothing to promote!"
-  echo "All services are already up to date between $SOURCE_ENV and $TARGET_ENV"
-  exit 0
-fi
-
 # Show what will be promoted
 echo "##### Summary of services to promote:"
-[ "$PROMOTE_SSO" = true ] && echo "  • SSO will be promoted"
-[ "$PROMOTE_ITC" = true ] && echo "  • ITC will be promoted"
-[ "$PROMOTE_ODB" = true ] && echo "  • ODB will be promoted"
 [ "$PROMOTE_HASURA" = true ] && echo "  • Hasura migrations will be applied"
 [ "$PROMOTE_FIREBASE" = true ] && echo "  • Firebase hosting will be promoted"
 echo
@@ -511,9 +431,9 @@ if [ "$DRY_RUN" = true ]; then
   echo "##### DRY RUN MODE - No actual promotions will be performed"
   echo
   echo "##### Slack notifications that would be sent:"
-  [ "$PROMOTE_SSO" = true ] && show_slack_message "SSO" "$SOURCE_ENV" "$TARGET_ENV"
-  [ "$PROMOTE_ITC" = true ] && show_slack_message "ITC" "$SOURCE_ENV" "$TARGET_ENV"
-  [ "$PROMOTE_ODB" = true ] && show_slack_message "ODB" "$SOURCE_ENV" "$TARGET_ENV" "b###"
+  show_slack_message "SSO" "$SOURCE_ENV" "$TARGET_ENV"
+  show_slack_message "ITC" "$SOURCE_ENV" "$TARGET_ENV"
+  show_slack_message "ODB" "$SOURCE_ENV" "$TARGET_ENV" "b###"
   [ "$PROMOTE_FIREBASE" = true ] && show_slack_message "Explore" "$SOURCE_ENV" "$TARGET_ENV"
   exit 0
 fi
@@ -695,14 +615,14 @@ fi
 # Final summary
 echo "##### Promotion completed!"
 echo "Services promoted:"
-[ "$PROMOTE_SSO" = true ] && echo "  ✓ SSO"
-[ "$PROMOTE_ITC" = true ] && echo "  ✓ ITC"
-[ "$PROMOTE_ODB" = true ] && echo "  ✓ ODB"
+echo "  ✓ SSO"
+echo "  ✓ ITC"
+echo "  ✓ ODB"
 [ "$PROMOTE_HASURA" = true ] && echo "  ✓ Hasura migrations"
 [ "$PROMOTE_FIREBASE" = true ] && echo "  ✓ Firebase hosting"
 echo "Services skipped (no changes):"
-[ "$PROMOTE_SSO" = false ] && echo "  ✗ SSO"
-[ "$PROMOTE_ITC" = false ] && echo "  ✗ ITC"
-[ "$PROMOTE_ODB" = false ] && echo "  ✗ ODB"
+# [ "$PROMOTE_SSO" = false ] && echo "  ✗ SSO"
+# [ "$PROMOTE_ITC" = false ] && echo "  ✗ ITC"
+# [ "$PROMOTE_ODB" = false ] && echo "  ✗ ODB"
 [ "$PROMOTE_HASURA" = false ] && echo "  ✗ Hasura migrations"
 [ "$PROMOTE_FIREBASE" = false ] && echo "  ✗ Firebase hosting"
