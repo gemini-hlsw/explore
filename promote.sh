@@ -232,6 +232,11 @@ check_docker_changes() {
 
   # Get image digests
   local source_digest=$(heroku container:login > /dev/null 2>&1 && docker manifest inspect "registry.heroku.com/$source_app/web:latest" 2>/dev/null | jq -r '.config.digest // "none"' || echo "none")
+  
+  # TODO we must check all process types, not just web
+  # Better to do it in the publish loop.
+  # Or just skip it with the optimization.
+
   local target_digest=$(docker manifest inspect "registry.heroku.com/$target_app/web:latest" 2>/dev/null | jq -r '.config.digest // "none"' || echo "none")
 
   if [ "$source_digest" != "$target_digest" ]; then
@@ -461,9 +466,9 @@ if check_docker_changes "ITC" "itc-${SOURCE_ENV}" "itc-${TARGET_ENV}"; then
   PROMOTE_ITC=true
 fi
 
-if check_docker_changes "ODB" "lucuma-postgres-odb-${SOURCE_ENV}" "lucuma-postgres-odb-${TARGET_ENV}"; then
+# if check_docker_changes "ODB" "lucuma-postgres-odb-${SOURCE_ENV}" "lucuma-postgres-odb-${TARGET_ENV}"; then
   PROMOTE_ODB=true
-fi
+# fi
 
 if check_hasura_changes; then
   PROMOTE_HASURA=true
