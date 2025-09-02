@@ -38,6 +38,7 @@ import lucuma.react.common.ReactFnProps
 import lucuma.react.resizeDetector.hooks.*
 import lucuma.refined.*
 import lucuma.ui.aladin.*
+import lucuma.ui.reusability
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import lucuma.ui.visualization.*
@@ -407,6 +408,9 @@ object AladinContainer extends AladinCommon {
 
         val screenOffset =
           currentPos.value.map(_.diff(baseCoordinates.value).offset).getOrElse(Offset.Zero)
+
+        // Use explicit reusability that excludes target changes
+        given Reusability[AladinOptions] = reusability.withoutTarget
 
         <.div.withRef(resize.ref)(ExploreStyles.AladinContainerBody)(
           // This is a bit tricky. Sometimes the height can be 0 or a very low number.
