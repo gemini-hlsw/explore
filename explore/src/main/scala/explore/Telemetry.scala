@@ -8,7 +8,6 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.react.common.ReactFnProps
 import lucuma.ui.sso.UserVault
-import explore.syntax.ui.*
 
 import scala.annotation.unused
 import scala.scalajs.js

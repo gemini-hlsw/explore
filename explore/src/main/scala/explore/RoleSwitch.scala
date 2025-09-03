@@ -16,7 +16,6 @@ import lucuma.ui.primereact.FormDropdown
 import lucuma.ui.sso.SSOClient
 import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given
-import explore.syntax.ui.*
 
 case class RoleSwitch(
   vault:        View[UserVault],

@@ -25,8 +25,6 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.Partner
 import lucuma.core.enums.TimeAccountingCategory
 import lucuma.core.model.GuestRole
-import lucuma.core.model.StandardRole
-import lucuma.core.model.StandardUser
 import lucuma.core.model.User
 import lucuma.core.util.CalculatedValue
 import lucuma.core.util.Enumerated

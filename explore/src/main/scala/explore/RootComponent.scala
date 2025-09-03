@@ -38,7 +38,13 @@ object RootComponent
       yield AppContext.ctx.provide(props.ctx):
         React.Fragment(
           props.ctx.tracing.map: c =>
-            Observability(HoneycombOptions(c.key, c.serviceName, version(props.ctx.environment).value, attr.orUndefined)),
+            Observability(
+              HoneycombOptions(c.key,
+                               c.serviceName,
+                               version(props.ctx.environment).value,
+                               attr.orUndefined
+              )
+            ),
           HelpContext.Provider:
             programSummariesPot.renderPot: programSummaries =>
               props.router(RootModelViews(rootModel, programSummaries))
