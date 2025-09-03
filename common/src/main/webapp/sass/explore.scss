@@ -2232,6 +2232,7 @@ img.partner-split-flag {
 // ------
 // Icons
 // ------
+.explore-warning-itc-icon,
 .explore-warning-icon {
   color: var(--warning-background-color);
 }
@@ -3098,6 +3099,15 @@ $help-title-height: 40px;
 
 .explore-modes-table {
   grid-area: table;
+
+  .explore-warning-itc-icon {
+    margin-left: 0.4em;
+    margin-bottom: 0.4em;
+  }
+
+  .explore-warning-label {
+    color: var(--warning-background-color);
+  }
 }
 
 .explore-basic-configuration-grid {

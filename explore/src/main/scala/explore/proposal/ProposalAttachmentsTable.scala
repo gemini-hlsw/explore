@@ -19,7 +19,6 @@ import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.Attachment
 import explore.model.AttachmentList
-import explore.model.Constants
 import explore.model.ProposalType
 import explore.model.reusability.given
 import explore.model.syntax.all.*
@@ -39,6 +38,7 @@ import lucuma.react.floatingui.syntax.*
 import lucuma.react.primereact.ConfirmPopup
 import lucuma.react.primereact.Dialog
 import lucuma.react.table.*
+import lucuma.ui.format.*
 import lucuma.ui.react.given
 import lucuma.ui.reusability.given
 import lucuma.ui.table.*
@@ -207,7 +207,7 @@ object ProposalAttachmentsTable extends ProposalAttachmentUtils {
                 .withCell(cell => cell.value.foldMap(_.toHumanReadableByteCount)),
               column(LastUpdateColumnId, _.updatedAt)
                 .withCell(
-                  _.value.foldMap(ts => Constants.GppDateFormatter.format(ts.toLocalDateTime))
+                  _.value.foldMap(ts => GppDateFormatter.format(ts.toLocalDateTime))
                 )
             )
       // Rows

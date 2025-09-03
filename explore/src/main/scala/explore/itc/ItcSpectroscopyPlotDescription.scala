@@ -4,7 +4,6 @@
 package explore.itc
 
 import cats.data.NonEmptyChain
-import eu.timepit.refined.types.numeric.PosInt
 import explore.components.ui.ExploreStyles
 import explore.model.itc.ItcExposureTime
 import explore.model.itc.math.*
@@ -15,8 +14,8 @@ import lucuma.itc.SingleSN
 import lucuma.itc.TotalSN
 import lucuma.react.common.ReactFnComponent
 import lucuma.react.common.ReactFnProps
+import lucuma.ui.format.*
 import lucuma.ui.syntax.all.given
-import lucuma.ui.utils.*
 
 case class ItcSpectroscopyPlotDescription(
   brightness:   Option[BrightnessValues],
@@ -28,13 +27,20 @@ case class ItcSpectroscopyPlotDescription(
 
 object ItcSpectroscopyPlotDescription
     extends ReactFnComponent[ItcSpectroscopyPlotDescription](props =>
-      val finalSN: String    = formatSN(props.finalSN.value)
-      val singleSN: String   = formatSN(props.singleSN.value)
+      val finalSN: String    = props.finalSN.value.format
+      val singleSN: String   = props.singleSN.value.format
       val brightness: String = props.brightness.fold("-")(_.toString)
+
       val exposureTime: String =
         // Not ideal, it needs a fix on lucuma-ui
-        format(props.exposureTime.time, PosInt.unsafeFrom(props.exposureTime.count.value))
-      val ccds: String       = s"${props.ccds.maxPeakPixelFlux} 𝐞⁻ (${props.ccds.maxADU} ADU)"
+        format(props.exposureTime.time, props.exposureTime.count)
+
+      val ccds: String = s"${props.ccds.maxPeakPixelFlux} 𝐞⁻ (${props.ccds.maxADU} ADU)"
+
+      val warningsWithCcd: List[(Int, String)] =
+        props.ccds.toNonEmptyList.toList.zipWithIndex.flatMap { case (ccd, index) =>
+          ccd.warnings.map(w => (index + 1, w.msg))
+        }.distinct
 
       <.div(
         ExploreStyles.ItcPlotDescription,
@@ -47,6 +53,14 @@ object ItcSpectroscopyPlotDescription
         <.label("Peak (signal + background):"),
         <.span(ccds),
         <.label("Input brightness:"),
-        <.span(brightness)
+        <.span(brightness),
+        <.label(ExploreStyles.ItcPlotDescriptionWarnings, "Warnings:")
+          .when(warningsWithCcd.nonEmpty),
+        <.span(
+          ExploreStyles.ItcPlotDescriptionWarnings,
+          warningsWithCcd.map { case (ccdIndex, msg) =>
+            <.div(ExploreStyles.WarningIcon, s"CCD $ccdIndex: $msg")
+          }.toReactFragment
+        )
       )
     )

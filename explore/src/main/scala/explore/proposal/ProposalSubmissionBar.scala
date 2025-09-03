@@ -9,7 +9,6 @@ import crystal.react.*
 import crystal.react.hooks.*
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
-import explore.model.Proposal
 import explore.services.OdbProposalApi
 import explore.syntax.ui.*
 import explore.utils.ToastCtx
@@ -26,11 +25,30 @@ import lucuma.react.primereact.Message
 import lucuma.react.primereact.Tag
 import lucuma.react.primereact.Toolbar
 import lucuma.schemas.enums.ProposalStatus
+import lucuma.ui.format.*
 import lucuma.ui.primereact.*
 import lucuma.ui.reusability.given
 import org.typelevel.log4cats.Logger
 
+import java.time.Duration
+import java.time.LocalDateTime
 import scala.concurrent.duration.*
+
+def deadlineString(deadline: Timestamp): String = {
+  val deadlineLDT = deadline.toLocalDateTime
+  s"${GppDateFormatter.format(deadlineLDT)} ${GppTimeTZFormatterWithZone.format(deadlineLDT)}"
+}
+
+def deadlineAndTimeLeft(now: Timestamp, deadline: Timestamp): (String, Option[String]) = {
+  val deadlineLDT: LocalDateTime = deadline.toLocalDateTime
+  val nowLDT: LocalDateTime      = now.toLocalDateTime
+  val diff: Duration             = Duration.between(nowLDT, deadlineLDT)
+  val deadlineStr: String        = deadlineString(deadline)
+  if (diff.isNegative) (deadlineStr, None)
+  else
+    val left = DurationLongWithSecondsFormatter(diff)
+    (deadlineStr, left.some)
+}
 
 case class ProposalSubmissionBar(
   programId:         Program.Id,
@@ -110,7 +128,7 @@ object ProposalSubmissionBar
                     val (text, severity) = deadlineEither match
                       case Right(deadline) =>
                         val (deadlineStr, left): (String, Option[String]) =
-                          Proposal.deadlineAndTimeLeft(now, deadline)
+                          deadlineAndTimeLeft(now, deadline)
                         val text: String                                  =
                           left.fold(deadlineStr)(l => s"$deadlineStr [$l]")
                         val severity: Message.Severity                    =

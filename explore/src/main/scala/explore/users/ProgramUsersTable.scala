@@ -25,7 +25,6 @@ import explore.model.UserInvitation
 import explore.model.UserInvitation.DeliveryStatus.*
 import explore.model.display.given
 import explore.model.reusability.given
-import explore.syntax.ui.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.EducationalStatus

@@ -35,10 +35,10 @@ import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Dropdown
 import lucuma.react.primereact.Message
 import lucuma.react.primereact.SelectItem
+import lucuma.ui.format.*
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
-import lucuma.ui.utils.*
 
 extension (tuple: (ItcTarget, Either[ItcQueryProblem, ItcGraphResult]))
   def toTargetAndResults: TargetAndResults =
@@ -221,10 +221,10 @@ object ItcSpectroscopyTile:
                 selected.set(props.tileState.get.graphsBrightestOrFirst)
         } yield
           def singleSN: ItcGraphResult => VdomNode =
-            (r: ItcGraphResult) => <.span(formatSN(r.singleSNRatio.value))
+            (r: ItcGraphResult) => <.span(r.singleSNRatio.value.format)
 
           def totalSN: ItcGraphResult => VdomNode =
-            (r: ItcGraphResult) => <.span(formatSN(r.finalSNRatio.value))
+            (r: ItcGraphResult) => <.span(r.finalSNRatio.value.format)
 
           def snSection(title: String, fn: ItcGraphResult => VdomNode) =
             props.tileState.get.selectedTarget

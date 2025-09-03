@@ -40,6 +40,7 @@ import lucuma.core.util.Timestamp
 import lucuma.itc.TotalSN
 import lucuma.react.circularprogressbar.CircularProgressbar
 import lucuma.react.common.Css
+import lucuma.react.fa.IconSize
 import lucuma.react.floatingui.Placement
 import lucuma.react.floatingui.syntax.*
 import lucuma.react.primereact.Button
@@ -47,13 +48,14 @@ import lucuma.react.table.HTMLTableVirtualizer
 import lucuma.react.table.HeaderContext
 import lucuma.typed.tanstackVirtualCore as rawVirtual
 import lucuma.ui.components.ThemeIcons
+import lucuma.ui.format.*
 import lucuma.ui.primereact.*
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
-import lucuma.ui.utils.*
 import workers.WorkerClient
 
 import scala.collection.decorators.*
+import scala.collection.immutable.SortedMap
 import scala.concurrent.duration.*
 
 trait ModesTableCommon:
@@ -61,10 +63,10 @@ trait ModesTableCommon:
 
   extension (pot: Pot[EitherNec[ItcTargetProblem, ItcResult]])
     def totalItcTime: Option[TimeSpan] =
-      pot.toOption.collect { case Right(ItcResult.Result(e, t, _, _)) => e *| t.value }
+      pot.toOption.collect { case Right(ItcResult.Result(e, t, _, _, _)) => e *| t.value }
 
     def totalSN: Option[SignalToNoise] =
-      pot.toOption.collect { case Right(ItcResult.Result(_, _, _, s)) =>
+      pot.toOption.collect { case Right(ItcResult.Result(_, _, _, s, _)) =>
         s.map(_.total.value)
       }.flatten
 
@@ -76,10 +78,10 @@ trait ModesTableCommon:
 
     lazy val totalItcTime: Option[TimeSpan] =
       result.toOption
-        .collect { case Right(ItcResult.Result(e, t, _, _)) => e *| t.value }
+        .collect { case Right(ItcResult.Result(e, t, _, _, _)) => e *| t.value }
 
     lazy val totalSN: Option[TotalSN] =
-      result.toOption.collect { case Right(ItcResult.Result(_, _, _, s)) =>
+      result.toOption.collect { case Right(ItcResult.Result(_, _, _, s, _)) =>
         s.map(_.total)
       }.flatten
 
@@ -176,6 +178,24 @@ trait ModesTableCommon:
         )
     )
 
+  def tooltipContent(
+    baseText: String,
+    warnings: SortedMap[Int, List[String]]
+  ): (VdomNode, Placement) =
+    if (warnings.nonEmpty) {
+      (<.div(
+         <.div(baseText),
+         <.div("Warnings:"),
+         warnings
+           .map(w => <.div(ExploreStyles.WarningLabel, s"• CCD${w._1} ${w._2.mkString(", ")}"))
+           .toVdomArray
+       ),
+       Placement.Bottom
+      )
+    } else {
+      (baseText, Placement.RightStart)
+    }
+
   protected def itcCell(
     c:   Pot[EitherNec[ItcTargetProblem, ItcResult]],
     col: ItcColumns
@@ -216,20 +236,29 @@ trait ModesTableCommon:
           case ItcColumns.Time      =>
             formatDurationHours(r.duration)
           case ItcColumns.SN        =>
-            r.snAt.map(_.total.value).foldMap(formatSN)
+            r.snAt.map(_.total.value).foldMap(_.format)
 
-        val tooltipText = col match
+        val (tooltip, placement) = col match
           case ItcColumns.Exposures =>
-            ""
+            ("": VdomNode, Placement.RightStart)
           case ItcColumns.Time      =>
-            s"${r.exposures} × ${formatDurationSeconds(r.exposureTime)}"
+            val baseText = s"${r.exposures} × ${formatDurationSeconds(r.exposureTime)}"
+            tooltipContent(baseText, r.ccdWarnings)
           case ItcColumns.SN        =>
-            s"${r.snAt.map(_.single.value).foldMap(formatSN)} / exposure"
+            val baseText = s"${r.snAt.map(_.single.value).foldMap(_.format)} / exposure"
+            tooltipContent(baseText, r.ccdWarnings)
 
-        <.span(content)
+        (if (r.ccdWarnings.nonEmpty)
+           <.span(
+             content,
+             Icons.ExclamationTriangle
+               .withClass(ExploreStyles.WarningItcIcon)
+               .withSize(IconSize.XS2)
+           )
+         else <.span(content))
           .withTooltip(
-            placement = Placement.RightStart,
-            tooltip = tooltipText
+            placement = placement,
+            tooltip = tooltip
           )
       case Some(Right(ItcResult.Pending))   =>
         Icons.Spinner.withSpin(true)
@@ -354,7 +383,7 @@ trait ModesTableCommon:
     rows
       .map(_.result.toOption)
       .collect:
-        case Some(Right(result @ ItcResult.Result(_, _, _, _))) =>
+        case Some(Right(result @ ItcResult.Result(_, _, _, _, _))) =>
           result
       // Very short exposure times may have ambiguity WRT the brightest target.
       .maxByOption(result => (result.exposureTime, result.exposures))

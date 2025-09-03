@@ -21,7 +21,6 @@ import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.Attachment
 import explore.model.AttachmentList
-import explore.model.Constants
 import explore.model.Focused
 import explore.model.ObsAttachmentAssignmentMap
 import explore.model.Observation
@@ -49,6 +48,7 @@ import lucuma.react.primereact.ConfirmPopup
 import lucuma.react.primereact.Dialog
 import lucuma.react.table.*
 import lucuma.refined.*
+import lucuma.ui.format.*
 import lucuma.ui.primereact.CheckboxView
 import lucuma.ui.primereact.EnumDropdownView
 import lucuma.ui.primereact.given
@@ -311,10 +311,7 @@ object AttachmentsTile:
             NonNegLong.from(cell.value).toOption.map(_.toHumanReadableByteCount).orEmpty
           ),
         column(LastUpdateColumnId, Attachment.updatedAt.get)
-          .withCell(cell =>
-            Constants.GppDateFormatter
-              .format(cell.value.toLocalDateTime)
-          ),
+          .withCell(cell => GppDateFormatter.format(cell.value.toLocalDateTime)),
         column(AssignmentsColumnId, identity)
           .withCell: cell =>
             cell.table.options.meta.map: meta =>

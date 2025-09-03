@@ -24,7 +24,6 @@ import explore.components.ui.*
 import explore.components.undo.UndoButtons
 import explore.model.AppContext
 import explore.model.CallForProposal
-import explore.model.Constants
 import explore.model.ExploreModelValidators
 import explore.model.Hours
 import explore.model.PartnerSplit
@@ -59,6 +58,7 @@ import lucuma.react.primereact.Button
 import lucuma.react.primereact.SelectItem
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB.Types.*
+import lucuma.ui.format.*
 import lucuma.ui.input.*
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
@@ -498,7 +498,7 @@ object ProposalDetailsBody:
           selectedCfp.map(cfp =>
             <.div(LucumaPrimeStyles.FormColumnVeryCompact, ExploreStyles.CfpData)(
               FormInfo(
-                s"${Constants.GppDateFormatter.format(cfp.active.start)} to ${Constants.GppDateFormatter.format(cfp.active.end)}",
+                s"${GppDateFormatter.format(cfp.active.start)} to ${GppDateFormatter.format(cfp.active.end)}",
                 "Observation Period"
               ),
               FormInfo(

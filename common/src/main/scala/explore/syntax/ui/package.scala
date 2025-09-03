@@ -24,7 +24,6 @@ import japgolly.scalajs.react.vdom.VdomNode
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.Partner
 import lucuma.core.enums.TimeAccountingCategory
-import lucuma.core.model.Access
 import lucuma.core.model.GuestRole
 import lucuma.core.model.User
 import lucuma.core.util.CalculatedValue
@@ -69,10 +68,6 @@ extension (vault: UserVault)
       vault.authorizationHeader.credentials.renderString
     )
     request
-
-  def isStaff: Boolean        = vault.user.role.access === Access.Staff
-  def isAdmin: Boolean        = vault.user.role.access === Access.Admin
-  def isStaffOrAdmin: Boolean = vault.user.role.access >= Access.Staff
 
 extension [F[_]: ApplicativeThrow: ToastCtx, A](f: F[A])
   def toastErrors: F[A] =

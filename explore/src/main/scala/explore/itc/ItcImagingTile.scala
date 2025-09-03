@@ -54,7 +54,7 @@ object ItcImagingTile extends ModesTableCommon:
     def enabled = true
 
     private def withResult[A](f: (TimeSpan, PosInt, Option[SignalToNoiseAt]) => A): Option[A] =
-      result.toOption.collect { case Right(ItcResult.Result(e, t, _, s)) => f(e, t, s) }
+      result.toOption.collect { case Right(ItcResult.Result(e, t, _, s, _)) => f(e, t, s) }
 
     val singleSN: Option[SingleSN] =
       withResult((_, _, s) => s.map(_.single)).flatten
