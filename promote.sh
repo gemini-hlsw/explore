@@ -12,6 +12,10 @@ TARGET_ENV=$2
 DRY_RUN=false
 SKIP_SLACK=false
 
+# all_systems=("Explore" "SSO" "ITC" "ODB")
+all_systems=("SSO" "ITC" "ODB")
+docker_systems=("SSO" "ITC" "ODB")
+
 # Parse optional arguments
 for arg in "$@"; do
   case $arg in
@@ -45,12 +49,13 @@ fi
 echo "##### Environment Variables Status"
 echo "GPP_SLACK_WEBHOOK_URL: $([ -n "$GPP_SLACK_WEBHOOK_URL" ] && echo "✓ Set" || echo "✗ Not set")"
 echo "GPP_SLACK_CHANNEL: $([ -n "$GPP_SLACK_CHANNEL" ] && echo "✓ Set ($GPP_SLACK_CHANNEL)" || echo "✗ Not set (will use default: #gpp)")"
-echo "GPP_GITHUB_TOKEN: $([ -n "$GPP_GITHUB_TOKEN" ] && echo "✓ Set" || echo "✗ Not set (GitHub API may be limited)")"
+if [ -n "$GPP_GITHUB_TOKEN" ]; then
+    echo "GPP_GITHUB_TOKEN: ✓ Set"
+  else 
+    echo "GPP_GITHUB_TOKEN:  ✗ Not set (This is necessary for recording deployments)"
+    exit 1
+fi
 echo
-
-# Global variables to track what needs promotion
-PROMOTE_HASURA=false
-PROMOTE_FIREBASE=false
 
 # Helper function to map environment names for GitHub deployments
 map_github_deploy_env() {
@@ -59,83 +64,125 @@ map_github_deploy_env() {
     "dev") echo "development" ;;
     "staging") echo "staging" ;;
     "production") echo "production" ;;
-    *) echo "explore-${env}" ;;
+    *) echo "${env}" ;;
+  esac
+}
+
+map_firebase_deploy_env() {
+  local env=$1
+    case $env in
+    "dev") echo "dev" ;;
+    "staging") echo "stage" ;;
+    "production") echo "prod" ;;
+    *) echo "${env}" ;;
   esac
 }
 
 # Slack notification functions
+get_github_deployment_shas() {
+  local system=$1
+  local env=$2
+  local -n git_sha="$3"
+
+  local is_docker=$([[ " ${docker_systems[*]} " =~ [[:space:]]${system}[[:space:]] ]] && [[ ${4} ]] && echo true || echo false)
+  
+  if [ $is_docker = true ]; then
+    local -n image_shas_object="$4"
+  fi
+
+  local repo_name=${repo["$system"]}
+  local deploy_env=$(map_github_deploy_env "$env")
+
+  # Secure curl options handling
+  local curl_opts=("-s" "-H" "Accept: application/vnd.github.v3+json")
+  if [ -n "$GPP_GITHUB_TOKEN" ]; then
+    curl_opts+=("-H" "Authorization: Bearer $GPP_GITHUB_TOKEN")
+  fi
+
+  local github_deployment=$(curl "${curl_opts[@]}" \
+    "https://api.github.com/repos/$repo_name/deployments?environment=${deploy_env}&task=deploy:${system}&per_page=1" || echo "error")
+
+  if [ "$github_deployment" = "error" ]; then
+    echo "  ! Error querying GitHub API Deployment for $system in $env"
+    exit 1
+  fi
+
+  git_sha=$(echo "$github_deployment" | jq -r '.[0].sha // "none"' ) # 2>/dev/null)
+  if [ $is_docker = true ]; then
+    image_shas_object=$(echo "$github_deployment" | jq -r '.[0].payload.docker_image_shas // "none"' ) #2>/dev/null)
+  fi
+}
+
+record_github_deployment() {
+  local system=$1
+
+  local repo_name=${repo["$system"]}
+  local deploy_env=$(map_github_deploy_env "$TARGET_ENV")
+
+  # Secure curl options handling
+  local curl_opts=("-s" "-H" "Accept: application/vnd.github.v3+json" "-H" "Authorization: Bearer $GPP_GITHUB_TOKEN")
+  local payload_object=""
+  if [[ ${docker_image_shas_object["$system"]} ]]; then payload_object=", \"payload\": { \"docker_image_shas\": ${docker_image_shas_object["$system"]} }"; fi 
+
+
+  echo "  Creating deployment record for $system in $TARGET_ENV environment..."
+  # echo "  Debug: curl "${curl_opts[@]}" -X POST \"https://api.github.com/repos/$repo_name/deployments\" -d "{\"ref\":\"${source_sha["$system"]}\",\"environment\":\"$deploy_env\",\"description\":\"Promotion from $SOURCE_ENV to $TARGET_ENV\",\"required_contexts\": [],\"task\":\"deploy:$system\"$payload_object}""
+  deployment_result=$(curl "${curl_opts[@]}" -X POST "https://api.github.com/repos/$repo_name/deployments" \
+    -d "{\"ref\":\"${source_sha["$system"]}\",\"environment\":\"$deploy_env\",\"description\":\"Promotion from $SOURCE_ENV to $TARGET_ENV\",\"required_contexts\": [],\"task\":\"deploy:$system\"$payload_object}" \
+    2>&1)
+  # echo "  Debug: Deployment creation result: $(echo "$deployment_result" | head -c 200)..."
+
+  if echo "$deployment_result" | grep -q '"id"'; then
+    echo "  ✓ Deployment record created successfully"
+  else
+    echo "  ! Failed to record deployment: $deployment_result"
+    exit 1
+  fi
+}
+
+set_system_vars() {
+  local -a systems=("${@:1}")
+
+  for display_name in "${systems[@]}"; do
+
+    echo "Checking of $display_name changes.."
+
+    get_github_deployment_shas "$display_name" "$SOURCE_ENV" source_sha["$display_name"] docker_image_shas_object["$display_name"]
+
+    if [[ "${source_sha["$display_name"]}" == "none" ]]; then
+      echo "  ! Source SHA for $display_name in $SOURCE_ENV is not set - cannot proceed."
+      exit 1
+    fi
+
+    if [[ " ${docker_systems[*]} " =~ [[:space:]]${display_name}[[:space:]] ]] && [[ "${docker_image_shas_object["$display_name"]}" == "none" ]]; then
+      echo "  ! Docker image SHAs for $display_name in $SOURCE_ENV are not set - cannot proceed."
+      exit 1
+    fi
+
+    get_github_deployment_shas "$display_name" "$TARGET_ENV" target_sha["$display_name"]
+    
+    promote["$display_name"]=$( [ "${source_sha["$display_name"]}" = "none" ] || [ "${target_sha["$display_name"]}" = "none" ] || [ "${source_sha["$display_name"]}" != "${target_sha["$display_name"]}" ] && echo true || echo false )
+  done
+}
 
 get_git_compare_link() {
   service=$1
   source_env=$2
   target_env=$3
-  pre_promotion_target_sha=${4:-""}
 
-  # Get service-specific repository and commit SHAs
-  github_repo=""
-  source_sha=""
-  target_sha=""
-
-  case $service in
-    "SSO")
-      github_repo="gemini-hlsw/lucuma-sso"
-      # Get commit SHAs from Heroku
-      source_sha=$(heroku releases:info --json --app "lucuma-sso-${source_env}" 2>/dev/null | jq -r '.description' | sed -n 's/Deploy \([a-f0-9]\{7,\}\).*/\1/p' || echo "unknown")
-      target_sha=$(heroku releases:info --json --app "lucuma-sso-${target_env}" 2>/dev/null | jq -r '.description' | sed -n 's/Deploy \([a-f0-9]\{7,\}\).*/\1/p' || echo "unknown")
-      ;;
-    "ITC")
-      github_repo="gemini-hlsw/lucuma-itc"
-      source_sha="unknown"
-      target_sha="unknown"
-      ;;
-    "ODB")
-      github_repo="gemini-hlsw/lucuma-odb"
-      # Get commit SHAs from Heroku release
-      source_sha=$(heroku releases:info --json --app "lucuma-postgres-odb-${source_env}" 2>/dev/null | jq -r '.description' | sed -n 's/Deploy \([a-f0-9]\{7,\}\).*/\1/p' || echo "unknown")
-
-      if [ -n "$pre_promotion_target_sha" ] && [ "$pre_promotion_target_sha" != "unknown" ]; then
-        target_sha="$pre_promotion_target_sha"
-      else
-        target_sha=$(heroku releases:info --json --app "lucuma-postgres-odb-${target_env}" 2>/dev/null | jq -r '.description' | sed -n 's/Deploy \([a-f0-9]\{7,\}\).*/\1/p' || echo "unknown")
-      fi
-      ;;
-    "Explore")
-      github_repo="gemini-hlsw/explore"
-      # Get commit SHAs from GitHub deployments API
-      source_deploy_env=$(map_github_deploy_env "$source_env")
-      target_deploy_env=$(map_github_deploy_env "$target_env")
-
-      # Get the most recent deployments with secure auth handling
-      local curl_opts=("-s" "-H" "Accept: application/vnd.github.v3+json")
-      if [ -n "$GPP_GITHUB_TOKEN" ]; then
-        curl_opts+=("-H" "Authorization: Bearer $GPP_GITHUB_TOKEN")
-      fi
-
-      source_sha=$(curl "${curl_opts[@]}" \
-        "https://api.github.com/repos/gemini-hlsw/explore/deployments?environment=${source_deploy_env}&per_page=1" \
-        | jq -r '.[0].sha // "unknown"' 2>/dev/null || echo "unknown")
-      target_sha=$(curl "${curl_opts[@]}" \
-        "https://api.github.com/repos/gemini-hlsw/explore/deployments?environment=${target_deploy_env}&per_page=1" \
-        | jq -r '.[0].sha // "unknown"' 2>/dev/null || echo "unknown")
-      ;;
-    *)
-      github_repo="gemini-hlsw/lucuma-odb"
-      source_sha="unknown"
-      target_sha="unknown"
-      ;;
-  esac
+  local github_repo=${repo["$service"]}
+  local source_sha=${source_sha["$service"]}
+  local target_sha=${target_sha["$service"]}
 
   # Create appropriate GitHub link based on available commit info
-  if [ "$source_sha" != "unknown" ] && [ "$target_sha" != "unknown" ]; then
+  if [ "$target_sha" != "none" ]; then
     if [ "$source_sha" != "$target_sha" ]; then
       echo "https://github.com/$github_repo/compare/${target_sha}...${source_sha}"
     else
       echo ""  # Skip meaningless comparison when SHAs are identical
     fi
-  elif [ "$source_sha" != "unknown" ]; then
-    echo "https://github.com/$github_repo/commit/${source_sha}"
   else
-    echo ""  # Skip link when no commit info available
+    echo "https://github.com/$github_repo/commit/${source_sha}"
   fi
 }
 
@@ -144,22 +191,20 @@ show_slack_message() {
   local source_env=$2
   local target_env=$3
   local backup_id=${4:-""}
-  local pre_promotion_target_sha=${5:-""}
-  local compare_link=$(get_git_compare_link "$service" "$source_env" "$target_env" "$pre_promotion_target_sha")
+
+  local compare_link=$(get_git_compare_link "$service" "$source_env" "$target_env")
   local channel=${GPP_SLACK_CHANNEL:-"#gpp"}
   local timestamp=$(date -u "+%Y-%m-%d %H:%M:%S UTC")
 
   echo "  Slack notification to $channel:"
   echo "    $service deployed from $source_env → $target_env"
 
-  if [ "$service" = "SSO" ] || [ "$service" = "ODB" ] || [ "$service" = "Explore" ]; then
-    if [ -n "$compare_link" ]; then
-      echo "    Changes: $compare_link"
-    fi
+  if [ -n "$compare_link" ]; then
+    echo "    Changes: $compare_link"
   fi
 
   # Include backup ID for ODB
-  if [ "$service" = "ODB" ] && [ -n "$backup_id" ] && [ "$backup_id" != "unknown" ]; then
+  if [ ${backup["$service"]} = true ] && [ -n "$backup_id" ] && [ "$backup_id" != "unknown" ]; then
     echo "    Database backup: $backup_id"
   fi
 
@@ -172,13 +217,13 @@ send_slack_notification() {
   local source_env=$2
   local target_env=$3
   local backup_id=${4:-""}
-  local pre_promotion_target_sha=${5:-""}
-  local compare_link=$(get_git_compare_link "$service" "$source_env" "$target_env" "$pre_promotion_target_sha")
+
+  local compare_link=$(get_git_compare_link "$service" "$source_env" "$target_env")
   local timestamp=$(date -u "+%Y-%m-%d %H:%M:%S UTC")
 
   if [ "$SKIP_SLACK" = true ]; then
     echo "  ! Slack notifications disabled with --skip-slack flag"
-    show_slack_message "$service" "$source_env" "$target_env" "$backup_id" "$pre_promotion_target_sha"
+    show_slack_message "$service" "$source_env" "$target_env" "$backup_id"
     return 0
   fi
 
@@ -220,58 +265,7 @@ send_slack_notification() {
   fi
 }
 
-check_firebase_changes() {
-  local source_env=$1
-  local target_env=$2
-
-  echo "Checking for Firebase hosting changes between $source_env and $target_env..."
-
-  # Map environment names to GitHub deployment environment names
-  local source_deploy_env=$(map_github_deploy_env "$source_env")
-  local target_deploy_env=$(map_github_deploy_env "$target_env")
-
-  # Get the most recent deployment SHAs for each environment from GitHub deployments API
-  echo "  Querying deployments for ${source_deploy_env} and ${target_deploy_env}..."
-
-  # Secure curl options handling
-  local curl_opts=("-s" "-H" "Accept: application/vnd.github.v3+json")
-  if [ -n "$GPP_GITHUB_TOKEN" ]; then
-    curl_opts+=("-H" "Authorization: Bearer $GPP_GITHUB_TOKEN")
-  fi
-
-  local source_response=$(curl "${curl_opts[@]}" \
-    "https://api.github.com/repos/gemini-hlsw/explore/deployments?environment=${source_deploy_env}&per_page=1" 2>/dev/null || echo "[]")
-  local target_response=$(curl "${curl_opts[@]}" \
-    "https://api.github.com/repos/gemini-hlsw/explore/deployments?environment=${target_deploy_env}&per_page=1" 2>/dev/null || echo "[]")
-
-  local source_sha=$(echo "$source_response" | jq -r '.[0].sha // "none"' 2>/dev/null || echo "none")
-  local target_sha=$(echo "$target_response" | jq -r '.[0].sha // "none"' 2>/dev/null || echo "none")
-
-  # Debug output
-  if [ "$source_sha" = "none" ]; then
-    echo "  Debug: No deployment found for ${source_deploy_env}"
-    echo "  API response: $(echo "$source_response" | head -c 200)..."
-  fi
-  if [ "$target_sha" = "none" ]; then
-    echo "  Debug: No deployment found for ${target_deploy_env}"
-    echo "  API response: $(echo "$target_response" | head -c 200)..."
-  fi
-
-  if [ "$source_sha" = "none" ] || [ "$target_sha" = "none" ]; then
-    echo "  ! Could not retrieve deployment information - assuming changes exist for safety"
-    return 0
-  fi
-
-  if [ "$source_sha" != "$target_sha" ]; then
-    echo "  ✓ Firebase hosting has changes (source: $source_sha, target: $target_sha)"
-    return 0  # Changes detected
-  else
-    echo "  ✗ Firebase hosting has no changes (both at $source_sha)"
-    return 1  # No changes
-  fi
-}
-
-## TODO sync hasura istanecs, we always get that changes are needed
+## TODO sync hasura instances, we always get that changes are needed
 check_hasura_changes() {
   echo "Checking for Hasura changes..."
 
@@ -334,15 +328,6 @@ check_hasura_changes() {
 }
 
 # Function to promote Docker images between environments in Heroku
-# Uses associative array for image names and separate arrays for process types
-# Example usage:
-#   image_name_ITC="lucuma-itc"
-#   process_types_ITC=("web")
-#   backup_ITC=false
-#   image_name_ODB="lucuma-postgres-odb"
-#   process_types_ODB=("web" "calibration" "obscalc")
-#   backup_ODB=true
-#   promote_heroku_docker_images ("ITC" "ODB")
 promote_heroku_docker_images() {
   local -a systems=("${@:1}")
   
@@ -354,87 +339,142 @@ promote_heroku_docker_images() {
   
   # Process each entry in the array
   for display_name in "${systems[@]}"; do
-    echo "## Promote ${display_name} to $TARGET_ENV"
-    
-    # Get image name from the associative array
-    local image_name_var="image_name_${display_name}"
-    local image_name="${!image_name_var}"
+    # Check if this service should be promoted
+    if [ "${promote["$display_name"]}" = true ]; then
+      echo "## Promote ${display_name} to $TARGET_ENV"
+      
+      # Get image name from the associative array
+      local base_name="${image_name["${display_name}"]}-${TARGET_ENV}"
 
-    echo "Capturing ${display_name} target environment state before promotion..."
-    local TARGET_SHA_BEFORE=$(heroku releases:info --json --app "${image_name}-${TARGET_ENV}" 2>/dev/null | jq -r '.description' | sed -n 's/Deployed \(.*\)/\1/p' || echo "unknown")
-    echo "${display_name} target environment SHA before promotion: ${TARGET_SHA_BEFORE}"
+      echo $base_name
 
-    local do_backup_var="backup_${display_name}"
-    local backup_id="omited"
-    if [ "${!do_backup_var}" = true ]; then
-      echo "Capturing database backup before ${display_name} promotion..."
-      local backup_output=$(heroku pg:backups:capture --app ${image_name}-${TARGET_ENV} 2>&1)
-      local backup_id=$(echo "$backup_output" | grep -o 'b[0-9]\{3\}' | head -1 || echo "unknown")
-      if [ "$backup_id" != "unknown" ]; then
-        echo "${display_name} database backup created: ${backup_id}"
-      else
-        echo "${display_name} database backup created (ID not captured)"
+      local do_backup_var="backup_${display_name}"
+      local backup_id="omited"
+      if [ "${!do_backup_var}" = true ]; then
+        echo "Capturing database backup before ${display_name} promotion..."
+        local backup_output=$(heroku pg:backups:capture --app ${base_name} 2>&1)
+        local backup_id=$(echo "$backup_output" | grep -o 'b[0-9]\{3\}' | head -1 || echo "unknown")
+        if [ "$backup_id" != "unknown" ]; then
+          echo "${display_name} database backup created: ${backup_id}"
+        else
+          echo "${display_name} database backup created (ID not captured)"
+        fi
       fi
-    fi
-    
-    # Get process types from the corresponding array variable
-    # We use indirect reference with the display_name to access the array
-    local process_types_var="process_types_${display_name}[@]"
-    local process_types=("${!process_types_var}")
-    
-    # Release all process types for this image in a single command
-    echo "  Releasing all process types for ${image_name}-${TARGET_ENV}..."
-    if heroku container:release "${process_types[@]}" --app "${image_name}-${TARGET_ENV}"; then
-      echo "  ✓ ${display_name} promotion successful"
-      send_slack_notification "${display_name}" "$SOURCE_ENV" "$TARGET_ENV" "$backup_id" "$TARGET_SHA_BEFORE"
+      
+      declare -a proc_types=() # Split space-separated string into array
+      read -a proc_types <<< "${process_types["${display_name}"]}"
+
+      # Release all process types for this image
+      for process_type in "${proc_types[@]}"; do
+        echo "  Processing ${base_name}/${process_type}"
+
+        local docker_image_sha=$(echo "${docker_image_shas_object["$display_name"]}" | jq -r '.'${process_type}' // "none"' || echo "none")
+        if [ "$docker_image_sha" = "none" ]; then
+          echo "  ! Docker image SHA for ${base_name}/${process_type} in $SOURCE_ENV is not set - cannot proceed."
+          exit 1
+        fi
+
+        echo "    Docker image to promote: $docker_image_sha"
+
+        # We use API instead of CLI in order to be able to release a docker image with a specific id.
+        local curl_opts=("-s" "--netrc" "-H" "Content-Type: application/json" "-H" "Accept: application/vnd.heroku+json; version=3.docker-releases")
+
+        local release_proc_type=$(curl "${curl_opts[@]}" -X PATCH https://api.heroku.com/apps/${base_name}/formation \
+          -d "{
+          \"updates\": [
+            {
+              \"type\": \"${process_type}\",
+              \"docker_image\": \"${docker_image_sha}\"
+            }
+          ]
+        }" || echo "error")
+
+        if [ "$release_proc_type" = "error" ]; then
+          echo "  ! Error promoting ${base_name}/${process_type} to $TARGET_ENV"
+          exit 1
+        else
+          echo "  ✓ ${base_name}/${process_type} promoted successfully to $TARGET_ENV"
+        fi
+      done
+
+      echo "  Recording deployment to GitHub..."
+      record_github_deployment "$display_name"
+
+      send_slack_notification "$display_name" "$SOURCE_ENV" "$TARGET_ENV" "$backup_id"
+
+      echo
     else
-      echo "  ! ${display_name} promotion FAILED at release stage"
-      exit 1
+      echo "## Skipping ${display_name} promotion (no changes)"
+      echo
     fi
-    
-    echo
   done
 }
 
+# Declare variables
+
+PROMOTE_HASURA=false
+
+declare -A repo
+declare -A image_name
+declare -A process_types
+declare -A backup
+declare -A source_sha
+declare -A docker_image_shas_object
+declare -A target_sha
+declare -A promote
+
+repo["Explore"]="gemini-hlsw/explore"
+
+repo["SSO"]="gemini-hlsw/lucuma-odb"
+image_name["SSO"]="lucuma-sso"
+process_types["SSO"]="web"
+backup["SSO"]=true
+
+repo["ITC"]="gemini-hlsw/lucuma-itc"
+image_name["ITC"]="itc"
+process_types["ITC"]="web"
+backup["ITC"]=false
+
+repo["ODB"]="gemini-hlsw/lucuma-odb"
+image_name["ODB"]="lucuma-postgres-odb"
+process_types["ODB"]="web calibration obscalc"
+backup["ODB"]=true
+
 echo "##### Checking for changes between $SOURCE_ENV and $TARGET_ENV"
 echo
+
+set_system_vars "${all_systems[@]}"
 
 if check_hasura_changes; then
   PROMOTE_HASURA=true
 fi
 
-case $SOURCE_ENV in
-  "dev")
-    if check_firebase_changes "dev" "staging"; then
-      PROMOTE_FIREBASE=true
-    fi
-    ;;
-  "staging")
-    if check_firebase_changes "staging" "production"; then
-      PROMOTE_FIREBASE=true
-    fi
-    ;;
-  *)
-    echo "Unknown source environment: $SOURCE_ENV - skipping Firebase check"
-    ;;
-esac
+# remove
+promote["ITC"]=true
 
 echo
 
+if [ "$promote["SSO"]" = false ] && [ "$promote["ITC"]" = false ] && [ "$promote["ODB"]" = false ] && [ "$PROMOTE_HASURA" = false ] && [ "$promote["Explore"]" = false ]; then
+  echo "##### No changes detected - nothing to promote!"
+  echo "All services are already up to date between $SOURCE_ENV and $TARGET_ENV"
+  exit 0
+fi
+
 # Show what will be promoted
 echo "##### Summary of services to promote:"
+for display_name in "${all_systems[@]}"; do
+  [ "${promote["$display_name"]}" = true ] && echo "  • $display_name will be promoted"
+done
 [ "$PROMOTE_HASURA" = true ] && echo "  • Hasura migrations will be applied"
-[ "$PROMOTE_FIREBASE" = true ] && echo "  • Firebase hosting will be promoted"
 echo
 
 if [ "$DRY_RUN" = true ]; then
   echo "##### DRY RUN MODE - No actual promotions will be performed"
   echo
   echo "##### Slack notifications that would be sent:"
-  show_slack_message "SSO" "$SOURCE_ENV" "$TARGET_ENV"
-  show_slack_message "ITC" "$SOURCE_ENV" "$TARGET_ENV"
-  show_slack_message "ODB" "$SOURCE_ENV" "$TARGET_ENV" "b###"
-  [ "$PROMOTE_FIREBASE" = true ] && show_slack_message "Explore" "$SOURCE_ENV" "$TARGET_ENV"
+  for display_name in "${all_systems[@]}"; do
+    [ "${promote["$display_name"]}" = true ] && show_slack_message "$display_name" "$SOURCE_ENV" "$TARGET_ENV"
+  done
   exit 0
 fi
 
@@ -446,21 +486,7 @@ else
 fi
 echo
 
-image_name_SSO="lucuma-sso"
-process_types_SSO=("web")
-backup_SSO=true
-
-image_name_ITC="itc"
-process_types_ITC=("web")
-backup_ITC=false
-
-image_name_ODB="lucuma-postgres-odb"
-process_types_ODB=("web" "calibration" "obscalc")
-backup_ODB=true
-
-systems=("SSO" "ITC" "ODB")
-
-promote_heroku_docker_images "${systems[@]}"
+promote_heroku_docker_images "${docker_systems[@]}"
 
 # Update user preferences
 if [ "$PROMOTE_HASURA" = true ]; then
@@ -502,127 +528,33 @@ else
 fi
 
 # Promote Firebase hosting
-if [ "$PROMOTE_FIREBASE" = true ]; then
-  case $SOURCE_ENV in
-    "dev")
-      echo "## Promote Firebase hosting to staging"
-      if firebase hosting:clone explore-gemini-dev:live explore-gemini-stage:live; then
-        echo "  ✓ Firebase hosting promoted successfully"
-      else
-        echo "  ! Firebase hosting promotion FAILED"
-        exit 1
-      fi
+if [ "${promote["Explore"]}" = true ]; then
+  echo "## Promote Explore from $SOURCE_ENV to $TARGET_ENV"
 
-      # Record deployment to GitHub deployments API
-      echo "  Recording deployment to GitHub..."
-
-      # Get the SHA from the source environment (dev) that's actually deployed
-      echo "  Debug: Querying development environment for deployed SHA..."
-      if [ -n "$GPP_GITHUB_TOKEN" ]; then
-        echo "  Debug: curl -s -H \"Accept: application/vnd.github.v3+json\" -H \"Authorization: Bearer \$GPP_GITHUB_TOKEN\" \"https://api.github.com/repos/gemini-hlsw/explore/deployments?environment=development&per_page=1\""
-        deployment_response=$(curl -s -H "Accept: application/vnd.github.v3+json" \
-          -H "Authorization: Bearer $GPP_GITHUB_TOKEN" \
-          "https://api.github.com/repos/gemini-hlsw/explore/deployments?environment=development&per_page=1" 2>&1)
-        echo "  Debug: GitHub API response: $(echo "$deployment_response" | head -c 200)..."
-        source_sha=$(echo "$deployment_response" | jq -r '.[0].sha // "unknown"' 2>/dev/null || echo "unknown")
-      else
-        source_sha="unknown"
-      fi
-      echo "  Debug: Development environment SHA: $source_sha"
-
-      if [ "$source_sha" != "unknown" ] && [ -n "$GPP_GITHUB_TOKEN" ]; then
-        echo "  Debug: Creating deployment record for staging environment..."
-        echo "  Debug: curl -s -X POST \"https://api.github.com/repos/gemini-hlsw/explore/deployments\" -H \"Accept: application/vnd.github.v3+json\" -H \"Authorization: Bearer \$GPP_GITHUB_TOKEN\" -d '{\"ref\":\"\$source_sha\",\"environment\":\"staging\",\"description\":\"Firebase hosting promotion from dev to staging\"}'"
-        deployment_result=$(curl -s -X POST "https://api.github.com/repos/gemini-hlsw/explore/deployments" \
-          -H "Accept: application/vnd.github.v3+json" \
-          -H "Authorization: Bearer $GPP_GITHUB_TOKEN" \
-          -d "{\"ref\":\"$source_sha\",\"environment\":\"staging\",\"description\":\"Firebase hosting promotion from dev to staging\"}" \
-          2>&1)
-        echo "  Debug: Deployment creation result: $(echo "$deployment_result" | head -c 200)..."
-
-        if echo "$deployment_result" | grep -q '"id"'; then
-          echo "  ✓ Deployment record created successfully"
-        else
-          echo "  ! Failed to record deployment: $deployment_result"
-        fi
-      elif [ "$source_sha" = "unknown" ]; then
-        echo "  ! Could not determine deployed SHA from development environment"
-      else
-        echo "  ! No GitHub token - skipping deployment record creation"
-      fi
-
-      send_slack_notification "Explore" "$SOURCE_ENV" "$TARGET_ENV"
-      ;;
-    "staging")
-      echo "## Promote Firebase hosting to production"
-      if firebase hosting:clone explore-gemini-stage:live explore-gemini-prod:live; then
-        echo "  ✓ Firebase hosting promoted successfully"
-      else
-        echo "  ! Firebase hosting promotion FAILED"
-        exit 1
-      fi
-
-      # Record deployment to GitHub deployments API
-      echo "  Recording deployment to GitHub..."
-
-      # Get the SHA from the source environment (staging) that's actually deployed
-      echo "  Debug: Querying staging environment for deployed SHA..."
-      if [ -n "$GPP_GITHUB_TOKEN" ]; then
-        echo "  Debug: curl -s -H \"Accept: application/vnd.github.v3+json\" -H \"Authorization: Bearer \$GPP_GITHUB_TOKEN\" \"https://api.github.com/repos/gemini-hlsw/explore/deployments?environment=staging&per_page=1\""
-        deployment_response=$(curl -s -H "Accept: application/vnd.github.v3+json" \
-          -H "Authorization: Bearer $GPP_GITHUB_TOKEN" \
-          "https://api.github.com/repos/gemini-hlsw/explore/deployments?environment=staging&per_page=1" 2>&1)
-        echo "  Debug: GitHub API response: $(echo "$deployment_response" | head -c 200)..."
-        source_sha=$(echo "$deployment_response" | jq -r '.[0].sha // "unknown"' 2>/dev/null || echo "unknown")
-      else
-        source_sha="unknown"
-      fi
-      echo "  Debug: Staging environment SHA: $source_sha"
-
-      if [ "$source_sha" != "unknown" ] && [ -n "$GPP_GITHUB_TOKEN" ]; then
-        echo "  Debug: Creating deployment record for production environment..."
-        echo "  Debug: curl -s -X POST \"https://api.github.com/repos/gemini-hlsw/explore/deployments\" -H \"Accept: application/vnd.github.v3+json\" -H \"Authorization: Bearer \$GPP_GITHUB_TOKEN\" -d '{\"ref\":\"\$source_sha\",\"environment\":\"production\",\"description\":\"Firebase hosting promotion from staging to production\"}'"
-        deployment_result=$(curl -s -X POST "https://api.github.com/repos/gemini-hlsw/explore/deployments" \
-          -H "Accept: application/vnd.github.v3+json" \
-          -H "Authorization: Bearer $GPP_GITHUB_TOKEN" \
-          -d "{\"ref\":\"$source_sha\",\"environment\":\"production\",\"description\":\"Firebase hosting promotion from staging to production\"}" \
-          2>&1)
-        echo "  Debug: Deployment creation result: $(echo "$deployment_result" | head -c 200)..."
-
-        if echo "$deployment_result" | grep -q '"id"'; then
-          echo "  ✓ Deployment record created successfully"
-        else
-          echo "  ! Failed to record deployment: $deployment_result"
-        fi
-      elif [ "$source_sha" = "unknown" ]; then
-        echo "  ! Could not determine deployed SHA from staging environment"
-      else
-        echo "  ! No GitHub token - skipping deployment record creation"
-      fi
-
-      send_slack_notification "Explore" "$SOURCE_ENV" "$TARGET_ENV"
-      ;;
-    *)
-      echo "## Unknown source environment for Firebase: $SOURCE_ENV"
-      ;;
-  esac
-  echo
+  source_deploy_env=$(map_firebase_deploy_env "$SOURCE_ENV")
+  target_deploy_env=$(map_firebase_deploy_env "$TARGET_ENV")
+  if firebase hosting:clone explore-gemini-$source_deploy_env:live explore-gemini-$target_deploy_env:live; then
+    echo "  ✓ Explore promoted successfully"
+  else
+    echo "  ! Explore promotion FAILED"
+    exit 1
+  fi
+  echo "  Recording deployment to GitHub..."
+  record_github_deployment "Explore"
 else
-  echo "## Skipping Firebase hosting promotion (no changes)"
+  echo "## Skipping Explore promotion (no changes)"
   echo
 fi
 
 # Final summary
 echo "##### Promotion completed!"
 echo "Services promoted:"
-echo "  ✓ SSO"
-echo "  ✓ ITC"
-echo "  ✓ ODB"
+for display_name in "${all_systems[@]}"; do
+  [ "${promote["$display_name"]}" = true ] && echo "  ✓ $display_name"
+done
 [ "$PROMOTE_HASURA" = true ] && echo "  ✓ Hasura migrations"
-[ "$PROMOTE_FIREBASE" = true ] && echo "  ✓ Firebase hosting"
 echo "Services skipped (no changes):"
-# [ "$PROMOTE_SSO" = false ] && echo "  ✗ SSO"
-# [ "$PROMOTE_ITC" = false ] && echo "  ✗ ITC"
-# [ "$PROMOTE_ODB" = false ] && echo "  ✗ ODB"
+for display_name in "${all_systems[@]}"; do
+  [ "${promote["$display_name"]}" = false ] && echo "  ✗ $display_name"
+done
 [ "$PROMOTE_HASURA" = false ] && echo "  ✗ Hasura migrations"
-[ "$PROMOTE_FIREBASE" = false ] && echo "  ✗ Firebase hosting"
