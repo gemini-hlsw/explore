@@ -11,7 +11,7 @@
     "@fortawesome/pro-regular-svg-icons": "^6.7.2",
     "@fortawesome/pro-solid-svg-icons": "^6.7.2",
     "@fortawesome/pro-thin-svg-icons": "^6.7.2",
-    "@honeycombio/opentelemetry-web": "^0.17.0",
+    "@honeycombio/opentelemetry-web": "^1.0.1",
     "@opentelemetry/auto-instrumentations-web": "^0.46.0",
     "@react-hook/size": "^2.1.2",
     "@tanstack/react-table": "^8.21.3",

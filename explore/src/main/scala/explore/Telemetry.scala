@@ -17,29 +17,47 @@ import scala.scalajs.js.annotation.*
 trait HoneycombOptions extends js.Object {
   val apiKey: String                                     = js.native
   val serviceName: String                                = js.native
+  val serviceVersion: js.UndefOr[String]                 = js.native
   val dataset: js.UndefOr[String]                        = js.native
   val localVisualizations: js.UndefOr[Boolean]           = js.native
   val resourceAttributes: js.UndefOr[ResourceAttributes] = js.native
   val debug: js.UndefOr[Boolean]                         = js.native
+  val instrumentations: js.UndefOr[js.Array[js.Object]]  = js.native
+  val endpoint: js.UndefOr[String]                       = js.native
+  val spanProcessors: js.UndefOr[js.Array[js.Object]]    = js.native
+  val skipOptionsValidation: js.UndefOr[Boolean]         = js.native
+  val contextManager: js.UndefOr[js.Object]              = js.native
 }
 
 object HoneycombOptions {
   def apply(
-    apiKey:              String,
-    serviceName:         String,
-    resourceAttributes:  js.UndefOr[ResourceAttributes] = js.undefined,
-    dataset:             js.UndefOr[String] = js.undefined,
-    localVisualizations: js.UndefOr[Boolean] = js.undefined,
-    debug:               js.UndefOr[Boolean] = js.undefined
+    apiKey:                String,
+    serviceName:           String,
+    serviceVersion:        js.UndefOr[String] = js.undefined,
+    resourceAttributes:    js.UndefOr[ResourceAttributes] = js.undefined,
+    dataset:               js.UndefOr[String] = js.undefined,
+    localVisualizations:   js.UndefOr[Boolean] = js.undefined,
+    debug:                 js.UndefOr[Boolean] = js.undefined,
+    instrumentations:      js.UndefOr[js.Array[js.Object]] = js.undefined,
+    endpoint:              js.UndefOr[String] = js.undefined,
+    spanProcessors:        js.UndefOr[js.Array[js.Object]] = js.undefined,
+    skipOptionsValidation: js.UndefOr[Boolean] = js.undefined,
+    contextManager:        js.UndefOr[js.Object] = js.undefined
   ): HoneycombOptions =
     js.Dynamic
       .literal(
         apiKey = apiKey,
         serviceName = serviceName,
+        serviceVersion = serviceVersion,
         dataset = dataset,
         localVisualizations = localVisualizations,
         resourceAttributes = resourceAttributes,
-        debug = debug
+        debug = debug,
+        instrumentations = instrumentations,
+        endpoint = endpoint,
+        spanProcessors = spanProcessors,
+        skipOptionsValidation = skipOptionsValidation,
+        contextManager = contextManager
       )
       .asInstanceOf[HoneycombOptions]
 }
