@@ -239,7 +239,7 @@ object Dependencies {
   val LucumaSSO = Def.setting(
     deps(
       "edu.gemini" %%% "lucuma-sso-frontend-client"
-    )(lucumaSSO)
+    )(lucumaOdbSchema)
   )
 
   val LucumaUI = Def.setting(
