@@ -11,6 +11,7 @@ import explore.model.Page
 import explore.model.ProgramSummaries
 import explore.model.RootModel
 import explore.model.RootModelViews
+import explore.utils.version
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.extra.router.RouterWithProps
 import japgolly.scalajs.react.vdom.VdomNode
@@ -37,7 +38,13 @@ object RootComponent
       yield AppContext.ctx.provide(props.ctx):
         React.Fragment(
           props.ctx.tracing.map: c =>
-            Observability(HoneycombOptions(c.key, c.serviceName, attr.orUndefined)),
+            Observability(
+              HoneycombOptions(c.key,
+                               c.serviceName,
+                               version(props.ctx.environment).value,
+                               attr.orUndefined
+              )
+            ),
           HelpContext.Provider:
             programSummariesPot.renderPot: programSummaries =>
               props.router(RootModelViews(rootModel, programSummaries))
