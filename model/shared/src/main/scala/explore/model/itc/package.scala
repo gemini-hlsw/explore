@@ -21,6 +21,7 @@ import lucuma.itc.client.SeriesResult
 import lucuma.itc.client.TargetTimeAndGraphsResult
 import lucuma.itc.math.roundToSignificantFigures
 
+import scala.collection.immutable.SortedMap
 import scala.math.*
 
 // Do not turn into enum or compositePickler will break.
@@ -49,8 +50,8 @@ private given Eq[SignalToNoiseAt] = Eq.by(x => (x.wavelength, x.single, x.total)
 
 sealed trait ItcResult derives Eq {
   def isSuccess: Boolean = this match {
-    case ItcResult.Result(_, _, _, _) => true
-    case _                            => false
+    case ItcResult.Result(_, _, _, _, _) => true
+    case _                               => false
   }
 
   def isPending: Boolean = this match {
@@ -65,7 +66,8 @@ object ItcResult {
     exposureTime:   TimeSpan,
     exposures:      PosInt,
     brightestIndex: Option[Int],
-    snAt:           Option[SignalToNoiseAt]
+    snAt:           Option[SignalToNoiseAt],
+    ccdWarnings:    SortedMap[Int, List[String]]
   ) extends ItcResult:
     val duration: TimeSpan        = exposureTime *| exposures.value
     override def toString: String = s"${exposures.value} x ${exposureTime.toMinutes}"
@@ -118,6 +120,20 @@ case class ItcGraphResult(target: ItcTarget, timeAndGraphs: TargetTimeAndGraphsR
 
   lazy val singleSNRatio: SingleSN =
     timeAndGraphs.atWavelengthSingleSNRatio.getOrElse(timeAndGraphs.peakSingleSNRatio)
+
+  lazy val ccdWarnings: SortedMap[Int, List[String]] =
+    SortedMap.from(timeAndGraphs.graphCcds.toList.zipWithIndex.map { case (ccd, index) =>
+      index -> ccd.warnings.map(_.msg)
+    })
+
+  def toItcResult(brightestIndex: Option[Int] = None): ItcResult.Result =
+    ItcResult.Result(
+      time.exposureTime,
+      time.exposureCount,
+      brightestIndex,
+      signalToNoiseAt.map(w => SignalToNoiseAt(w.wavelength, singleSNRatio, finalSNRatio)),
+      ccdWarnings
+    )
 }
 
 case class ItcAsterismGraphResults(

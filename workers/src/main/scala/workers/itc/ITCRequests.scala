@@ -29,8 +29,10 @@ import org.typelevel.log4cats.Logger
 import queries.schemas.itc.syntax.*
 import workers.*
 
+import scala.collection.immutable.SortedMap
+
 object ITCRequests:
-  val cacheVersion = CacheVersion(20)
+  val cacheVersion = CacheVersion(21)
 
   val itcErrorToQueryProblems: Error => ItcQueryProblem =
     case Error.SourceTooBright(halfWell) => ItcQueryProblem.SourceTooBright(halfWell)
@@ -68,8 +70,20 @@ object ITCRequests:
         times =>
           val i    = times.value.focus.times.focus
           val snAt = times.value.focus.signalToNoiseAt
+
+          // Extract CCD warnings from TargetIntegrationTime
+          val ccdWarnings: SortedMap[Int, List[String]] =
+            SortedMap.from(times.value.focus.ccds.zipWithIndex.map { case (ccd, index) =>
+              index -> ccd.warnings.map(_.msg)
+            })
+
           ItcResult
-            .Result(i.exposureTime, i.exposureCount, r.targetTimes.brightestIndex, snAt)
+            .Result(i.exposureTime,
+                    i.exposureCount,
+                    r.targetTimes.brightestIndex,
+                    snAt,
+                    ccdWarnings
+            )
             .rightNec
       )
 

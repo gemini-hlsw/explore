@@ -309,6 +309,7 @@ object ExploreStyles:
   // Labels
   val WarningLabel: Css       = Css("explore-warning-label")
   val WarningIcon: Css        = Css("explore-warning-icon")
+  val WarningItcIcon: Css     = Css("explore-warning-itc-icon")
   val WarningInput: Css       = Css("explore-warning-input")
   val ErrorIcon: Css          = Css("explore-error-icon")
   val SuccessIcon: Css        = Css("explore-success-icon")
