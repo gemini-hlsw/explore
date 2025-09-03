@@ -23,7 +23,6 @@ import explore.model.enums.AppTab
 import explore.programs.ProgramsPopup
 import explore.shortcuts.*
 import explore.shortcuts.given
-import explore.syntax.ui.*
 import explore.utils.*
 import fs2.dom.BroadcastChannel
 import japgolly.scalajs.react.*

@@ -8,7 +8,6 @@ import crystal.react.View
 import crystal.react.syntax.effect.*
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
-import explore.model.Constants
 import explore.model.ProgramDetails
 import explore.model.ProgramTimes
 import explore.model.ProgramUser
@@ -18,6 +17,7 @@ import lucuma.core.model.Program
 import lucuma.react.common.ReactFnComponent
 import lucuma.react.common.ReactFnProps
 import lucuma.refined.*
+import lucuma.ui.format.*
 import lucuma.ui.primereact.CheckboxView
 import lucuma.ui.primereact.FormInfo
 import lucuma.ui.primereact.given
@@ -45,8 +45,8 @@ object ProgramDetailsTile
         <.div(ExploreStyles.ProgramDetailsTile)(
           <.div(ExploreStyles.ProgramDetailsInfoArea, ExploreStyles.ProgramDetailsLeft)(
             FormInfo(details.reference.map(_.label).getOrElse("---"), "Reference"),
-            FormInfo(Constants.GppDateFormatter.format(details.active.start), "Start"),
-            FormInfo(Constants.GppDateFormatter.format(details.active.end), "End"),
+            FormInfo(GppDateFormatter.format(details.active.start), "Start"),
+            FormInfo(GppDateFormatter.format(details.active.end), "End"),
             // Thesis should be set True if any of the investigators will use the proposal as part of their thesis (3390)
             FormInfo(if (thesis) "Yes" else "No", "Thesis"),
             FormInfo(s"${details.proprietaryMonths} months", "Proprietary")

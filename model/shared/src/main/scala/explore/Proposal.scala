@@ -20,9 +20,6 @@ import monocle.Focus
 import monocle.Iso
 import monocle.Lens
 
-import java.time.Duration
-import java.time.LocalDateTime
-
 case class Proposal(
   call:         Option[CallForProposal],
   category:     Option[TacCategory],
@@ -189,19 +186,3 @@ object Proposal:
     } yield Proposal(call, category, pte, r.flatten)
 
   val Default = Proposal(None, None, None, None)
-
-  def deadlineAndTimeLeft(now: Timestamp, deadline: Timestamp): (String, Option[String]) = {
-    val deadlineLDT: LocalDateTime = deadline.toLocalDateTime
-    val nowLDT: LocalDateTime      = now.toLocalDateTime
-    val diff: Duration             = Duration.between(nowLDT, deadlineLDT)
-    val deadlineStr: String        = deadlineString(deadline)
-    if (diff.isNegative) (deadlineStr, None)
-    else
-      val left = Constants.DurationLongWithSecondsFormatter(diff)
-      (deadlineStr, left.some)
-  }
-
-  def deadlineString(deadline: Timestamp): String = {
-    val deadlineLDT = deadline.toLocalDateTime
-    s"${Constants.GppDateFormatter.format(deadlineLDT)} ${Constants.GppTimeTZFormatterWithZone.format(deadlineLDT)}"
-  }

@@ -8,7 +8,6 @@ import cats.syntax.all.*
 import crystal.react.*
 import explore.*
 import explore.highcharts.*
-import explore.model.Constants
 import explore.model.enums.TimeDisplay
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
@@ -25,6 +24,7 @@ import lucuma.react.common.ReactFnProps
 import lucuma.react.highcharts.Chart
 import lucuma.typed.highcharts.mod.*
 import lucuma.ui.components.MoonPhase
+import lucuma.ui.format.*
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import org.typelevel.cats.time.given
@@ -168,7 +168,7 @@ object NightPlot:
       ZonedDateTime
         .ofInstant(instant, zoneId)
         .roundTo(ChronoUnit.MINUTES)
-        .format(Constants.GppTimeFormatter)
+        .format(GppTimeFormatter)
 
     def instantFormat(instant: Instant): String =
       timeDisplay match

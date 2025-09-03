@@ -5,7 +5,6 @@ package explore.model
 
 import cats.syntax.all.*
 import eu.timepit.refined.collection.NonEmpty
-import explore.model.Constants
 import explore.optics.all.*
 import lucuma.core.math.*
 import lucuma.core.math.HourAngle.HMS
@@ -19,6 +18,8 @@ import lucuma.refined.*
 
 import java.text.NumberFormat
 import java.time.LocalTime
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
 import java.util.Locale
 import scala.math.*
 
@@ -164,7 +165,21 @@ trait formats:
             "time on HH:mm parsing errors".refined[NonEmpty]
           }
           .toEitherErrors,
-      time => time.format(Constants.GppTimeFormatter)
+      time => time.format(formats.GppTimeFormatter)
     )
 
-object formats extends formats
+object formats extends formats:
+  // move to core
+  // they are on ui but only published for js
+  private[model] val DateFormat = "yyyy-MMM-dd"
+  private[model] val TimeFormat = "HH:mm"
+
+  private[model] val GppDateFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern(DateFormat)
+
+  private[model] val GppTimeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern(TimeFormat)
+
+  private[model] val GppTimeTZFormatter: DateTimeFormatter =
+    DateTimeFormatter.ofPattern(TimeFormat).withZone(ZoneOffset.UTC)
+
+  private[model] val GppTimeTZFormatterWithZone: DateTimeFormatter =
+    DateTimeFormatter.ofPattern("HH:mm 'UTC'").withZone(ZoneOffset.UTC)

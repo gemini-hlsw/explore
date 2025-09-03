@@ -3,12 +3,9 @@
 
 package explore.model
 
-import cats.syntax.all.*
 import lucuma.core.math.Angle
 
-import java.time.Duration
 import java.time.ZoneOffset
-import java.time.format.DateTimeFormatter
 
 trait Constants:
   val UTC                      = ZoneOffset.UTC

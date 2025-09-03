@@ -6,7 +6,7 @@ package explore
 import cats.effect.IO
 import cats.syntax.all.*
 import crystal.react.hooks.*
-import explore.model.Proposal
+import explore.proposal.deadlineString
 import fs2.Stream
 import japgolly.scalajs.react.*
 import lucuma.core.model.ProposalReference
@@ -25,7 +25,7 @@ case class SubmittedProposalMessage(
 
   private val deadlineStr: String =
     deadline
-      .map(d => s" until the proposal deadline at ${Proposal.deadlineString(d)}")
+      .map(d => s" until the proposal deadline at ${deadlineString(d)}")
       .orEmpty
 
 object SubmittedProposalMessage:

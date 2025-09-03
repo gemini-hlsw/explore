@@ -48,10 +48,10 @@ import lucuma.react.table.HTMLTableVirtualizer
 import lucuma.react.table.HeaderContext
 import lucuma.typed.tanstackVirtualCore as rawVirtual
 import lucuma.ui.components.ThemeIcons
+import lucuma.ui.format.*
 import lucuma.ui.primereact.*
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
-import lucuma.ui.utils.*
 import workers.WorkerClient
 
 import scala.collection.decorators.*
@@ -236,7 +236,7 @@ trait ModesTableCommon:
           case ItcColumns.Time      =>
             formatDurationHours(r.duration)
           case ItcColumns.SN        =>
-            r.snAt.map(_.total.value).foldMap(formatSN)
+            r.snAt.map(_.total.value).foldMap(_.format)
 
         val (tooltip, placement) = col match
           case ItcColumns.Exposures =>
@@ -245,7 +245,7 @@ trait ModesTableCommon:
             val baseText = s"${r.exposures} × ${formatDurationSeconds(r.exposureTime)}"
             tooltipContent(baseText, r.ccdWarnings)
           case ItcColumns.SN        =>
-            val baseText = s"${r.snAt.map(_.single.value).foldMap(formatSN)} / exposure"
+            val baseText = s"${r.snAt.map(_.single.value).foldMap(_.format)} / exposure"
             tooltipContent(baseText, r.ccdWarnings)
 
         (if (r.ccdWarnings.nonEmpty)

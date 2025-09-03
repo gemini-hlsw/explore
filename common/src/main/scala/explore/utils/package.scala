@@ -26,9 +26,9 @@ import lucuma.core.util.NewBoolean
 import lucuma.core.util.TimeSpan
 import lucuma.react.common.style.Css
 import lucuma.ui.components.TimeSpanView
+import lucuma.ui.format.versionDateFormatter
 import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.syntax.all.given
-import lucuma.ui.utils.versionDateFormatter
 import org.scalajs.dom
 
 import java.time.Instant

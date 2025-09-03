@@ -10,7 +10,6 @@ import crystal.react.hooks.*
 import explore.events.PlotMessage.*
 import explore.highcharts.*
 import explore.model.AppContext
-import explore.model.Constants
 import explore.model.WorkerClients.PlotClient
 import fs2.Stream
 import japgolly.scalajs.react.*
@@ -19,6 +18,7 @@ import lucuma.core.model.CoordinatesAtVizTime
 import lucuma.react.common.ReactFnProps
 import lucuma.react.highcharts.Chart
 import lucuma.typed.highcharts.mod.*
+import lucuma.ui.format.*
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import org.typelevel.cats.time.given
@@ -164,7 +164,7 @@ object SemesterPlot:
           def timeFormat(value: Double): String =
             ZonedDateTime
               .ofInstant(Instant.ofEpochMilli(value.toLong), site.timezone)
-              .format(Constants.GppDateFormatter)
+              .format(GppDateFormatter)
 
           val tickFormatter: AxisLabelsFormatterCallbackFunction =
             (
@@ -179,7 +179,7 @@ object SemesterPlot:
           def dateFormat(value: Double): String =
             ZonedDateTime
               .ofInstant(Instant.ofEpochMilli(value.toLong), ZoneOffset.UTC)
-              .format(Constants.GppDateFormatter)
+              .format(GppDateFormatter)
 
           val tooltipFormatter: TooltipFormatterCallbackFunction = {
             (ctx: TooltipFormatterContextObject, _: Tooltip) =>

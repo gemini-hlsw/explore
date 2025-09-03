@@ -4,12 +4,12 @@
 package explore
 
 import cats.syntax.all.given
-import explore.model.Constants.DurationLongFormatter
 import explore.model.formats.durationHMS
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.TimingWindowEnd
 import lucuma.core.model.TimingWindowRepeat
+import lucuma.ui.format.*
 import lucuma.ui.syntax.render.*
 import lucuma.ui.utils.Render
 
