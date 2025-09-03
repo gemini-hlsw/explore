@@ -9,7 +9,6 @@ import crystal.react.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.StandardRole
-import lucuma.core.model.StandardUser
 import lucuma.react.common.*
 import lucuma.react.primereact.SelectItem
 import lucuma.refined.*
@@ -17,6 +16,7 @@ import lucuma.ui.primereact.FormDropdown
 import lucuma.ui.sso.SSOClient
 import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.given
+import explore.syntax.ui.*
 
 case class RoleSwitch(
   vault:        View[UserVault],
@@ -26,8 +26,6 @@ case class RoleSwitch(
 
 object RoleSwitch
     extends ReactFnComponent[RoleSwitch](props =>
-      val user = props.vault.get.user
-
       def roleSwitch(role: StandardRole) =
         (
           for
@@ -37,10 +35,7 @@ object RoleSwitch
           yield ()
         ).runAsyncAndForget
 
-      val (curRole, otherRoles) = user match {
-        case StandardUser(_, role, other, _) => (role.some, other)
-        case _                               => (none, Nil)
-      }
+      val (curRole, otherRoles) = props.vault.get.extractRoles
 
       React.Fragment(
         curRole match {

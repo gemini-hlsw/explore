@@ -8,9 +8,11 @@ import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.react.common.ReactFnProps
 import lucuma.ui.sso.UserVault
+import explore.syntax.ui.*
 
 import scala.annotation.unused
 import scala.scalajs.js
+import scala.scalajs.js.JSConverters.*
 import scala.scalajs.js.annotation.*
 
 @js.native
@@ -63,22 +65,21 @@ object HoneycombOptions {
 }
 
 @js.native
-trait ResourceAttributes extends js.Object {
-  val `user.id`: String   = js.native
-  val `user.role`: String = js.native
-}
+trait ResourceAttributes extends js.Object
 
 object ResourceAttributes {
   def apply(
     userId:   String,
-    userRole: String
+    userRole: List[String],
+    fullName: String
   ): ResourceAttributes =
+    // https://opentelemetry.io/docs/specs/semconv/registry/attributes/user/
     js.Dynamic
-      .literal(`user.id` = userId, `user.role` = userRole)
+      .literal(`user.id` = userId, `user.roles` = userRole.toJSArray, `user.fullName` = fullName)
       .asInstanceOf[ResourceAttributes]
 
   def fromUserVault(vault: UserVault): ResourceAttributes =
-    apply(vault.user.id.show, vault.user.role.name)
+    apply(vault.user.id.show, vault.roleNames, vault.user.displayName)
 }
 
 @js.native
