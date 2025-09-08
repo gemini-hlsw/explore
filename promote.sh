@@ -12,8 +12,7 @@ TARGET_ENV=$2
 DRY_RUN=false
 SKIP_SLACK=false
 
-# all_systems=("Explore" "SSO" "ITC" "ODB")
-all_systems=("SSO" "ITC" "ODB")
+all_systems=("Explore" "SSO" "ITC" "ODB")
 docker_systems=("SSO" "ITC" "ODB")
 
 # Parse optional arguments
