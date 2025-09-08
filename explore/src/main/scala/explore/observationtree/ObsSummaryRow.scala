@@ -4,16 +4,11 @@
 package explore.observationtree
 
 import cats.syntax.all.*
-import explore.Icons
 import explore.model.Asterism
 import explore.model.Group
 import explore.model.Observation
-import explore.model.extensions.*
-import explore.syntax.ui.*
 import lucuma.core.math.Coordinates
-import lucuma.core.math.Region
 import lucuma.core.model.Target
-import lucuma.react.fa.FontAwesomeIcon
 import lucuma.schemas.model.TargetWithId
 
 import java.time.Instant
@@ -48,29 +43,22 @@ enum ObsSummaryRow:
   )
 
   // TODO: Update to handle ToOs/Regions
-  def coordsOrRegion: Option[Either[Coordinates, Region]] =
+  def coordsAtVizTime: Option[Coordinates] =
     this match
-      case r: ExpandedTargetRow => targetCoordsOrRegion(r.targetWithId, r.vizTime)
+      case r: ExpandedTargetRow => targetCoords(r.targetWithId, r.vizTime)
       case r: ObsRow            =>
-        asterismCoordsOrRegion(r.asterism, r.obs.observationTime)
+        asterismCoords(r.asterism, r.obs.observationTime)
+          .orElse(r.targetWithId.flatMap(t => targetCoords(t, r.obs.observationTime)))
 
-  def icon: Option[FontAwesomeIcon] = fold(
-    e => e.targetWithId.target.icon.some,
-    o =>
-      o.asterism.map(a =>
-        if (a.asNel.isMixed) Icons.Stars
-        else a.focus.target.icon
-      )
-  )
+  private def targetCoords(twid: TargetWithId, vizTime: Option[Instant]): Option[Coordinates] =
+    Target.sidereal
+      .getOption(twid.target)
+      .flatMap(t => vizTime.fold(t.tracking.baseCoordinates.some)(t.tracking.at))
 
-  private def targetCoordsOrRegion(
-    twid:    TargetWithId,
-    vizTime: Option[Instant]
-  ): Option[Either[Coordinates, Region]] =
-    vizTime.fold(twid.target)(twid.target.at).coordsOrRegion
-
-  private def asterismCoordsOrRegion(
+  private def asterismCoords(
     asterism: Option[Asterism],
     vizTime:  Option[Instant]
-  ): Option[Either[Coordinates, Region]] =
-    asterism.flatMap(_.asNel.coordsOrRegionAt(vizTime))
+  ): Option[Coordinates] =
+    asterism
+      .flatMap(_.baseTracking)
+      .flatMap(bt => vizTime.fold(bt.baseCoordinates.some)(v => bt.at(v).map(_.value)))

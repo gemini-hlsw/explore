@@ -34,8 +34,6 @@ case class Asterism(private val targets: Zipper[TargetWithId]) derives Eq {
 
   def asList: List[TargetWithId] = targets.toList
 
-  def asNel: NonEmptyList[TargetWithId] = targets.toNel
-
   def add(t: TargetWithId): Asterism =
     Asterism.isoTargets.reverse.modify(_ :+ t)(this)
 

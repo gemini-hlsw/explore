@@ -8,6 +8,7 @@ import cats.Order.*
 import cats.syntax.all.*
 import eu.timepit.refined.cats.given
 import eu.timepit.refined.types.string.NonEmptyString
+import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.model.ExploreModelValidators.*
 import explore.model.conversions.*
@@ -16,7 +17,6 @@ import explore.model.enums.SourceProfileType
 import explore.model.extensions.*
 import explore.model.formats.*
 import explore.optics.all.*
-import explore.syntax.ui.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.Band
 import lucuma.core.math.ApparentRadialVelocity
@@ -69,8 +69,7 @@ object TargetColumns:
       NameColumnId      -> "Name",
       CatalogName       -> "Catalog",
       CatalogId         -> "Catalog Id",
-      CatalogObjectType -> "Catalog Type",
-      SEDColumnId       -> "SED"
+      CatalogObjectType -> "Catalog Type"
     )
 
   val RaDecColNames: TreeSeqMap[ColumnId, String] =
@@ -91,7 +90,8 @@ object TargetColumns:
       ZColumnId          -> "z",
       CZColumnId         -> "cz",
       ParallaxColumnId   -> "Parallax",
-      MorphologyColumnId -> "Morphology"
+      MorphologyColumnId -> "Morphology",
+      SEDColumnId        -> "SED"
     )
 
   val AllColNames: TreeSeqMap[ColumnId, String] =
@@ -264,7 +264,11 @@ object TargetColumns:
       val BaseColumns: List[colDef.Type] =
         List(
           baseColumn(TypeColumnId, identity)
-            .withCell(_.value.icon.withFixedWidth())
+            .withCell(_.value match
+              case Target.Sidereal(_, _, _, _) => Icons.Star.withFixedWidth(): VdomNode
+              case Target.Nonsidereal(_, _, _) => Icons.Star.withFixedWidth(): VdomNode
+              case Target.Opportunity(_, _, _) => Icons.HourglassClock.withFixedWidth(): VdomNode
+            )
             .withSize(35.toPx),
           NameColumn,
           baseColumn(
@@ -288,16 +292,16 @@ object TargetColumns:
           .withCell(_.value.map(_.shortName).orEmpty)
           .withSize(115.toPx)
           .sortable,
-        baseColumn(
+        siderealColumn(
           SEDColumnId,
           t =>
-            Target.integratedSpectralDefinition
+            Target.Sidereal.integratedSpectralDefinition
               .getOption(t)
               .map(_.shortName)
-              .orElse(Target.surfaceSpectralDefinition.getOption(t).map(_.shortName))
+              .orElse(Target.Sidereal.surfaceSpectralDefinition.getOption(t).map(_.shortName))
               .orEmpty
         )
-          .withCell(_.value)
+          .withCell(_.value.orEmpty)
           .withSize(200.toPx)
           .sortable
       )

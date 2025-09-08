@@ -9,6 +9,7 @@ import cats.effect.IO
 import cats.syntax.all.*
 import eu.timepit.refined.cats.given
 import eu.timepit.refined.types.numeric.PosInt
+import explore.Icons
 import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import explore.model.Focused
@@ -16,7 +17,6 @@ import explore.model.Group
 import explore.model.Observation
 import explore.model.display.given
 import explore.model.enums.AppTab
-import explore.model.extensions.*
 import explore.model.syntax.all.*
 import explore.syntax.ui.*
 import japgolly.scalajs.react.*
@@ -66,7 +66,7 @@ trait ObsSummaryColumns:
     TreeSeqMap(
       ExpanderColumnId      -> " ",
       ObservationIdColumnId -> "Observation Id",
-      TargetTypeColumnId    -> "",
+      TargetTypeColumnId    -> "Target Type",
       TargetColumnId        -> "Targets",
       GroupColumnId         -> "Group",
       StateColumnId         -> "State",
@@ -89,6 +89,9 @@ trait ObsSummaryColumns:
   protected val ColumnsExcludedFromVisibility: Set[ColumnId] =
     Set(ExpanderColumnId)
 
+  private val ColumnHeaderOverrides: Set[ColumnId] =
+    Set(TargetTypeColumnId)
+
   // Columns to be shown in the column visibility selector. We exclude
   // the science band because we set that visibility below.
   protected val SelectableColumnNames: List[(ColumnId, String)] =
@@ -107,7 +110,11 @@ trait ObsSummaryColumns:
   def columns(pid: Program.Id, ctx: AppContext[IO]): List[ColDef.Type] =
     // For columns that only have data in the base observation row.
     def obsColumn[V](id: ColumnId, accessor: ObsRow => V): ColDef.TypeFor[Option[V]] =
-      ColDef(id, v => v.value.fold(_ => none, accessor(_).some), ColumnNames(id))
+      ColDef(
+        id,
+        v => v.value.fold(_ => none, accessor(_).some),
+        if (ColumnHeaderOverrides.contains(id)) " " else ColumnNames(id)
+      )
 
     extension [A](name: String | (A, TargetWithId))
       def sortableValue =
@@ -191,10 +198,11 @@ trait ObsSummaryColumns:
         .withCell:
           _.value.map(obsLink)
         .sortableWith(identifierSortFn),
-      ColDef(TargetTypeColumnId, _.value, ColumnNames(TargetTypeColumnId))
-        .withCell(_.value.icon.map(_.withFixedWidth()))
+      // TODO: TargetTypeColumnId
+      obsColumn(TargetTypeColumnId, _ => ())
+        .withCell(_ => Icons.Star.withFixedWidth())
         .withSize(35.toPx)
-        .setEnableSorting(false.some),
+        .sortable,
       mixedColumn(
         TargetColumnId,
         r => r.obs.title,
@@ -221,18 +229,18 @@ trait ObsSummaryColumns:
       mixedColumn(
         RAColumnId,
         // at visualization time, defaults to base coordinates
-        r => r.coordsOrRegion.ra,
-        r => r.coordsOrRegion.ra
+        r => r.coordsAtVizTime.map(_.ra),
+        r => r.coordsAtVizTime.map(_.ra)
       )
-        .withCell(_.value.format(MathValidators.truncatedRA.reverseGet))
+        .withCell(_.value.map(MathValidators.truncatedRA.reverseGet).orEmpty)
         .sortable,
       mixedColumn(
         DecColumnId,
         // at visualization time, defaults to base coordinates
-        r => r.coordsOrRegion.dec,
-        r => r.coordsOrRegion.dec
+        r => r.coordsAtVizTime.map(_.dec),
+        r => r.coordsAtVizTime.map(_.dec)
       )
-        .withCell(_.value.format(MathValidators.truncatedDec.reverseGet))
+        .withCell(_.value.map(MathValidators.truncatedDec.reverseGet).orEmpty)
         .sortable,
       // TODO: TimingColumnId
       // TODO: SEDColumnId
@@ -241,11 +249,12 @@ trait ObsSummaryColumns:
         v =>
           v.value
             .fold(_.targetWithId.target.some, _.targetWithId.map(_.target))
+            .flatMap(Target.sidereal.getOption)
             .flatMap: t =>
-              Target.integratedSpectralDefinition
+              Target.Sidereal.integratedSpectralDefinition
                 .getOption(t)
                 .map(_.shortName)
-                .orElse(Target.surfaceSpectralDefinition.getOption(t).map(_.shortName)),
+                .orElse(Target.Sidereal.surfaceSpectralDefinition.getOption(t).map(_.shortName)),
         ColumnNames(SEDColumnId)
       ).withCell(cell =>
         cell.value
