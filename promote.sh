@@ -347,9 +347,8 @@ promote_heroku_docker_images() {
 
       echo $base_name
 
-      local do_backup_var="backup_${display_name}"
       local backup_id="omited"
-      if [ "${!do_backup_var}" = true ]; then
+      if [ "${backup["${display_name}"]}" = true ]; then
         echo "Capturing database backup before ${display_name} promotion..."
         local backup_output=$(heroku pg:backups:capture --app ${base_name} 2>&1)
         local backup_id=$(echo "$backup_output" | grep -o 'b[0-9]\{3\}' | head -1 || echo "unknown")
@@ -448,9 +447,6 @@ if check_hasura_changes; then
   PROMOTE_HASURA=true
 fi
 
-# remove
-promote["ITC"]=true
-
 echo
 
 if [ "$promote["SSO"]" = false ] && [ "$promote["ITC"]" = false ] && [ "$promote["ODB"]" = false ] && [ "$PROMOTE_HASURA" = false ] && [ "$promote["Explore"]" = false ]; then
@@ -539,7 +535,10 @@ if [ "${promote["Explore"]}" = true ]; then
     exit 1
   fi
   echo "  Recording deployment to GitHub..."
+
   record_github_deployment "Explore"
+
+  send_slack_notification "Explore" "$SOURCE_ENV" "$TARGET_ENV"
 else
   echo "## Skipping Explore promotion (no changes)"
   echo
