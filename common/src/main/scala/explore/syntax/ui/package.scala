@@ -25,9 +25,11 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.Partner
 import lucuma.core.enums.TimeAccountingCategory
 import lucuma.core.model.GuestRole
+import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.core.util.CalculatedValue
 import lucuma.core.util.Enumerated
+import lucuma.react.fa.FontAwesomeIcon
 import lucuma.react.primereact.Message
 import lucuma.react.primereact.Tooltip
 import lucuma.react.primereact.tooltip.*
@@ -181,3 +183,10 @@ extension [A](view: View[Option[A]])
 
   def removeOptionality(default: A): View[A] =
     view.zoom(_.getOrElse(default))(f => b => f(b.getOrElse(default)).some)
+
+extension (target: Target)
+  def icon: FontAwesomeIcon =
+    target match
+      case Target.Sidereal(_, _, _, _) => Icons.Star
+      case Target.Nonsidereal(_, _, _) => Icons.PlanetRinged
+      case Target.Opportunity(_, _, _) => Icons.HourglassClock
