@@ -27,8 +27,8 @@ addCommandAlias(
 ThisBuild / description                         := "Explore"
 Global / onChangedBuildSource                   := ReloadOnSourceChanges
 ThisBuild / scalafixDependencies += "edu.gemini" % "lucuma-schemas_3" % Versions.lucumaUI
-ThisBuild / scalaVersion                        := "3.7.2"
-ThisBuild / crossScalaVersions                  := Seq("3.7.2")
+ThisBuild / scalaVersion                        := "3.7.3"
+ThisBuild / crossScalaVersions                  := Seq("3.7.3")
 ThisBuild / scalacOptions ++= Seq("-language:implicitConversions")
 ThisBuild / scalacOptions ++= Seq(
   // warning coming out of scalablytyped generated code stBuildingComponent.scala.
