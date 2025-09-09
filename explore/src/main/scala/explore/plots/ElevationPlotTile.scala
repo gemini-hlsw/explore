@@ -26,7 +26,7 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.enums.Site
 import lucuma.core.enums.TimingWindowInclusion
 import lucuma.core.math.BoundedInterval
-import lucuma.core.model.CoordinatesAtVizTime
+import lucuma.core.model.CoordinatesAt
 import lucuma.core.model.Semester
 import lucuma.core.model.TimingWindow
 import lucuma.core.model.User
@@ -212,11 +212,11 @@ object ElevationPlotTile:
                 )
               case PlotRange.Semester                  =>
                 props.plotData.value.headOption.map { case (_, data) =>
-                  val coords: CoordinatesAtVizTime =
+                  val coords: CoordinatesAt =
                     data.tracking
                       .at(semesterView.get.start.atSite(siteView.get).toInstant)
                       .getOrElse:
-                        CoordinatesAtVizTime(data.tracking.baseCoordinates)
+                        CoordinatesAt(data.tracking.baseCoordinates)
 
                   SemesterPlot(
                     plotOptions.get,

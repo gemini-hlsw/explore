@@ -11,7 +11,7 @@ import eu.timepit.refined.types.string.NonEmptyString
 import japgolly.scalajs.react.*
 import lucuma.core.enums.Site
 import lucuma.core.math.skycalc.SkyCalcResults
-import lucuma.core.model.CoordinatesAtVizTime
+import lucuma.core.model.CoordinatesAt
 import lucuma.core.model.ObjectTracking
 import lucuma.core.model.Observation
 import lucuma.core.model.Target

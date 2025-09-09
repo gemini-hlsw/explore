@@ -15,7 +15,7 @@ import lucuma.core.enums.Site
 import lucuma.core.enums.TwilightType
 import lucuma.core.math.BoundedInterval
 import lucuma.core.math.Coordinates
-import lucuma.core.model.CoordinatesAtVizTime
+import lucuma.core.model.CoordinatesAt
 import lucuma.core.model.ObjectTracking
 import lucuma.core.model.ObservingNight
 import lucuma.core.model.Semester
