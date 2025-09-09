@@ -59,7 +59,7 @@ import lucuma.core.math.Angle
 import lucuma.core.math.Offset
 import lucuma.core.math.skycalc.averageParallacticAngle
 import lucuma.core.model.ConstraintSet
-import lucuma.core.model.CoordinatesAtVizTime
+import lucuma.core.model.CoordinatesAt
 import lucuma.core.model.IntCentiPercent
 import lucuma.core.model.ObjectTracking
 import lucuma.core.model.PosAngleConstraint
@@ -133,7 +133,7 @@ case class ObsTabTiles(
     NonEmptyList.fromList:
       obsTargets.toList.map((tid, t) => TargetWithId(tid, t))
 
-  def targetCoords(obsTime: Instant): Option[CoordinatesAtVizTime] =
+  def targetCoords(obsTime: Instant): Option[CoordinatesAt] =
     asterismAsNel
       .flatMap(asterismNel => asterismNel.baseTracking.flatMap(_.at(obsTime)))
 

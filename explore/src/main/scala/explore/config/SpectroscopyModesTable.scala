@@ -65,7 +65,7 @@ case class SpectroscopyModesTable(
   spectroscopyRequirements: ScienceRequirements.Spectroscopy,
   constraints:              ConstraintSet,
   targets:                  EitherNec[ItcTargetProblem, NonEmptyList[ItcTarget]],
-  baseCoordinates:          Option[CoordinatesAtVizTime],
+  baseCoordinates:          Option[CoordinatesAt],
   matrix:                   SpectroscopyModesMatrix,
   customSedTimestamps:      List[Timestamp],
   units:                    WavelengthUnits

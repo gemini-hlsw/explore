@@ -31,7 +31,7 @@ import lucuma.core.math.Angle
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Offset
 import lucuma.core.math.Wavelength
-import lucuma.core.model.CoordinatesAtVizTime
+import lucuma.core.model.CoordinatesAt
 import lucuma.core.model.ObjectTracking
 import lucuma.react.common.Css
 import lucuma.react.common.ReactFnProps
@@ -84,9 +84,9 @@ object AladinContainer extends AladinCommon {
         ExploreStyles.GuideSpeedSlow
 
   private def baseAndScience(p: Props) = {
-    val base: CoordinatesAtVizTime = p.asterismTracking
+    val base: CoordinatesAt = p.asterismTracking
       .at(p.obsTime)
-      .getOrElse(CoordinatesAtVizTime(p.asterismTracking.baseCoordinates))
+      .getOrElse(CoordinatesAt(p.asterismTracking.baseCoordinates))
 
     val science = p.asterism.toSidereal
       .map(t =>

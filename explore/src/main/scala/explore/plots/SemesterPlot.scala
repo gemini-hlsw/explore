@@ -14,7 +14,7 @@ import explore.model.WorkerClients.PlotClient
 import fs2.Stream
 import japgolly.scalajs.react.*
 import lucuma.core.math.BoundedInterval
-import lucuma.core.model.CoordinatesAtVizTime
+import lucuma.core.model.CoordinatesAt
 import lucuma.react.common.ReactFnProps
 import lucuma.react.highcharts.Chart
 import lucuma.typed.highcharts.mod.*
@@ -36,7 +36,7 @@ import js.JSConverters.*
 
 case class SemesterPlot(
   options:          ObjectPlotOptions,
-  coords:           CoordinatesAtVizTime,
+  coords:           CoordinatesAt,
   excludeIntervals: List[BoundedInterval[Instant]]
 ) extends ReactFnProps(SemesterPlot.component)
 
