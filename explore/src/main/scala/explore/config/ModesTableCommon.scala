@@ -178,17 +178,26 @@ trait ModesTableCommon:
         )
     )
 
-  def tooltipContent(
+  private def filterWarnings(warnings: SortedMap[Int, List[String]]) =
+    warnings.collect {
+      case (x, r) if r.exists(_.nonEmpty) => (x, r.filter(_.nonEmpty))
+    }
+
+  private def tooltipContent(
     baseText: String,
     warnings: SortedMap[Int, List[String]]
   ): (VdomNode, Placement) =
-    if (warnings.nonEmpty) {
+    val w = filterWarnings(warnings)
+    if (w.nonEmpty) {
       (<.div(
          <.div(baseText),
          <.div("Warnings:"),
-         warnings
-           .map(w => <.div(ExploreStyles.WarningLabel, s"• CCD${w._1} ${w._2.mkString(", ")}"))
-           .toVdomArray
+         w.map(w =>
+           <.div(^.key := s"ccd-warning-${w._1}",
+                 ExploreStyles.WarningLabel,
+                 s"• CCD${w._1} ${w._2.mkString(", ")}"
+           )
+         ).toVdomArray
        ),
        Placement.Bottom
       )
@@ -248,7 +257,7 @@ trait ModesTableCommon:
             val baseText = s"${r.snAt.map(_.single.value).foldMap(_.format)} / exposure"
             tooltipContent(baseText, r.ccdWarnings)
 
-        (if (r.ccdWarnings.nonEmpty)
+        (if (filterWarnings(r.ccdWarnings).nonEmpty)
            <.span(
              content,
              Icons.ExclamationTriangle
