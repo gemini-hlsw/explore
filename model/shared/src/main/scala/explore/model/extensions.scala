@@ -60,6 +60,27 @@ object extensions:
     def toSidereal: List[SiderealTargetWithId] =
       targets.toList.map(_.toSidereal).flattenOption
 
+    // This uses ObjectTracking.orRegionFromAsterism, which treats any asterism with a
+    // ToO as a ToO and returns the region of the first ToO it finds. Since we "shouldn't"
+    // have asterisms with multiple ToOs, this is probably fine.
+    def coordsOrRegionAt(vizTime: Option[Instant]): Option[Either[Coordinates, Region]] =
+      ObjectTracking
+        .orRegionFromAsterism(targets.map(_.target)) match
+        case Left(ot)      =>
+          vizTime.fold(ot.baseCoordinates.asLeft.some)(v => ot.at(v).map(_.value.asLeft))
+        case Right(region) => region.asRight.some
+
+    def isMixed: Boolean =
+      targets
+        .map {
+          _.target match
+            case Target.Sidereal(_, _, _, _) => 0
+            case Target.Nonsidereal(_, _, _) => 1
+            case Target.Opportunity(_, _, _) => 2
+        }
+        .distinct
+        .size > 1
+
   extension [A](arc: Arc[A])
     def format(f: A => String): String = arc match
       case Arc.Empty()             => "Empty"
