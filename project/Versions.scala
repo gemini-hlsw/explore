@@ -6,7 +6,7 @@ object Versions {
   val catsTime               = "0.6.0"
   val circe                  = "0.14.14"
   val circeGolden            = "0.3.0"
-  val coulomb                = "0.8.0"
+  val coulomb                = "0.9.1"
   val clue                   = "0.48.0"
   val crystal                = "0.49.0"
   val discipline             = "1.7.0"
