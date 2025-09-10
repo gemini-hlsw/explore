@@ -6,6 +6,7 @@ package explore.model
 import cats.data.NonEmptyList
 import cats.syntax.all.*
 import cats.syntax.all.given
+import lucuma.core.enums.ArcType
 import lucuma.core.math.Arc
 import lucuma.core.math.Coordinates
 import lucuma.core.math.Declination
@@ -86,6 +87,10 @@ object extensions:
       case Arc.Empty()             => "Empty"
       case Arc.Full()              => "Full"
       case Arc.Partial(start, end) => s"${f(start)} - ${f(end)}"
+    def toArcType: ArcType             = arc match
+      case Arc.Empty()       => ArcType.Empty
+      case Arc.Full()        => ArcType.Full
+      case Arc.Partial(_, _) => ArcType.Partial
 
   extension (coordsOrRegion: Option[Either[Coordinates, Region]])
     def ra: Option[Either[RightAscension, Arc[RightAscension]]] =

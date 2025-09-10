@@ -29,6 +29,12 @@ import lucuma.schemas.model.BasicConfiguration
 import java.text.DecimalFormat
 
 trait DisplayImplicits:
+  given Display[ArcType] =
+    Display.byShortName:
+      case ArcType.Empty   => "Empty"
+      case ArcType.Full    => "Full"
+      case ArcType.Partial => "Partial"
+
   given Display[AttachmentType] =
     Display.by(_.shortName, _.longName)
 

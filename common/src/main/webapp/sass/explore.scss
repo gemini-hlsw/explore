@@ -384,6 +384,10 @@ div.inline.field.explore-warning-input {
   box-shadow: -0 0 2px 1px var(--warning-background-color);
 }
 
+label.explore-indent-label {
+  text-indent: 2em;
+}
+
 // https://zellwk.com/blog/creating-focus-style/
 i.icon.explore-button-icon:hover,
 i.icon.explore-button-icon:focus {
@@ -1747,10 +1751,6 @@ svg.fa-check.explore-success-icon {
     'col1 col2 col3' auto
     'col1 buttons buttons' auto
     / 1fr 1fr 1fr;
-
-  label.explore-indent-label {
-    text-indent: 2em;
-  }
 }
 
 // on small tiles, we want to stack the form fields

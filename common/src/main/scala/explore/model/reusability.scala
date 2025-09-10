@@ -34,6 +34,7 @@ import lucuma.core.enums.GmosNorthGrating
 import lucuma.core.enums.GmosSouthFilter
 import lucuma.core.enums.GmosSouthFpu
 import lucuma.core.enums.GmosSouthGrating
+import lucuma.core.math.Arc
 import lucuma.core.math.Offset
 import lucuma.core.math.SignalToNoise
 import lucuma.core.math.WavelengthDither
@@ -104,6 +105,7 @@ object reusability:
 
   given modelUndoStacksReuse[F[_]]: Reusability[ModelUndoStacks[F]] = Reusability.byEq
 
+  given [A: Eq]: Reusability[Arc[A]]                    = Reusability.byEq
   given Reusability[Progress]                           = Reusability.byEq
   given Reusability[AngularSize]                        = Reusability.byEq
   given Reusability[CatalogTargetResult]                = Reusability.byEq
