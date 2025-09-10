@@ -207,29 +207,30 @@ object ItcImagingTile extends ModesTableCommon:
       extends ReactFnComponent[Title](props =>
         for {
           // Even though this is just the title it is always visible thus it is better for it to control processing
-          ctx <- useContext(AppContext.ctx)
+          ctx           <- useContext(AppContext.ctx)
+          imagingQuerier =
+            ItcImagingQuerier(
+              props.observation,
+              props.selectedConfigs.configs.map(_.instrumentConfig),
+              props.obsTargets,
+              props.customSedTimestamps
+            )
           // Update calculationResults for the selected configs
-          _   <- useEffectWithDeps(props.selectedConfigs): configs =>
-                   import ctx.given
+          _             <- useEffectWithDeps(imagingQuerier): querier =>
+                             import ctx.given
 
-                   props.tileState
-                     .zoom(ItcTileState.calculationResults)
-                     .set(Pot.pending)
-                     .toAsync >>
-                     ItcImagingQuerier(
-                       props.observation,
-                       configs.configs.map(_.instrumentConfig),
-                       props.obsTargets,
-                       props.customSedTimestamps
-                     ).requestCalculations
-                       .flatMap { result =>
-                         props.tileState
-                           .zoom(ItcTileState.calculationResults)
-                           .set(result.ready)
-                           .toAsync
-                       }
+                             props.tileState
+                               .zoom(ItcTileState.calculationResults)
+                               .set(Pot.pending)
+                               .toAsync >>
+                               querier.requestCalculations
+                                 .flatMap: result =>
+                                   props.tileState
+                                     .zoom(ItcTileState.calculationResults)
+                                     .set(result.ready)
+                                     .toAsync
           // Initialize selected target if none is set
-          _   <-
+          _             <-
             useEffectWithDeps((props.selectedTarget.get, props.tileState.get.imagingTargetResults)):
               (selectedTarget, availableTargets) =>
                 selectedTarget match
