@@ -84,5 +84,4 @@ object ItcImagingQuerier:
   ) derives Eq
 
   private given Reusability[QueryProps] = Reusability.byEq
-  given Reusability[ItcImagingQuerier]  =
-    Reusability.by(_.queryProps)
+  given Reusability[ItcImagingQuerier]  = Reusability.by(_.queryProps)
