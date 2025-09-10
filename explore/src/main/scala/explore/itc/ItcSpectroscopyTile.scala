@@ -36,7 +36,6 @@ import lucuma.react.primereact.Dropdown
 import lucuma.react.primereact.Message
 import lucuma.react.primereact.SelectItem
 import lucuma.ui.format.*
-import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.*
 import lucuma.ui.syntax.all.given
 
@@ -183,34 +182,35 @@ object ItcSpectroscopyTile:
   private object Title
       extends ReactFnComponent[Title](props =>
         for {
-          ctx <- useContext(AppContext.ctx)
-          _   <-
-            useEffectWithDeps(
-              (props.observation, props.selectedConfig, props.obsTargets, props.customSedTimestamps)
-            ): (obs, config, targets, customSedTimestamps) =>
+          ctx         <- useContext(AppContext.ctx)
+          graphQuerier =
+            ItcGraphQuerier(
+              props.observation,
+              props.selectedConfig.getOrElse(List.empty),
+              props.obsTargets,
+              props.customSedTimestamps
+            )
+          _           <-
+            useEffectWithDeps(graphQuerier): querier =>
               import ctx.given
 
               props.tileState
                 .zoom(ItcTileState.asterismResults)
                 .set(Pot.pending)
                 .toAsync >>
-                ItcGraphQuerier(obs,
-                                config.getOrElse(List.empty),
-                                targets,
-                                customSedTimestamps
-                ).requestGraphs
+                querier.requestGraphs
                   .flatMap { t =>
                     props.tileState
                       .zoom(ItcTileState.asterismResults)
                       .set(t.ready)
                       .toAsync
                   }
-          _   <- // Reset the selected target if the brightest target changes
+          _           <- // Reset the selected target if the brightest target changes
             useEffectWithDeps(
               props.tileState.get.graphsBrightestOrFirst
             ): itcBrightestOrFirst =>
               props.tileState.zoom(ItcTileState.selectedTarget).set(itcBrightestOrFirst)
-          _   <- // if the targets change, make sure the selected target is still available
+          _           <- // if the targets change, make sure the selected target is still available
             useEffectWithDeps(
               props.tileState.get.graphsTargets
             ): targets =>
