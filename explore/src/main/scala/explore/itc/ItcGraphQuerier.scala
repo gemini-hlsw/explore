@@ -107,5 +107,4 @@ object ItcGraphQuerier:
   ) derives Eq
 
   private given Reusability[QueryProps] = Reusability.byEq
-  given Reusability[ItcGraphQuerier]    =
-    Reusability.by(_.queryProps)
+  given Reusability[ItcGraphQuerier]    = Reusability.by(_.queryProps)
