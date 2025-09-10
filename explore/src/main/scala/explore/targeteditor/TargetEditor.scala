@@ -203,6 +203,23 @@ object TargetEditor:
           def optReplace[I](a: A, f: B => (I => I)): I => I =
             i => prism.getOption(a).fold(i)(b => f(b)(i))
 
+        extension (region: Region)
+          def toOpportunityInput: OpportunityInput =
+            OpportunityInput(
+              region = RegionInput(
+                rightAscensionArc = RightAscensionArcInput(
+                  `type` = region.raArc.arcType,
+                  start = Arc.start.getOption(region.raArc).map(_.toInput).orUnassign,
+                  end = Arc.end.getOption(region.raArc).map(_.toInput).orUnassign
+                ),
+                declinationArc = DeclinationArcInput(
+                  `type` = region.decArc.arcType,
+                  start = Arc.start.getOption(region.decArc).map(_.toInput).orUnassign,
+                  end = Arc.end.getOption(region.decArc).map(_.toInput).orUnassign
+                )
+              )
+            )
+
         val allView: View[Target] =
           targetAligner.viewMod(t =>
             nameLens.replace(t.name.assign) >>>
@@ -219,6 +236,12 @@ object TargetEditor:
           targetAligner.value.zoomOpt(
             Target.sidereal,
             siderealToTargetEndo
+          )
+
+        val optOpportunityAligner: Option[Aligner[Target.Opportunity, TargetPropertiesInput]] =
+          targetAligner.value.zoomOpt(
+            Target.opportunity,
+            UpdateTargetsInput.SET.modify
           )
 
         val nameView: View[NonEmptyString] =
@@ -265,6 +288,15 @@ object TargetEditor:
             )
           )
         }
+
+        def opportunityRegion(
+          opportunityAligner: Aligner[Target.Opportunity, TargetPropertiesInput]
+        ): VdomElement =
+          val regionView: View[Region] =
+            opportunityAligner
+              .zoom(Target.Opportunity.region, TargetPropertiesInput.opportunity.modify)
+              .view(_.toOpportunityInput.assign)
+          RegionEditor(regionView, disabled)
 
         def siderealTracking(
           siderealTargetAligner: Aligner[Target.Sidereal, SiderealInput]
@@ -399,13 +431,7 @@ object TargetEditor:
                 cloning.get
               ),
               optSiderealAligner.map(siderealCoordinates),
-              Target.opportunity
-                .getOption(props.target.get)
-                .map(_ =>
-                  <.div("Target of Opportunity Region Editor Coming Soon!",
-                        LucumaPrimeStyles.FormField
-                  )
-                )
+              optOpportunityAligner.map(opportunityRegion)
             ),
             optSiderealAligner.map(siderealTracking),
             <.div(
