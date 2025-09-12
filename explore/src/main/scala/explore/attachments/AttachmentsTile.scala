@@ -40,6 +40,7 @@ import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.util.Enumerated
 import lucuma.core.util.Timestamp
+import lucuma.core.util.time.format.GppDateFormatter
 import lucuma.react.common.ReactFnProps
 import lucuma.react.common.style.Css
 import lucuma.react.floatingui.Placement
@@ -48,7 +49,6 @@ import lucuma.react.primereact.ConfirmPopup
 import lucuma.react.primereact.Dialog
 import lucuma.react.table.*
 import lucuma.refined.*
-import lucuma.ui.format.*
 import lucuma.ui.primereact.CheckboxView
 import lucuma.ui.primereact.EnumDropdownView
 import lucuma.ui.primereact.given

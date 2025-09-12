@@ -16,6 +16,7 @@ import lucuma.core.enums.ObservationWorkflowState
 import lucuma.core.enums.ScienceBand
 import lucuma.core.model.Configuration
 import lucuma.core.model.ConfigurationRequest
+import lucuma.core.model.ObservationWorkflow
 import lucuma.core.model.PartnerLink
 import lucuma.core.model.ProgramReference
 import lucuma.core.model.ProposalReference
@@ -23,6 +24,9 @@ import lucuma.core.model.SourceProfile
 import lucuma.core.model.Target
 import lucuma.core.model.TimingWindow
 import lucuma.core.model.UnnormalizedSED
+import lucuma.core.model.sequence.ExecutionDigest
+import lucuma.core.optics.syntax.lens.*
+import lucuma.core.util.CalculatedValue
 import lucuma.schemas.enums.ProposalStatus
 import lucuma.schemas.model.TargetWithId
 import monocle.Focus
@@ -33,13 +37,14 @@ import scala.collection.immutable.SortedMap
 import scala.collection.immutable.SortedSet
 
 case class ProgramSummaries(
-  optProgramDetails:     Option[ProgramDetails],
-  targets:               TargetList,
-  observations:          ObservationList,
-  groups:                GroupList,
-  attachments:           AttachmentList,
-  programs:              ProgramInfoList,
-  configurationRequests: ConfigurationRequestList
+  optProgramDetails:      Option[ProgramDetails],
+  targets:                TargetList,
+  observations:           ObservationList,
+  groups:                 GroupList,
+  attachments:            AttachmentList,
+  programs:               ProgramInfoList,
+  configurationRequests:  ConfigurationRequestList,
+  calculatedValueOrphans: CalculatedValueOrphanMap = Map.empty
 ) derives Eq:
   lazy val proposalIsSubmitted =
     optProgramDetails.exists(_.proposalStatus === ProposalStatus.Submitted)
@@ -165,11 +170,47 @@ case class ProgramSummaries(
       m.updatedWith(o.configuration.get)(_.fold(NonEmptyList.one(o))(nel => nel :+ o).some)
     )
 
-  def insertObs(observation: Observation): ProgramSummaries =
-    ProgramSummaries.observations.modify(_ + (observation.id -> observation))(this)
+  def upsertObs(observation: Observation): ProgramSummaries =
+    ProgramSummaries.obsAndOrphans.modify { (obs, orphans) =>
+      val newObs     = obs.updatedWith(observation.id): existing =>
+        existing
+          .map(o =>
+            // if it exists, we want to keep the existing calculated values
+            Observation.calculatedValues
+              .replace(Observation.calculatedValues.get(o))(observation)
+          )
+          .orElse(
+            // if it doesn't exist, insert it but apply any orphaned calculated values
+            orphans
+              .get(observation.id)
+              .fold(observation): (workflow, digest) =>
+                Observation.calculatedValues.replace((workflow, digest))(observation)
+              .some
+          )
+      val newOrphans = orphans - observation.id
+      (newObs, newOrphans)
+    }(this)
 
   def removeObs(obsId: Observation.Id): ProgramSummaries =
-    ProgramSummaries.observations.modify(_.removed(obsId))(this)
+    ProgramSummaries.obsAndOrphans.modify((obs, orphans) => (obs - obsId, orphans - obsId))(this)
+
+  def updateCalculatedValues(
+    obsId:    Observation.Id,
+    workflow: CalculatedValue[ObservationWorkflow],
+    digest:   CalculatedValue[Option[ExecutionDigest]]
+  ): ProgramSummaries =
+    ProgramSummaries.obsAndOrphans.modify { (obs, orphans) =>
+      // if the observation is not present, we may be getting the obsCalc event before we
+      // get the actual observation, so we store it in the orphans to be applied later
+      // when the observation arrives.
+      val newOrphans =
+        if (obs.contains(obsId)) orphans - obsId // shouldn't be there in the first place...
+        else orphans.updated(obsId, (workflow, digest))
+      val newObs = obs.updatedWith(obsId)(
+        _.map(Observation.calculatedValues.replace((workflow, digest)))
+      )
+      (newObs, newOrphans)
+    }(this)
 
   def cloneTargetForObservations(
     originalId: Target.Id,
@@ -277,18 +318,23 @@ case class ProgramSummaries(
       .toMap
 
 object ProgramSummaries:
-  val optProgramDetails: Lens[ProgramSummaries, Option[ProgramDetails]]       =
+  val optProgramDetails: Lens[ProgramSummaries, Option[ProgramDetails]]        =
     Focus[ProgramSummaries](_.optProgramDetails)
-  val proposal: Optional[ProgramSummaries, Option[Proposal]]                  =
+  val proposal: Optional[ProgramSummaries, Option[Proposal]]                   =
     optProgramDetails.some.andThen(ProgramDetails.proposal)
-  val targets: Lens[ProgramSummaries, TargetList]                             = Focus[ProgramSummaries](_.targets)
-  val observations: Lens[ProgramSummaries, ObservationList]                   =
+  val targets: Lens[ProgramSummaries, TargetList]                              = Focus[ProgramSummaries](_.targets)
+  val observations: Lens[ProgramSummaries, ObservationList]                    =
     Focus[ProgramSummaries](_.observations)
-  val groups: Lens[ProgramSummaries, GroupList]                               = Focus[ProgramSummaries](_.groups)
-  val attachments: Lens[ProgramSummaries, AttachmentList]                     = Focus[ProgramSummaries](_.attachments)
-  val programs: Lens[ProgramSummaries, ProgramInfoList]                       = Focus[ProgramSummaries](_.programs)
-  val configurationRequests: Lens[ProgramSummaries, ConfigurationRequestList] =
+  val groups: Lens[ProgramSummaries, GroupList]                                = Focus[ProgramSummaries](_.groups)
+  val attachments: Lens[ProgramSummaries, AttachmentList]                      = Focus[ProgramSummaries](_.attachments)
+  val programs: Lens[ProgramSummaries, ProgramInfoList]                        = Focus[ProgramSummaries](_.programs)
+  val configurationRequests: Lens[ProgramSummaries, ConfigurationRequestList]  =
     Focus[ProgramSummaries](_.configurationRequests)
+  val calculatedValueOrphans: Lens[ProgramSummaries, CalculatedValueOrphanMap] =
+    Focus[ProgramSummaries](_.calculatedValueOrphans)
+
+  val obsAndOrphans: Lens[ProgramSummaries, (ObservationList, CalculatedValueOrphanMap)] =
+    (observations, calculatedValueOrphans).disjointZip
 
   val programReference: Optional[ProgramSummaries, ProgramReference] =
     optProgramDetails.some.andThen(ProgramDetails.reference.some)

@@ -18,8 +18,8 @@ private def obsListSetter(obsList: List[Observation.Id])(
   programSummaries =>
     otwol.fold {
       // the Option[List]] is empty, so we're deleting.
-      obsList.foldLeft(programSummaries) { case (grps, obsId) => grps.removeObs(obsId) }
+      obsList.foldLeft(programSummaries) { case (ps, obsId) => ps.removeObs(obsId) }
     } {
       // we insert the ones we received back into the programSummaries
-      _.foldLeft(programSummaries)((grps, obsSumm) => grps.insertObs(obsSumm))
+      _.foldLeft(programSummaries)((ps, obsSumm) => ps.upsertObs(obsSumm))
     }

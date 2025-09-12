@@ -37,6 +37,7 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Group
 import lucuma.core.model.Program
 import lucuma.core.model.Target
+import lucuma.core.optics.syntax.lens.*
 import lucuma.core.util.NewBoolean
 import lucuma.react.common.*
 import lucuma.react.hotkeys.*
@@ -44,7 +45,6 @@ import lucuma.react.hotkeys.hooks.*
 import lucuma.react.primereact.Button
 import lucuma.react.resizeDetector.*
 import lucuma.react.resizeDetector.hooks.*
-import lucuma.ui.optics.*
 import lucuma.ui.primereact.*
 import lucuma.ui.reusability.given
 import lucuma.ui.sso.UserVault

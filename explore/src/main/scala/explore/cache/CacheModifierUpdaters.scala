@@ -7,7 +7,6 @@ import cats.Order.given
 import cats.syntax.all.*
 import explore.givens.given
 import explore.model.Attachment
-import explore.model.Execution
 import explore.model.GroupList
 import explore.model.Observation
 import explore.model.ProgramInfo
@@ -18,7 +17,6 @@ import lucuma.core.model.Group
 import lucuma.schemas.ObservationDB.Enums.EditType
 import lucuma.schemas.ObservationDB.Enums.EditType.*
 import lucuma.schemas.ObservationDB.Enums.Existence
-import lucuma.ui.optics.*
 import queries.common.ObsQueriesGQL.ObsCalcSubscription.Data.ObscalcUpdate
 import queries.common.ObsQueriesGQL.ProgramObservationsDelta.Data.ObservationEdit
 import queries.common.ProgramQueriesGQL.GroupEditSubscription.Data.GroupEdit
@@ -56,13 +54,11 @@ trait CacheModifierUpdaters {
             if isPresentInServer || isPresentLocally then mod(programSummaries)
             else programSummaries
 
-        val obsUpdate: ProgramSummaries => ProgramSummaries =
-          ProgramSummaries.observations
-            .modify: observations =>
-              if (isPresentInServer)
-                observations + (obsId -> value)
-              else
-                observations - obsId
+        val obsUpdate: ProgramSummaries => ProgramSummaries = ps =>
+          if (isPresentInServer)
+            ps.upsertObs(value)
+          else
+            ps.removeObs(obsId)
 
         ifPresentInServerOrLocally(obsUpdate)
       .getOrElse:
@@ -73,18 +69,13 @@ trait CacheModifierUpdaters {
   protected def modifyObservationCalculatedValues(
     obscalcUpdate: ObscalcUpdate
   ): ProgramSummaries => ProgramSummaries =
-    val digestLens   = Observation.execution.andThen(Execution.digest)
-    val disjointLens = digestLens.disjointZip(Observation.workflow)
     // `Execution.digest` and `workflow` will be made non-optional in the future.
     // In practice, both should be defined.
     obscalcUpdate.value
       .flatMap(value => (value.execution.digest, value.workflow).tupled)
       .fold(identity[ProgramSummaries]) { case (digest, workflow) =>
         val obsId: Observation.Id = obscalcUpdate.observationId
-        ProgramSummaries.observations
-          .index(obsId)
-          .andThen(disjointLens)
-          .replace((digest, workflow))
+        (ps: ProgramSummaries) => ps.updateCalculatedValues(obsId, workflow, digest)
       }
 
   protected def modifyGroups(groupEdit: GroupEdit): ProgramSummaries => ProgramSummaries =

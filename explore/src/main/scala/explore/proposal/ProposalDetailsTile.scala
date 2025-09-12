@@ -51,6 +51,7 @@ import lucuma.core.syntax.all.*
 import lucuma.core.util.CalculatedValue
 import lucuma.core.util.Enumerated
 import lucuma.core.util.TimeSpan
+import lucuma.core.util.time.format.GppDateFormatter
 import lucuma.core.validation.*
 import lucuma.react.common.Css
 import lucuma.react.common.ReactFnProps
@@ -58,7 +59,6 @@ import lucuma.react.primereact.Button
 import lucuma.react.primereact.SelectItem
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB.Types.*
-import lucuma.ui.format.*
 import lucuma.ui.input.*
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given

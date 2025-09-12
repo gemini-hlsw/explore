@@ -20,11 +20,11 @@ import lucuma.core.model.ObservingNight
 import lucuma.core.model.TwilightBoundedNight
 import lucuma.core.util.Enumerated
 import lucuma.core.util.time.*
+import lucuma.core.util.time.format.GppTimeFormatter
 import lucuma.react.common.ReactFnProps
 import lucuma.react.highcharts.Chart
 import lucuma.typed.highcharts.mod.*
 import lucuma.ui.components.MoonPhase
-import lucuma.ui.format.*
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import org.typelevel.cats.time.given

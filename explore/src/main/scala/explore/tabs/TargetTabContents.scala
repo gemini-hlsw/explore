@@ -43,6 +43,7 @@ import lucuma.core.model.Program
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.core.model.sequence.ExecutionDigest
+import lucuma.core.optics.syntax.lens.*
 import lucuma.core.util.CalculatedValue
 import lucuma.core.util.TimeSpan
 import lucuma.react.common.*
@@ -51,7 +52,6 @@ import lucuma.react.hotkeys.hooks.*
 import lucuma.react.resizeDetector.*
 import lucuma.react.resizeDetector.hooks.*
 import lucuma.schemas.model.*
-import lucuma.ui.optics.*
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import monocle.Iso

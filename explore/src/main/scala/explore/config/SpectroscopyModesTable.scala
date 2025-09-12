@@ -3,7 +3,6 @@
 
 package explore.config
 
-import algebra.instances.all.given
 import cats.data.*
 import cats.effect.*
 import cats.implicits.catsKernelOrderingForOrder

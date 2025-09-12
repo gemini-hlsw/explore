@@ -115,7 +115,6 @@ object ObsQueriesGQL:
           observationId
           oldState
           newState
-          meta:value { existence }
           editType
           value {
             groupId

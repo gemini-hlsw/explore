@@ -298,10 +298,6 @@ object Dependencies {
     )(mUnitCatsEffect)
   )
 
-  val RefinedAlgebra = Def.setting(
-    Seq("edu.gemini" %%% "refined-algebra" % refinedAlgebra)
-  )
-
   val ScalaCollectionContrib = Def.setting(
     deps(
       "org.scala-lang.modules" %%% "scala-collection-contrib"

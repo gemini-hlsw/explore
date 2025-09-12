@@ -39,7 +39,9 @@ import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.SourceProfile
 import lucuma.core.model.Target
 import lucuma.core.model.TimingWindow
+import lucuma.core.model.sequence.ExecutionDigest
 import lucuma.core.model.sequence.gmos.GmosCcdMode
+import lucuma.core.optics.syntax.lens.*
 import lucuma.core.util.CalculatedValue
 import lucuma.core.util.Enumerated
 import lucuma.core.util.TimeSpan
@@ -336,6 +338,13 @@ object Observation:
   val groupId                  = Focus[Observation](_.groupId)
   val groupIndex               = Focus[Observation](_.groupIndex)
   val execution                = Focus[Observation](_.execution)
+  val digest                   = execution.andThen(Execution.digest)
+
+  val calculatedValues
+    : Lens[Observation,
+           (CalculatedValue[ObservationWorkflow], CalculatedValue[Option[ExecutionDigest]])
+    ] =
+    (workflow, digest).disjointZip
 
   // unlawful because it also updates the list of valid transitions, but
   // is needed for optimistically setting the state in the ObsBadge

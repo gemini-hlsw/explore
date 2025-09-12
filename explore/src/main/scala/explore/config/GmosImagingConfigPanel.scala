@@ -30,6 +30,7 @@ import lucuma.core.math.Offset
 import lucuma.core.math.syntax.int.*
 import lucuma.core.model.ExposureTimeMode
 import lucuma.core.model.Program
+import lucuma.core.optics.syntax.lens.*
 import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
 import lucuma.core.util.NewBoolean
