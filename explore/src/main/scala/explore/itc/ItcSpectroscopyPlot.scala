@@ -10,6 +10,7 @@ import explore.highcharts.*
 import explore.model.itc.*
 import explore.model.reusability.given
 import japgolly.scalajs.react.*
+import japgolly.scalajs.react.Reusability
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.math.Wavelength
 import lucuma.itc.GraphType
@@ -35,6 +36,8 @@ case class ItcSpectroscopyPlot(
 ) extends ReactFnProps(ItcSpectroscopyPlot.component)
 
 object ItcSpectroscopyPlot {
+  // Derive reusability to prevent unnecessary re-renders when props haven't changed
+  given Reusability[ItcSpectroscopyPlot] = Reusability.derive
   private def chartOptions(
     graph:           GraphResult,
     targetName:      String,
@@ -178,7 +181,7 @@ object ItcSpectroscopyPlot {
         )
     }
 
-  private val component = ScalaFnComponent[ItcSpectroscopyPlot]: props =>
+  private val component = ScalaFnComponent.withReuse[ItcSpectroscopyPlot]: props =>
     for {
       itcGraphOptions <- useMemo((props.graphs, props.targetName, props.signalToNoiseAt)):
                            (graphs, targetName, signalToNoiseAt) =>
@@ -193,10 +196,11 @@ object ItcSpectroscopyPlot {
       options         <- useMemo((props.graphType, itcGraphOptions)): (graphType, itcGraphOptions) =>
                            itcGraphOptions.get(graphType)
     } yield
-      val chartOptions: Reusable[Options] = options.sequenceOption.getOrElse(EmptyGraphOptions)
+      val chartOptionsReusable: Reusable[Options] =
+        options.sequenceOption.getOrElse(EmptyGraphOptions)
 
       Chart(
-        chartOptions,
+        chartOptionsReusable,
         allowUpdate = false,
         containerMod = TagMod(ExploreStyles.ItcPlotBody)
       )
