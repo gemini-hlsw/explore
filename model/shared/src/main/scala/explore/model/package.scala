@@ -19,6 +19,7 @@ import lucuma.core.math.Region
 import lucuma.core.model.ConfigurationRequest
 import lucuma.core.model.ConstraintSet
 import lucuma.core.model.Group
+import lucuma.core.model.ObservationWorkflow
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Program
 import lucuma.core.model.SiderealTracking
@@ -26,6 +27,8 @@ import lucuma.core.model.SourceProfile
 import lucuma.core.model.SpectralDefinition
 import lucuma.core.model.Target
 import lucuma.core.model.TimingWindow
+import lucuma.core.model.sequence.ExecutionDigest
+import lucuma.core.util.CalculatedValue
 import lucuma.refined.*
 import lucuma.schemas.model.ObservingMode
 import monocle.Focus
@@ -87,6 +90,10 @@ type ProgramInfoList               = SortedMap[Program.Id, ProgramInfo]
 type ConfigurationRequestList      = SortedMap[ConfigurationRequest.Id, ConfigurationRequest]
 
 type ObservationsAndTargets = (ObservationList, TargetList)
+
+type CalculatedWorkflowAndDigest =
+  (CalculatedValue[ObservationWorkflow], CalculatedValue[Option[ExecutionDigest]])
+type CalculatedValueOrphanMap    = Map[Observation.Id, CalculatedWorkflowAndDigest]
 
 object ObservationsAndTargets:
   val observations: Lens[ObservationsAndTargets, ObservationList] =

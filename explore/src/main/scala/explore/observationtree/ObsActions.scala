@@ -21,8 +21,8 @@ import explore.undo.AsyncAction
 import japgolly.scalajs.react.*
 import lucuma.core.enums.ScienceBand
 import lucuma.core.model.Program
+import lucuma.core.optics.syntax.lens.*
 import lucuma.schemas.ObservationDB.Types.*
-import lucuma.ui.optics.*
 import monocle.Lens
 
 object ObsActions:

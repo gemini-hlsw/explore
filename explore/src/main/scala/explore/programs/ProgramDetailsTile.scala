@@ -14,10 +14,10 @@ import explore.model.ProgramUser
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Program
+import lucuma.core.util.time.format.GppDateFormatter
 import lucuma.react.common.ReactFnComponent
 import lucuma.react.common.ReactFnProps
 import lucuma.refined.*
-import lucuma.ui.format.*
 import lucuma.ui.primereact.CheckboxView
 import lucuma.ui.primereact.FormInfo
 import lucuma.ui.primereact.given

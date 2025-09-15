@@ -15,10 +15,10 @@ import fs2.Stream
 import japgolly.scalajs.react.*
 import lucuma.core.math.BoundedInterval
 import lucuma.core.model.CoordinatesAt
+import lucuma.core.util.time.format.GppDateFormatter
 import lucuma.react.common.ReactFnProps
 import lucuma.react.highcharts.Chart
 import lucuma.typed.highcharts.mod.*
-import lucuma.ui.format.*
 import lucuma.ui.reusability.given
 import lucuma.ui.syntax.all.given
 import org.typelevel.cats.time.given

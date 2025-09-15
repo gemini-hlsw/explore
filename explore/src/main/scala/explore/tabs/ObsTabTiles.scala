@@ -65,6 +65,7 @@ import lucuma.core.model.ObjectTracking
 import lucuma.core.model.PosAngleConstraint
 import lucuma.core.model.Program
 import lucuma.core.model.Target
+import lucuma.core.optics.syntax.lens.*
 import lucuma.core.syntax.all.*
 import lucuma.core.util.TimeSpan
 import lucuma.react.common.ReactFnProps
@@ -75,7 +76,6 @@ import lucuma.refined.*
 import lucuma.schemas.model.BasicConfiguration
 import lucuma.schemas.model.CentralWavelength
 import lucuma.schemas.model.TargetWithId
-import lucuma.ui.optics.*
 import lucuma.ui.reusability.given
 import lucuma.ui.sso.UserVault
 import lucuma.ui.syntax.all.*

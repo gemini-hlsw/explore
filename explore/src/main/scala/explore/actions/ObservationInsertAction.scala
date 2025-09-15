@@ -27,7 +27,7 @@ object ObservationInsertAction {
     optObs.fold { // undo
       agwo.removeObs(obsId)
     } { // do or re-do
-      agwo.insertObs
+      agwo.upsertObs
     }
 
   private def updateExpandedIds(

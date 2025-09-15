@@ -165,7 +165,6 @@ lazy val commonLibSettings = Seq(
       LucumaRefined.value ++
       LucumaAgs.value ++
       LucumaITCClient.value ++
-      RefinedAlgebra.value ++
       Monocle.value ++
       Mouse.value ++
       Boopickle.value ++

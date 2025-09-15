@@ -18,6 +18,7 @@ import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Program
 import lucuma.core.util.NewBoolean
 import lucuma.core.util.Timestamp
+import lucuma.core.util.time.format.*
 import lucuma.react.common.ReactFnComponent
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Button

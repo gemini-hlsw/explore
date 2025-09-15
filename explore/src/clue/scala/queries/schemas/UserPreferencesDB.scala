@@ -9,8 +9,8 @@ import io.circe.Encoder
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.core.util.Enumerated
+import lucuma.core.util.time.format.IsoUTCFormatter
 import lucuma.react.table.SortDirection
-import lucuma.ui.format.*
 
 import java.time.ZonedDateTime
 

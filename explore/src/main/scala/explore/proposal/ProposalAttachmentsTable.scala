@@ -31,6 +31,7 @@ import lucuma.core.enums.ScienceSubtype
 import lucuma.core.model.Program
 import lucuma.core.util.Enumerated
 import lucuma.core.util.Timestamp
+import lucuma.core.util.time.format.GppDateFormatter
 import lucuma.react.common.ReactFnProps
 import lucuma.react.common.style.Css
 import lucuma.react.floatingui.Placement
@@ -38,7 +39,6 @@ import lucuma.react.floatingui.syntax.*
 import lucuma.react.primereact.ConfirmPopup
 import lucuma.react.primereact.Dialog
 import lucuma.react.table.*
-import lucuma.ui.format.*
 import lucuma.ui.react.given
 import lucuma.ui.reusability.given
 import lucuma.ui.table.*
