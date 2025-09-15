@@ -10,13 +10,13 @@ import cats.syntax.all.*
 import eu.timepit.refined.cats.refTypeEq
 import eu.timepit.refined.types.numeric.PosInt
 import eu.timepit.refined.types.string.NonEmptyString
+import lucuma.core.math.SingleSN
+import lucuma.core.math.TotalSN
 import lucuma.core.math.Wavelength
 import lucuma.core.util.TimeSpan
 import lucuma.itc.IntegrationTime
 import lucuma.itc.ItcAxis
 import lucuma.itc.SignalToNoiseAt
-import lucuma.itc.SingleSN
-import lucuma.itc.TotalSN
 import lucuma.itc.client.SeriesResult
 import lucuma.itc.client.TargetTimeAndGraphsResult
 import lucuma.itc.math.roundToSignificantFigures

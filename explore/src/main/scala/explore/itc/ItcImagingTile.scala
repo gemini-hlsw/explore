@@ -26,12 +26,12 @@ import explore.modes.ItcInstrumentConfig
 import explore.modes.ModeRow
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.math.SingleSN
+import lucuma.core.math.TotalSN
 import lucuma.core.model.User
 import lucuma.core.util.TimeSpan
 import lucuma.core.util.Timestamp
 import lucuma.itc.SignalToNoiseAt
-import lucuma.itc.SingleSN
-import lucuma.itc.TotalSN
 import lucuma.react.common.ReactFnComponent
 import lucuma.react.common.ReactFnProps
 import lucuma.react.primereact.Dropdown

@@ -29,6 +29,8 @@ import lucuma.core.math.FluxDensityContinuumValue
 import lucuma.core.math.LineFluxValue
 import lucuma.core.math.LineWidthValue
 import lucuma.core.math.SignalToNoise
+import lucuma.core.math.SingleSN
+import lucuma.core.math.TotalSN
 import lucuma.core.math.Wavelength
 import lucuma.core.math.dimensional.*
 import lucuma.core.model.EmissionLine
@@ -49,9 +51,7 @@ import lucuma.itc.ItcSeries
 import lucuma.itc.ItcVersions
 import lucuma.itc.ItcWarning
 import lucuma.itc.SignalToNoiseAt
-import lucuma.itc.SingleSN
 import lucuma.itc.TargetIntegrationTime
-import lucuma.itc.TotalSN
 import lucuma.itc.client.AsterismTargetGraphsResultOutcomes
 import lucuma.itc.client.GraphResult
 import lucuma.itc.client.SeriesResult

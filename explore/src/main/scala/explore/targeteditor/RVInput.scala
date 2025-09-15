@@ -5,7 +5,6 @@ package explore.targeteditor
 
 import algebra.instances.all.given
 import cats.syntax.all.*
-import coulomb.policy.spire.standard.given
 import crystal.react.View
 import crystal.react.hooks.*
 import crystal.react.syntax.all.*

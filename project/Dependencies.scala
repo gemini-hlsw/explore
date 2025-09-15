@@ -68,12 +68,6 @@ object Dependencies {
     )(clue)
   )
 
-  val CoulombRefined = Def.setting(
-    deps(
-      "com.manyangled" %%% "coulomb-refined"
-    )(coulomb)
-  )
-
   val Crystal = Def.setting(
     deps(
       "edu.gemini" %%% "crystal"
@@ -209,12 +203,6 @@ object Dependencies {
       "edu.gemini" %%% "lucuma-react-resize-detector",
       "edu.gemini" %%% "lucuma-react-prime-react"
     )(lucumaReact)
-  )
-
-  val LucumaRefined = Def.setting(
-    deps(
-      "edu.gemini" %%% "lucuma-refined"
-    )(lucumaRefined)
   )
 
   val LucumaOdbSchema = Def.setting(
