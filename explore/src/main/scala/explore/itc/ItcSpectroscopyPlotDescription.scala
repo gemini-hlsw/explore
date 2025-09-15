@@ -9,9 +9,9 @@ import explore.model.itc.ItcExposureTime
 import explore.model.itc.math.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.math.SingleSN
+import lucuma.core.math.TotalSN
 import lucuma.itc.ItcCcd
-import lucuma.itc.SingleSN
-import lucuma.itc.TotalSN
 import lucuma.react.common.ReactFnComponent
 import lucuma.react.common.ReactFnProps
 import lucuma.ui.format.*

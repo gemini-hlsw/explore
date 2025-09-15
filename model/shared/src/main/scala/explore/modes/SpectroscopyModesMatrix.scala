@@ -8,7 +8,7 @@ import cats.Order
 import cats.data.NonEmptyList
 import cats.derived.*
 import cats.implicits.*
-import coulomb.*
+import coulomb.Quantity
 import coulomb.conversion.ValueConversion
 import eu.timepit.refined.*
 import eu.timepit.refined.auto.*
@@ -68,10 +68,7 @@ trait ModeCommonWavelengths {
     shifted.intersect(BoundedInterval.unsafeClosed(λminV, λmaxV))
 }
 
-object SlitLength extends NewType[ModeSlitSize] {
-  given Order[SlitLength] = Order.by(_.value.value.toMicroarcseconds)
-}
-
+object SlitLength extends NewType[ModeSlitSize]
 type SlitLength = SlitLength.Type
 
 object SlitWidth extends NewType[ModeSlitSize]

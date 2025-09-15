@@ -154,7 +154,6 @@ lazy val commonLibSettings = Seq(
       CatsRetry.value ++
       Circe.value ++
       Clue.value ++
-      CoulombRefined.value ++
       Crystal.value ++
       FS2.value ++
       Http4sCore.value ++
@@ -162,7 +161,6 @@ lazy val commonLibSettings = Seq(
       LucumaCore.value ++
       LucumaSchemas.value ++
       LucumaOdbSchema.value ++
-      LucumaRefined.value ++
       LucumaAgs.value ++
       LucumaITCClient.value ++
       Monocle.value ++

@@ -5,10 +5,10 @@ package explore.model.itc.math
 
 import cats.data.NonEmptyChain
 import cats.syntax.all.*
+import lucuma.core.math.SingleSN
+import lucuma.core.math.TotalSN
 import lucuma.core.math.Wavelength
 import lucuma.itc.ItcCcd
-import lucuma.itc.SingleSN
-import lucuma.itc.TotalSN
 
 import scala.math.*
 

@@ -3,9 +3,11 @@
 
 package explore.optics
 
+import algebra.instances.all.*
 import cats.Order.given
 import coulomb.*
-import coulomb.policy.spire.standard.given
+import coulomb.conversion.*
+import coulomb.conversion.implicits.given
 import coulomb.syntax.*
 import lucuma.core.enums.Band
 import lucuma.core.math.ApparentRadialVelocity
@@ -22,6 +24,7 @@ import lucuma.core.model.Target
 import monocle.*
 
 import scala.collection.immutable.SortedMap
+import scala.language.implicitConversions
 
 /**
  * Contains a set of useful optics to explore the model
@@ -36,7 +39,7 @@ trait ModelOptics {
   val FromKilometersPerSecondRV: Prism[BigDecimal, RadialVelocity] =
     Prism[BigDecimal, RadialVelocity](b =>
       Some(b)
-        .filter(_.abs <= SpeedOfLight.tToUnit[KilometersPerSecond].value)
+        .filter(_.abs <= SpeedOfLight.toValue[BigDecimal].value)
         .flatMap(v => RadialVelocity(v.withUnit[KilometersPerSecond]))
     )(rv => rv.rv.toUnit[KilometersPerSecond].value)
 

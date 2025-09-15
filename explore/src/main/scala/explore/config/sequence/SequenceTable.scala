@@ -5,9 +5,9 @@ package explore.config.sequence
 
 import cats.syntax.all.*
 import lucuma.core.enums.SequenceType
+import lucuma.core.math.SingleSN
+import lucuma.core.math.TotalSN
 import lucuma.core.model.sequence.*
-import lucuma.itc.SingleSN
-import lucuma.itc.TotalSN
 import lucuma.schemas.model.Visit
 import lucuma.schemas.model.enums.AtomExecutionState
 import lucuma.schemas.model.enums.StepExecutionState
