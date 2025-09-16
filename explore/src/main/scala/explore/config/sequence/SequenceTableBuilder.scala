@@ -8,6 +8,7 @@ import explore.components.ui.ExploreStyles
 import explore.model.AppContext
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.enums.Instrument
 import lucuma.react.SizePx
 import lucuma.react.resizeDetector.hooks.*
 import lucuma.react.syntax.*
@@ -27,9 +28,7 @@ private type SequenceColumnsType[D] =
 private type ColumnType[D]          =
   ColumnDef[Expandable[HeaderOrRow[SequenceIndexedRow[D]]], ?, Nothing, Nothing, Nothing, Any, Any]
 
-private trait SequenceTableBuilder[S, D](
-  instrumentColumns: SequenceColumnsType[D] => List[ColumnType[D]]
-) extends SequenceRowBuilder[D]:
+private trait SequenceTableBuilder[S, D](instrument: Instrument) extends SequenceRowBuilder[D]:
   private type Props = SequenceTable[S, D]
 
   private lazy val ColDef = ColumnDef[SequenceTableRowType]
@@ -40,7 +39,7 @@ private trait SequenceTableBuilder[S, D](
   private lazy val ColumnSizes: Map[ColumnId, ColumnSize] = Map(
     HeaderColumnId   -> FixedSize(0.toPx),
     ExtraRowColumnId -> FixedSize(0.toPx)
-  ) ++ SequenceColumns.BaseColumnSizes
+  ) ++ SequenceColumns.BaseColumnSizes(instrument)
 
   private lazy val columns: Reusable[List[ColDef.Type]] =
     Reusable.always:
@@ -57,11 +56,11 @@ private trait SequenceTableBuilder[S, D](
               case step @ SequenceRow.Executed.ExecutedStep(_, _) =>
                 renderVisitExtraRow(step, showOngoingLabel = true)
         ).withColumnSize(ColumnSizes(ExtraRowColumnId))
-      ) ++ instrumentColumns(SequenceColumns(ColDef, _.step.some, _.index.some))
+      ) ++ SequenceColumns(ColDef, _.step.some, _.index.some)(instrument)
 
   private lazy val DynTableDef = DynTable(
     ColumnSizes,
-    SequenceColumns.BaseColumnPriorities,
+    SequenceColumns.BaseColumnPriorities(instrument),
     DynTable.ColState(
       resized = ColumnSizing(),
       visibility = ColumnVisibility()

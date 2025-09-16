@@ -5,6 +5,7 @@ package explore.config.sequence.byInstrument
 
 import explore.config.sequence.SequenceTable
 import explore.config.sequence.SequenceTableBuilder
+import lucuma.core.enums.Instrument
 import lucuma.core.enums.SequenceType
 import lucuma.core.math.SingleSN
 import lucuma.core.math.TotalSN
@@ -22,4 +23,6 @@ case class Flamingos2SequenceTable(
     with SequenceTable[Flamingos2StaticConfig, Flamingos2DynamicConfig]
 
 object Flamingos2SequenceTable
-    extends SequenceTableBuilder[Flamingos2StaticConfig, Flamingos2DynamicConfig](_.forFlamingos2)
+    extends SequenceTableBuilder[Flamingos2StaticConfig, Flamingos2DynamicConfig](
+      Instrument.Flamingos2
+    )

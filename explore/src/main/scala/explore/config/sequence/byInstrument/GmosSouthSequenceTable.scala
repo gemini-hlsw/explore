@@ -5,6 +5,7 @@ package explore.config.sequence.byInstrument
 
 import explore.config.sequence.SequenceTable
 import explore.config.sequence.SequenceTableBuilder
+import lucuma.core.enums.Instrument
 import lucuma.core.enums.SequenceType
 import lucuma.core.math.SingleSN
 import lucuma.core.math.TotalSN
@@ -21,5 +22,5 @@ case class GmosSouthSequenceTable(
 
 object GmosSouthSequenceTable
     extends SequenceTableBuilder[gmos.StaticConfig.GmosSouth, gmos.DynamicConfig.GmosSouth](
-      _.forGmos
+      Instrument.GmosSouth
     )
