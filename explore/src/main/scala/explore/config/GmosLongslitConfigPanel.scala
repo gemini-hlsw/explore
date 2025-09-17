@@ -180,9 +180,11 @@ object GmosLongslitConfigPanel {
         yield
           import ctx.given
 
-          val disableAdvancedEdit = editState.get =!= ConfigEditState.AdvancedEdit || props.readonly
-          val disableSimpleEdit   =
+          val disableAdvancedEdit      = editState.get =!= ConfigEditState.AdvancedEdit || props.readonly
+          val disableSimpleEdit        =
             disableAdvancedEdit && editState.get =!= ConfigEditState.SimpleEdit
+          val showCustomization        = props.calibrationRole.isEmpty
+          val allowRevertCustomization = !props.readonly
 
           val centralWavelengthView    = centralWavelength(props.observingMode)
           val initialCentralWavelength = initialCentralWavelengthLens.get(props.observingMode.get)
@@ -221,7 +223,9 @@ object GmosLongslitConfigPanel {
                 .toSequence()
                 .optional,
               units = "nm".some,
-              disabled = disableSimpleEdit
+              disabled = disableSimpleEdit,
+              showCustomization = showCustomization,
+              allowRevertCustomization = allowRevertCustomization
             )
 
           <.div(
@@ -237,7 +241,9 @@ object GmosLongslitConfigPanel {
                 defaultValue = initialGratingLens.get(props.observingMode.get),
                 label = "Grating".some,
                 helpId = Some("configuration/gmos/grating.md".refined),
-                disabled = disableAdvancedEdit
+                disabled = disableAdvancedEdit,
+                showCustomization = showCustomization,
+                allowRevertCustomization = allowRevertCustomization
               ),
               CustomizableEnumSelectOptional(
                 id = "filter".refined,
@@ -247,7 +253,9 @@ object GmosLongslitConfigPanel {
                 helpId = Some("configuration/gmos/filter.md".refined),
                 disabled = disableAdvancedEdit,
                 showClear = true,
-                resetToOriginal = true
+                resetToOriginal = true,
+                showCustomization = showCustomization,
+                allowRevertCustomization = allowRevertCustomization
               ),
               CustomizableEnumSelect(
                 id = "fpu".refined,
@@ -255,12 +263,17 @@ object GmosLongslitConfigPanel {
                 defaultValue = initialFpuLens.get(props.observingMode.get),
                 label = "FPU".some,
                 helpId = Some("configuration/gmos/fpu.md".refined),
-                disabled = disableAdvancedEdit
+                disabled = disableAdvancedEdit,
+                showCustomization = showCustomization,
+                allowRevertCustomization = allowRevertCustomization
               ),
-              OffsetsControl(explicitSpatialOffsets(props.observingMode),
-                             defaultSpatialOffsetsLens.get(props.observingMode.get),
-                             props.sequenceChanged,
-                             disableSimpleEdit
+              OffsetsControl(
+                explicitSpatialOffsets(props.observingMode),
+                defaultSpatialOffsetsLens.get(props.observingMode.get),
+                props.sequenceChanged,
+                disableSimpleEdit,
+                showCustomization = showCustomization,
+                allowRevertCustomization = allowRevertCustomization
               )
             ),
             <.div(LucumaPrimeStyles.FormColumnCompact, ExploreStyles.AdvancedConfigurationCol2)(
@@ -274,7 +287,9 @@ object GmosLongslitConfigPanel {
                 validFormat = props.units.toInputFormat,
                 changeAuditor = props.units.toAuditor,
                 defaultValue = initialCentralWavelength,
-                disabled = disableSimpleEdit
+                disabled = disableSimpleEdit,
+                showCustomization = showCustomization,
+                allowRevertCustomization = allowRevertCustomization
               ),
               dithersControl(props.sequenceChanged),
               ExposureTimeModeEditor(
@@ -302,7 +317,9 @@ object GmosLongslitConfigPanel {
                   view = explicitXBinning(props.observingMode).withDefault(defaultXBinning),
                   defaultValue = defaultXBinning.some,
                   disabled = disableAdvancedEdit,
-                  dropdownMods = ^.aria.label := "X Binning"
+                  dropdownMods = ^.aria.label := "X Binning",
+                  showCustomization = showCustomization,
+                  allowRevertCustomization = allowRevertCustomization
                 ),
                 <.label("x"),
                 CustomizableEnumSelectOptional(
@@ -310,7 +327,9 @@ object GmosLongslitConfigPanel {
                   view = explicitYBinning(props.observingMode).withDefault(defaultYBinning),
                   defaultValue = defaultYBinning.some,
                   disabled = disableAdvancedEdit,
-                  dropdownMods = ^.aria.label := "Y Binning"
+                  dropdownMods = ^.aria.label := "Y Binning",
+                  showCustomization = showCustomization,
+                  allowRevertCustomization = allowRevertCustomization
                 )
               ),
               CustomizableEnumSelectOptional(
@@ -320,7 +339,9 @@ object GmosLongslitConfigPanel {
                 defaultValue = defaultReadModeGain.some,
                 label = "Read Mode".some,
                 helpId = Some("configuration/gmos/read-mode.md".refined),
-                disabled = disableAdvancedEdit
+                disabled = disableAdvancedEdit,
+                showCustomization = showCustomization,
+                allowRevertCustomization = allowRevertCustomization
               ),
               CustomizableEnumSelectOptional(
                 id = "explicitRoi".refined,
@@ -328,7 +349,9 @@ object GmosLongslitConfigPanel {
                 defaultValue = defaultRoi.some,
                 label = "ROI".some,
                 helpId = Some("configuration/gmos/roi.md".refined),
-                disabled = disableAdvancedEdit
+                disabled = disableAdvancedEdit,
+                showCustomization = showCustomization,
+                allowRevertCustomization = allowRevertCustomization
               ),
               LambdaAndIntervalFormValues(
                 modeData = modeData,

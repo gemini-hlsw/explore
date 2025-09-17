@@ -27,16 +27,18 @@ import lucuma.ui.syntax.all.given
  * the icon reverts the value to the default value.
  */
 final case class CustomizableEnumSelectOptional[A](
-  id:              NonEmptyString,
-  view:            View[Option[A]],
-  defaultValue:    Option[A],
-  disabled:        Boolean,
-  label:           Option[String] = None,
-  helpId:          Option[Help.Id] = None,
-  exclude:         Set[A] = Set.empty[A],
-  showClear:       Boolean = false,
-  resetToOriginal: Boolean = false, // resets to `none` on false
-  dropdownMods:    TagMod = TagMod.empty
+  id:                       NonEmptyString,
+  view:                     View[Option[A]],
+  defaultValue:             Option[A],
+  disabled:                 Boolean,
+  showCustomization:        Boolean,
+  allowRevertCustomization: Boolean,
+  label:                    Option[String] = None,
+  helpId:                   Option[Help.Id] = None,
+  exclude:                  Set[A] = Set.empty[A],
+  showClear:                Boolean = false,
+  resetToOriginal:          Boolean = false, // resets to `none` on false
+  dropdownMods:             TagMod = TagMod.empty
 )(using val display: Display[A], val enumerated: Enumerated[A])
     extends ReactFnProps(CustomizableEnumSelectOptional.component)
 
@@ -62,10 +64,11 @@ object CustomizableEnumSelectOptional:
           PrimeStyles.InputGroupAddon,
           CustomizedGroupAddon(
             originalText,
-            props.view.set(if (props.resetToOriginal) props.defaultValue else none)
+            props.view.set(if (props.resetToOriginal) props.defaultValue else none),
+            props.allowRevertCustomization
           )
         )
-          .when(props.view.get =!= props.defaultValue)
+          .when(props.showCustomization && props.view.get =!= props.defaultValue)
       )
     )
   )

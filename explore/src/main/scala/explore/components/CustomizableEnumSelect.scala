@@ -27,13 +27,15 @@ import lucuma.ui.syntax.all.given
  * reverts the value to the default value.
  */
 final case class CustomizableEnumSelect[A](
-  id:           NonEmptyString,
-  view:         View[A],
-  defaultValue: A,
-  disabled:     Boolean,
-  exclude:      Set[A] = Set.empty[A],
-  label:        Option[String] = None,
-  helpId:       Option[Help.Id] = None
+  id:                       NonEmptyString,
+  view:                     View[A],
+  defaultValue:             A,
+  disabled:                 Boolean,
+  showCustomization:        Boolean,
+  allowRevertCustomization: Boolean,
+  exclude:                  Set[A] = Set.empty[A],
+  label:                    Option[String] = None,
+  helpId:                   Option[Help.Id] = None
 )(using val display: Display[A], val enumerated: Enumerated[A])
     extends ReactFnProps(CustomizableEnumSelect.component)
 
@@ -55,8 +57,11 @@ object CustomizableEnumSelect:
           disabled = props.disabled
         ),
         <.span(PrimeStyles.InputGroupAddon,
-               CustomizedGroupAddon(originalText, props.view.set(props.defaultValue))
-        ).when(props.view.get =!= props.defaultValue)
+               CustomizedGroupAddon(originalText,
+                                    props.view.set(props.defaultValue),
+                                    props.allowRevertCustomization
+               )
+        ).when(props.showCustomization && props.view.get =!= props.defaultValue)
       )
     )
   )

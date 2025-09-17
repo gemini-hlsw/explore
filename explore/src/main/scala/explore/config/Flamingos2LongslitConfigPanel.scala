@@ -61,9 +61,11 @@ object Flamingos2LongslitConfigPanel
       yield
         import ctx.given
 
-        val disableAdvancedEdit = editState.get =!= ConfigEditState.AdvancedEdit || props.readonly
-        val disableSimpleEdit   =
+        val disableAdvancedEdit      = editState.get =!= ConfigEditState.AdvancedEdit || props.readonly
+        val disableSimpleEdit        =
           disableAdvancedEdit && editState.get =!= ConfigEditState.SimpleEdit
+        val showCustomization        = props.calibrationRole.isEmpty
+        val allowRevertCustomization = !props.readonly
 
         val disperserView: View[Flamingos2Disperser] = props.observingMode
           .zoom(
@@ -117,7 +119,9 @@ object Flamingos2LongslitConfigPanel
               defaultValue = props.observingMode.get.initialDisperser,
               label = "Disperser".some,
               helpId = Some("configuration/f2/disperser.md".refined),
-              disabled = disableSimpleEdit
+              disabled = disableSimpleEdit,
+              showCustomization = showCustomization,
+              allowRevertCustomization = allowRevertCustomization
             ),
             CustomizableEnumSelect(
               id = "filter".refined,
@@ -125,7 +129,9 @@ object Flamingos2LongslitConfigPanel
               defaultValue = props.observingMode.get.initialFilter,
               label = "Filter".some,
               helpId = Some("configuration/f2/filter.md".refined),
-              disabled = disableSimpleEdit
+              disabled = disableSimpleEdit,
+              showCustomization = showCustomization,
+              allowRevertCustomization = allowRevertCustomization
             ),
             CustomizableEnumSelect(
               id = "fpu".refined,
@@ -133,7 +139,9 @@ object Flamingos2LongslitConfigPanel
               defaultValue = props.observingMode.get.initialFpu,
               label = "FPU".some,
               helpId = Some("configuration/f2/fpu.md".refined),
-              disabled = disableSimpleEdit
+              disabled = disableSimpleEdit,
+              showCustomization = showCustomization,
+              allowRevertCustomization = allowRevertCustomization
             ),
             CustomizableEnumSelect(
               id = "read-mode".refined,
@@ -141,7 +149,9 @@ object Flamingos2LongslitConfigPanel
               defaultValue = None,
               label = "Read Mode".some,
               helpId = Some("configuration/f2/read-mode.md".refined),
-              disabled = disableSimpleEdit
+              disabled = disableSimpleEdit,
+              showCustomization = showCustomization,
+              allowRevertCustomization = allowRevertCustomization
             )
           ),
           <.div(LucumaPrimeStyles.FormColumnCompact, ExploreStyles.AdvancedConfigurationCol2)(
@@ -164,7 +174,9 @@ object Flamingos2LongslitConfigPanel
                 id = "decker".refined,
                 view = deckerView.withDefault(defaultDecker),
                 defaultValue = defaultDecker.some,
-                disabled = disableAdvancedEdit
+                disabled = disableAdvancedEdit,
+                showCustomization = showCustomization,
+                allowRevertCustomization = allowRevertCustomization
               )
             else
               <.label(^.id := "decker",

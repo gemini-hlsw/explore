@@ -25,14 +25,16 @@ import scalajs.js.JSConverters.*
  * default value.
  */
 final case class CustomizableInputText[A](
-  id:            NonEmptyString,
-  value:         View[A],
-  validFormat:   InputValidFormat[A],
-  changeAuditor: ChangeAuditor,
-  label:         TagMod,
-  defaultValue:  A,
-  units:         Option[String],
-  disabled:      Boolean
+  id:                       NonEmptyString,
+  value:                    View[A],
+  validFormat:              InputValidFormat[A],
+  changeAuditor:            ChangeAuditor,
+  label:                    TagMod,
+  defaultValue:             A,
+  units:                    Option[String],
+  disabled:                 Boolean,
+  showCustomization:        Boolean,
+  allowRevertCustomization: Boolean
 )(using val eq: Eq[A])
     extends ReactFnProps(CustomizableInputText.component)
 
@@ -42,9 +44,10 @@ object CustomizableInputText:
 
     val isCustom                    = props.value.get =!= props.defaultValue
     val customAddon: Option[TagMod] =
-      if (isCustom)
+      if (props.showCustomization && isCustom)
         (CustomizedGroupAddon(props.validFormat.reverseGet(props.defaultValue),
-                              props.value.set(props.defaultValue)
+                              props.value.set(props.defaultValue),
+                              props.allowRevertCustomization
         ): TagMod).some
       else none
 
