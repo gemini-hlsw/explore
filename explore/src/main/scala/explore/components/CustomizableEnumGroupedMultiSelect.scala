@@ -27,25 +27,27 @@ import lucuma.ui.syntax.all.given
 import scala.scalajs.js.JSConverters.*
 
 final case class CustomizableEnumGroupedMultiSelect[A](
-  id:                 NonEmptyString,
-  view:               View[List[A]],
-  groupFunctions:     NonEmptyList[(String, A => Boolean)],
-  defaultValue:       List[A],
-  defaultFormatter:   Option[A => String] = None, // if you don't want to use the short name
-  error:              Option[String] = None,
-  tooltip:            Option[String] = None,
-  tooltipOptions:     Option[TooltipOptions] = None,
-  itemTemplate:       Option[SelectItem[A] => VdomNode] = None,
-  maxSelectedLabels:  Option[Int] = None,
-  selectedItemsLabel: Option[String] = None,
-  displayStyle:       MultiSelect.Display = MultiSelect.Display.Chip,
-  filter:             Boolean = true,             // show filter texbox at top
-  showSelectAll:      Boolean = false,
-  showClear:          Boolean = true,
-  disabled:           Boolean,
-  exclude:            Set[A] = Set.empty[A],
-  label:              Option[String] = None,
-  helpId:             Option[Help.Id] = None
+  id:                       NonEmptyString,
+  view:                     View[List[A]],
+  groupFunctions:           NonEmptyList[(String, A => Boolean)],
+  defaultValue:             List[A],
+  defaultFormatter:         Option[A => String] = None, // if you don't want to use the short name
+  error:                    Option[String] = None,
+  tooltip:                  Option[String] = None,
+  tooltipOptions:           Option[TooltipOptions] = None,
+  itemTemplate:             Option[SelectItem[A] => VdomNode] = None,
+  maxSelectedLabels:        Option[Int] = None,
+  selectedItemsLabel:       Option[String] = None,
+  displayStyle:             MultiSelect.Display = MultiSelect.Display.Chip,
+  filter:                   Boolean = true,             // show filter texbox at top
+  showSelectAll:            Boolean = false,
+  showClear:                Boolean = true,
+  disabled:                 Boolean,
+  showCustomization:        Boolean,
+  allowRevertCustomization: Boolean,
+  exclude:                  Set[A] = Set.empty[A],
+  label:                    Option[String] = None,
+  helpId:                   Option[Help.Id] = None
 )(using val display: Display[A], val enumerated: Enumerated[A])
     extends ReactFnProps(CustomizableEnumGroupedMultiSelect.component)
 
@@ -80,8 +82,11 @@ object CustomizableEnumGroupedMultiSelect:
           tooltipOptions = props.tooltipOptions.orUndefined
         ),
         <.span(PrimeStyles.InputGroupAddon,
-               CustomizedGroupAddon(originalText, props.view.set(props.defaultValue))
-        ).when(props.view.get =!= props.defaultValue)
+               CustomizedGroupAddon(originalText,
+                                    props.view.set(props.defaultValue),
+                                    props.allowRevertCustomization
+               )
+        ).when(props.showCustomization && props.view.get =!= props.defaultValue)
       )
     )
   )

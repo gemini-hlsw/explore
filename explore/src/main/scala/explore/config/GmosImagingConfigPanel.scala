@@ -161,9 +161,11 @@ object GmosImagingConfigPanel {
         } yield
           import ctx.given
 
-          val disableAdvancedEdit = editState.get =!= ConfigEditState.AdvancedEdit || props.readonly
-          val disableSimpleEdit   =
+          val disableAdvancedEdit      = editState.get =!= ConfigEditState.AdvancedEdit || props.readonly
+          val disableSimpleEdit        =
             disableAdvancedEdit && editState.get =!= ConfigEditState.SimpleEdit
+          val showCustomization        = props.calibrationRole.isEmpty
+          val allowRevertCustomization = !props.readonly
 
           val defaultMultipleFiltersMode =
             defaultMultipleFiltersModeLens.get(props.observingMode.get)
@@ -217,7 +219,9 @@ object GmosImagingConfigPanel {
                   selectedItemsLabel = s"${localFiltersView.get.size} selected".some,
                   tooltip = localFiltersView.get.map(Display[Filter].longName).mkString("\n").some,
                   tooltipOptions = TooltipOptions(showOnDisabled = true).some,
-                  disabled = disableSimpleEdit
+                  disabled = disableSimpleEdit,
+                  showCustomization = showCustomization,
+                  allowRevertCustomization = allowRevertCustomization
                 ),
                 CustomizableEnumSelectOptional(
                   id = "explicitMultipleFiltersMode".refined,
@@ -226,7 +230,9 @@ object GmosImagingConfigPanel {
                   defaultValue = defaultMultipleFiltersMode.some,
                   label = "Multiple Filters".some,
                   helpId = Some("configuration/imaging/multiple-filters-mode.md".refined),
-                  disabled = disableSimpleEdit
+                  disabled = disableSimpleEdit,
+                  showCustomization = showCustomization,
+                  allowRevertCustomization = allowRevertCustomization
                 )
               ),
               <.div(LucumaPrimeStyles.FormColumnCompact, ExploreStyles.AdvancedConfigurationCol2)(
@@ -270,7 +276,9 @@ object GmosImagingConfigPanel {
                   label = "Binning".some,
                   helpId = Some("configuration/gmos/binning.md".refined),
                   disabled = disableAdvancedEdit,
-                  dropdownMods = ^.aria.label := "Binning"
+                  dropdownMods = ^.aria.label := "Binning",
+                  showCustomization = showCustomization,
+                  allowRevertCustomization = allowRevertCustomization
                 ),
                 CustomizableEnumSelectOptional(
                   id = "explicitReadMode".refined,
@@ -279,7 +287,9 @@ object GmosImagingConfigPanel {
                   defaultValue = defaultReadModeGain.some,
                   label = "Read Mode".some,
                   helpId = Some("configuration/gmos/read-mode.md".refined),
-                  disabled = disableAdvancedEdit
+                  disabled = disableAdvancedEdit,
+                  showCustomization = showCustomization,
+                  allowRevertCustomization = allowRevertCustomization
                 ),
                 CustomizableEnumSelectOptional(
                   id = "explicitRoi".refined,
@@ -287,7 +297,9 @@ object GmosImagingConfigPanel {
                   defaultValue = defaultRoi.some,
                   label = "ROI".some,
                   helpId = Some("configuration/gmos/roi.md".refined),
-                  disabled = disableAdvancedEdit
+                  disabled = disableAdvancedEdit,
+                  showCustomization = showCustomization,
+                  allowRevertCustomization = allowRevertCustomization
                 )
               ),
               AdvancedConfigButtons(

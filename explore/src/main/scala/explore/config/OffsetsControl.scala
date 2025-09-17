@@ -19,10 +19,12 @@ import lucuma.ui.input.ChangeAuditor
 import lucuma.ui.syntax.all.given
 
 final case class OffsetsControl(
-  view:         View[Option[NonEmptyList[Offset.Q]]],
-  defaultValue: NonEmptyList[Offset.Q],
-  onChange:     Callback,
-  disabled:     Boolean
+  view:                     View[Option[NonEmptyList[Offset.Q]]],
+  defaultValue:             NonEmptyList[Offset.Q],
+  onChange:                 Callback,
+  disabled:                 Boolean,
+  showCustomization:        Boolean,
+  allowRevertCustomization: Boolean
 ) extends ReactFnProps(OffsetsControl)
 
 object OffsetsControl
@@ -41,6 +43,8 @@ object OffsetsControl
           .toSequence()
           .optional,
         units = "arcsec".some,
-        disabled = props.disabled
+        disabled = props.disabled,
+        showCustomization = props.showCustomization,
+        allowRevertCustomization = props.allowRevertCustomization
       )
     )

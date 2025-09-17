@@ -26,14 +26,16 @@ import scalajs.js.JSConverters.*
  * entering the default value will also set it to None.
  */
 final case class CustomizableInputTextOptional[A](
-  id:            NonEmptyString,
-  value:         View[Option[A]],
-  validFormat:   InputValidFormat[Option[A]],
-  changeAuditor: ChangeAuditor,
-  label:         TagMod,
-  defaultValue:  A,
-  units:         Option[String],
-  disabled:      Boolean
+  id:                       NonEmptyString,
+  value:                    View[Option[A]],
+  validFormat:              InputValidFormat[Option[A]],
+  changeAuditor:            ChangeAuditor,
+  label:                    TagMod,
+  defaultValue:             A,
+  units:                    Option[String],
+  disabled:                 Boolean,
+  showCustomization:        Boolean,
+  allowRevertCustomization: Boolean
 )(using val eq: Eq[A])
     extends ReactFnProps(CustomizableInputTextOptional.component)
 
@@ -43,7 +45,14 @@ object CustomizableInputTextOptional:
 
     val originalText = props.validFormat.reverseGet(props.defaultValue.some)
     val customAddon  =
-      props.value.get.map(_ => CustomizedGroupAddon(originalText, props.value.set(none)): TagMod)
+      props.value.get
+        .filter(_ => props.showCustomization)
+        .map(_ =>
+          CustomizedGroupAddon(originalText,
+                               props.value.set(none),
+                               props.allowRevertCustomization
+          ): TagMod
+        )
 
     FormInputTextView(
       id = props.id,
