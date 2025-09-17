@@ -321,6 +321,7 @@ object ObsTabContents extends TwoPanels:
                   resize,
                   ExploreGridLayouts.sectionLayout(GridLayoutSection.GroupEditLayout),
                   props.userPreferences.get.groupEditLayout,
+                  props.readonly,
                   backButton
                 )
 
