@@ -28,6 +28,7 @@ case class ObsGroupTiles(
   resize:         UseResizeDetectorReturn,
   defaultLayouts: LayoutsMap,
   layouts:        LayoutsMap,
+  readonly:       Boolean,
   backButton:     VdomNode
 ) extends ReactFnProps(ObsGroupTiles.component)
 
@@ -53,7 +54,7 @@ object ObsGroupTiles:
               props.group,
               props.groupWarnings,
               props.childCount,
-              props.group.get.system
+              props.group.get.system || props.readonly
             )
               .withKey(props.group.get.id.toString)
               .toUnmounted,
