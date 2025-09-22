@@ -37,6 +37,7 @@ import lucuma.react.common.*
 import lucuma.react.hotkeys.*
 import lucuma.react.hotkeys.hooks.*
 import lucuma.react.primereact.ConfirmDialog
+import lucuma.react.primereact.Message
 import lucuma.react.primereact.Sidebar
 import lucuma.react.primereact.Toast
 import lucuma.react.primereact.ToastRef
@@ -251,15 +252,21 @@ object ExploreLayout:
                 val programSummaries: Pot[ProgramSummaries] =
                   props.model.programSummariesValue
 
-                val (showProgsPopupPot, msg, isSubmitted, proposalReference)
-                  : (Pot[Boolean], Option[String], Boolean, Option[ProposalReference]) =
-                  programSummaries.toOption.fold((pending, none, false, none)): pss =>
-                    routingInfo.optProgramId.fold((true.ready, none, false, none)): id =>
+                val (showProgsPopupPot, msg, isSubmitted, isNotAccepted, proposalReference)
+                  : (Pot[Boolean], Option[String], Boolean, Boolean, Option[ProposalReference]) =
+                  programSummaries.toOption.fold((pending, none, false, false, none)): pss =>
+                    routingInfo.optProgramId.fold((true.ready, none, false, false, none)): id =>
                       if (pss.programs.get(id).exists(!_.deleted))
-                        (false.ready, none, pss.proposalIsSubmitted, pss.proposalId)
+                        (false.ready,
+                         none,
+                         pss.proposalIsSubmitted,
+                         pss.proposalIsNotAccepted,
+                         pss.proposalId
+                        )
                       else
                         (true.ready,
                          s"The program id in the url, '$id', either does not exist, is deleted, or you do not have authorization to view it.".some,
+                         false,
                          false,
                          none
                         )
@@ -375,11 +382,13 @@ object ExploreLayout:
                               ),
                               <.div(
                                 LayoutStyles.MainBody,
-                                LayoutStyles.WithMessage.when(isSubmitted)
+                                LayoutStyles.WithMessage.when(isSubmitted || isNotAccepted)
                               )(
                                 props.resolution.renderP(props.model),
                                 TagMod.when(isSubmitted):
                                   SubmittedProposalMessage(proposalReference, deadline)
+                                ,
+                                Message(text = "The proposal was not accepted.").when(isNotAccepted)
                               )
                             )
                         )

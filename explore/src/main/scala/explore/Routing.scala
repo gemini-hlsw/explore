@@ -78,7 +78,7 @@ object Routing:
                 detailsUndoSetter,
                 userPreferences(model.rootModel).overviewTabLayout,
                 programSummaries.get.proposalIsAccepted,
-                programSummaries.get.proposalIsSubmitted || model.userIsReadonlyCoi
+                programSummaries.get.programIsReadonly || model.userIsReadonlyCoi
               )
       .orEmpty
 
@@ -99,7 +99,7 @@ object Routing:
                 model.rootModel.zoom(RootModel.searchingTarget),
                 model.rootModel.zoom(RootModel.expandedIds.andThen(ExpandedIds.asterismObsIds)),
                 model.rootModel.get.vault.map(_.token),
-                programSummaries.get.proposalIsSubmitted || model.userIsReadonlyCoi
+                programSummaries.get.programIsReadonly || model.userIsReadonlyCoi
               )
             .toOption
       .orEmpty
@@ -125,7 +125,7 @@ object Routing:
                 routingInfo.focused,
                 model.rootModel.zoom(RootModel.searchingTarget),
                 model.rootModel.zoom(RootModel.expandedIds.andThen(ExpandedIds.obsListGroupIds)),
-                programSummaries.get.proposalIsSubmitted || model.userIsReadonlyCoi
+                programSummaries.get.programIsReadonly || model.userIsReadonlyCoi
               )
             .toOption
       .orEmpty
@@ -142,7 +142,7 @@ object Routing:
             userPreferences(model.rootModel),
             routingInfo.focused.obsSet,
             model.rootModel.zoom(RootModel.expandedIds.andThen(ExpandedIds.constraintSetObsIds)),
-            programSummaries.get.proposalIsSubmitted || model.userIsReadonlyCoi
+            programSummaries.get.programIsReadonly || model.userIsReadonlyCoi
           )
       .orEmpty
 
@@ -158,7 +158,7 @@ object Routing:
             userPreferences(model.rootModel),
             routingInfo.focused.obsSet,
             model.rootModel.zoom(RootModel.expandedIds.andThen(ExpandedIds.schedulingObsIds)),
-            programSummaries.get.proposalIsSubmitted || model.userIsReadonlyCoi
+            programSummaries.get.programIsReadonly || model.userIsReadonlyCoi
           )
       .orEmpty
 
