@@ -184,6 +184,12 @@ extension [A](view: View[Option[A]])
   def removeOptionality(default: A): View[A] =
     view.zoom(_.getOrElse(default))(f => b => f(b.getOrElse(default)).some)
 
+  // Treats None as the monoidic empty and vice versa.
+  def withNoneAsEmpty(using m: Monoid[A], eq: Eq[A]): View[A] =
+    // not lawful (can't get back a Some(empty)), but works for our purpose.
+    val iso = monocle.Iso[Option[A], A](_.orEmpty)(_.some.filterNot(_.isEmpty))
+    view.as(iso)
+
 extension (target: Target)
   def icon: FontAwesomeIcon =
     target match

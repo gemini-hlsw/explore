@@ -4,6 +4,7 @@
 package explore.tabs
 
 import cats.data.NonEmptySet
+import cats.effect.IO
 import cats.syntax.all.*
 import clue.data.syntax.*
 import crystal.react.*
@@ -17,10 +18,12 @@ import explore.model.AppContext
 import explore.model.Group
 import explore.model.ProgramTimeRange
 import explore.model.enums.GroupWarning
+import explore.services.OdbApi
 import explore.syntax.ui.*
 import explore.undo.UndoSetter
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.optics.syntax.lens.*
 import lucuma.core.util.CalculatedValue
 import lucuma.core.util.Display
 import lucuma.core.util.Enumerated
@@ -30,15 +33,17 @@ import lucuma.react.common.*
 import lucuma.react.primereact.*
 import lucuma.refined.*
 import lucuma.schemas.ObservationDB.Types.GroupPropertiesInput
-import lucuma.schemas.ObservationDB.Types.TimeSpanInput
+import lucuma.schemas.odb.input.*
 import lucuma.ui.components.TimeSpanView
 import lucuma.ui.format.TimeSpanFormatter.HoursMinutesAbbreviation
 import lucuma.ui.primereact.*
 import lucuma.ui.primereact.given
-import monocle.Iso
+import lucuma.ui.reusability.given
 import monocle.Lens
+import org.typelevel.log4cats.Logger
 
 import scala.scalajs.js
+import scala.scalajs.js.JSConverters.*
 
 case class GroupEditBody(
   group:          UndoSetter[Group],
@@ -57,16 +62,65 @@ object GroupEditBody
 
       given Display[GroupEditType] = Display.byShortName(_.tag)
 
+      val intervalsLens: Lens[Group, (Option[TimeSpan], Option[TimeSpan])] =
+        Group.minimumInterval.disjointZip(Group.maximumInterval)
+
+      def isIntervalError(min: Option[TimeSpan], max: Option[TimeSpan]): Boolean =
+        // If either is unset, the API is fine with it
+        (min, max).tupled.exists(_ > _)
+
+      val intervalErrorString: NonEmptyString =
+        "Mininum delay must be <= Maximum delay".refined
+
       def minimumForGroup(t: GroupEditType): Option[NonNegShort] =
         if t === GroupEditType.And then none
         else NonNegShort.from(1).toOption
 
+      def groupModViewBase[A](
+        group:     UndoSetter[Group],
+        lens:      Lens[Group, A],
+        prop:      A => GroupPropertiesInput,
+        odbApi:    OdbApi[IO],
+        isLoading: View[Boolean]
+      )(using Logger[IO]) =
+        props.group
+          .undoableView(lens)
+          .withOnMod(a =>
+            odbApi.updateGroup(group.get.id, prop(a)).switching(isLoading.async).runAsync
+          )
+
       for
-        ctx         <- useContext(AppContext.ctx)
-        editType    <- useStateView:
-                         if props.group.get.isAnd then GroupEditType.And else GroupEditType.Or
-        isLoading   <- useStateView(false)
-        nameDisplay <- useState(props.group.get.name)
+        ctx           <- useContext(AppContext.ctx)
+        editType      <- useStateView:
+                           if props.group.get.isAnd then GroupEditType.And else GroupEditType.Or
+        isLoading     <- useStateView(false)
+        minIntervalV  <- useStateView(props.group.get.minimumInterval)
+        maxIntervalV  <- useStateView(props.group.get.maximumInterval)
+        _             <- useEffectWithDeps(props.group.get.minimumInterval): ots =>
+                           minIntervalV.set(ots)
+        _             <- useEffectWithDeps(props.group.get.maximumInterval): ots =>
+                           maxIntervalV.set(ots)
+        _             <-
+          useEffectWithDeps((minIntervalV.get, maxIntervalV.get)): (min, max) =>
+            if (
+              !isIntervalError(min, max) &&
+              (props.group.get.minimumInterval =!= min || props.group.get.maximumInterval =!= max)
+            )
+              groupModViewBase(
+                props.group,
+                intervalsLens,
+                (n, x) =>
+                  GroupPropertiesInput(minimumInterval = n.map(_.toInput).orUnassign,
+                                       maximumInterval = x.map(_.toInput).orUnassign
+                  ),
+                ctx.odbApi,
+                isLoading
+              )(using ctx.logger).set((min, max))
+            else Callback.empty
+        nameDisplay   <- useState(props.group.get.name)
+        intervalError <-
+          useMemo((minIntervalV.get, maxIntervalV.get)): (min, max) =>
+            Option.when(isIntervalError(min, max))(intervalErrorString).orUndefined
       yield
         import ctx.given
 
@@ -76,11 +130,7 @@ object GroupEditBody
         val isDisabled: Boolean = props.readonly || isLoading.get
 
         def groupModView[A](lens: Lens[Group, A], prop: A => GroupPropertiesInput) =
-          props.group
-            .undoableView(lens)
-            .withOnMod(a =>
-              ctx.odbApi.updateGroup(group.id, prop(a)).switching(isLoading.async).runAsync
-            )
+          groupModViewBase(props.group, lens, prop, ctx.odbApi, isLoading)
 
         val minRequiredV = groupModView(
           Group.minimumRequired,
@@ -92,23 +142,6 @@ object GroupEditBody
         )
         val orderedV     =
           groupModView(Group.ordered, o => GroupPropertiesInput(ordered = o.assign))
-
-        val timeSpanOrEmptyLens =
-          Iso[Option[TimeSpan], TimeSpan](_.orEmpty)(_.some.filterNot(_.isZero))
-        val minIntervalV        = groupModView(
-          Group.minimumInterval.andThen(timeSpanOrEmptyLens),
-          ts =>
-            GroupPropertiesInput(minimumInterval =
-              TimeSpanInput(microseconds = ts.toMicroseconds.assign).assign
-            )
-        )
-        val maxIntervalV        = groupModView(
-          Group.maximumInterval.andThen(timeSpanOrEmptyLens),
-          ts =>
-            GroupPropertiesInput(maximumInterval =
-              TimeSpanInput(microseconds = ts.toMicroseconds.assign).assign
-            )
-        )
 
         val changeGroupTypeButtons =
           <.div(ExploreStyles.GroupChangeButtons)(
@@ -187,19 +220,20 @@ object GroupEditBody
         val delaysForm = <.div(
           ExploreStyles.GroupDelaysForm,
           FormTimeSpanInput(
-            value = minIntervalV,
+            value = minIntervalV.withNoneAsEmpty,
             id = "minDelay".refined,
             label = "Minimum delay",
             min = TimeSpan.Zero,
-            max = maxIntervalV.get,
-            disabled = isDisabled
+            disabled = isDisabled,
+            error = intervalError.value
           ),
           FormTimeSpanInput(
-            value = maxIntervalV,
+            value = maxIntervalV.withNoneAsEmpty,
             id = "maxDelay".refined,
             label = "Maximum delay",
-            min = minIntervalV.get,
-            disabled = isDisabled
+            min = TimeSpan.Zero,
+            disabled = isDisabled,
+            error = intervalError.value
           )
         )
 
