@@ -208,7 +208,7 @@ object Dependencies {
   val LucumaOdbSchema = Def.setting(
     deps(
       "edu.gemini" %%% "lucuma-odb-schema"
-    )(lucumaOdbSchema)
+    )(lucumaServers)
   )
 
   val LucumaSchemas = Def.setting(
@@ -227,7 +227,7 @@ object Dependencies {
   val LucumaSSO = Def.setting(
     deps(
       "edu.gemini" %%% "lucuma-sso-frontend-client"
-    )(lucumaOdbSchema)
+    )(lucumaServers)
   )
 
   val LucumaUI = Def.setting(
@@ -245,7 +245,7 @@ object Dependencies {
   val LucumaITCClient = Def.setting(
     deps(
       "edu.gemini" %%% "lucuma-itc-client"
-    )(lucumaITC)
+    )(lucumaServers)
   )
 
   val Monocle = Def.setting(
