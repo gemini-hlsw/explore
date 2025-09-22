@@ -72,7 +72,9 @@ case class ProgramUsersTable(
     case Mode.SupportSecondary => NonEmptySet.of(ProgramUserRole.SupportSecondary)
     case Mode.DataSharing(_)   =>
       NonEmptySet.fromSetUnsafe(
-        SortedSet.from(Enumerated[ProgramUserRole].all) - ProgramUserRole.Pi
+        SortedSet.from(
+          Enumerated[ProgramUserRole].all
+        ) - ProgramUserRole.Pi - ProgramUserRole.SupportPrimary - ProgramUserRole.SupportSecondary
       )
 
   private val hiddenColumns: Set[ProgramUsersTable.Column] = mode match
@@ -97,7 +99,8 @@ case class ProgramUsersTable(
         Column.Partner,
         Column.EducationalStatus,
         Column.Thesis,
-        Column.Gender
+        Column.Gender,
+        Column.Affiliation
       )
 
 object ProgramUsersTable:
