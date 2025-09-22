@@ -46,10 +46,11 @@ case class ProgramSummaries(
   configurationRequests:  ConfigurationRequestList,
   calculatedValueOrphans: CalculatedValueOrphanMap = Map.empty
 ) derives Eq:
-  lazy val proposalIsSubmitted =
-    optProgramDetails.exists(_.proposalStatus === ProposalStatus.Submitted)
-  lazy val proposalIsAccepted  =
-    optProgramDetails.exists(_.proposalStatus === ProposalStatus.Accepted)
+  lazy val proposalStatus: Option[ProposalStatus] = optProgramDetails.map(_.proposalStatus)
+  lazy val proposalIsSubmitted                    = proposalStatus.exists(_ === ProposalStatus.Submitted)
+  lazy val proposalIsAccepted                     = proposalStatus.exists(_ === ProposalStatus.Accepted)
+  lazy val proposalIsNotAccepted                  = proposalStatus.exists(_ === ProposalStatus.NotAccepted)
+  lazy val programIsReadonly                      = proposalIsSubmitted || proposalIsNotAccepted
 
   lazy val proposalId: Option[ProposalReference] =
     optProgramDetails.flatMap(_.proposal.flatMap(_.reference))
