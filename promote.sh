@@ -428,7 +428,7 @@ image_name["SSO"]="lucuma-sso"
 process_types["SSO"]="web"
 backup["SSO"]=true
 
-repo["ITC"]="gemini-hlsw/lucuma-itc"
+repo["ITC"]="gemini-hlsw/lucuma-odb"
 image_name["ITC"]="itc"
 process_types["ITC"]="web"
 backup["ITC"]=false
