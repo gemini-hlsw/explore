@@ -272,7 +272,7 @@ case class Observation(
 
   // if it has any of the ConfigurationRequest* errors. We filter these out of the validations table.
   inline def hasConfigurationRequestError: Boolean =
-    hasPendingRequestCode || hasNotRequestedCode || hasDeniedValidationCode
+    hasPendingRequestCode || hasNotRequestedCode // We will show DENIED
 
   // update the validation status to pending and add the configuration request id
   inline def updateToPending(crId: ConfigurationRequest.Id): Observation =
