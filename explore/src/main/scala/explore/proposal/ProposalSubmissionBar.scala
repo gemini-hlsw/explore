@@ -114,16 +114,15 @@ object ProposalSubmissionBar
                   else Tag.Severity.Danger
               )
                 .when(props.proposalStatus.get > ProposalStatus.Submitted),
-              // TODO: Validate proposal before allowing submission
               React
                 .Fragment(
                   Button(
                     label = "Submit Proposal",
                     onClick = updateStatus(ProposalStatus.Submitted),
                     disabled =
-                    isUpdatingStatus.get.value || props.hasProposalErrors || isDueDeadline
-                    // Temporarily enable submission even if there are errors for testing against PI validation
-                    // isUpdatingStatus.get.value || isDueDeadline
+                      isUpdatingStatus.get.value || props.hasProposalErrors || isDueDeadline || !props.canSubmit
+                    // Temporarily enable submission even if there are errors for testing against API validation
+                    // isUpdatingStatus.get.value || isDueDeadline || !props.canSubmit
                   ).compact.tiny,
                   props.deadline.map: deadlineEither =>
                     val (text, severity) = deadlineEither match
@@ -146,16 +145,16 @@ object ProposalSubmissionBar
                     )
                 )
                 .when:
-                  props.canSubmit && props.proposalStatus.get === ProposalStatus.NotSubmitted
+                  props.proposalStatus.get === ProposalStatus.NotSubmitted
               ,
               Button(
                 "Retract Proposal",
                 severity = Button.Severity.Warning,
                 onClick = updateStatus(ProposalStatus.NotSubmitted),
-                disabled = isUpdatingStatus.get.value || isDueDeadline
+                disabled = isUpdatingStatus.get.value || isDueDeadline || !props.canSubmit
               ).compact.tiny
                 .when:
-                  props.canSubmit && props.proposalStatus.get === ProposalStatus.Submitted && !isDueDeadline
+                  props.proposalStatus.get === ProposalStatus.Submitted && !isDueDeadline
               ,
               errorMessage.value
                 .map(r =>
