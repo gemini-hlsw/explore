@@ -70,7 +70,7 @@ object UserPreferencesQueriesGQL {
           },
           onConflict: {
             constraint: lucuma_observation_pkey,
-            update_columns: observationId
+            update_columns: [observationId]
           }
         ) {
             observationId
@@ -143,8 +143,8 @@ object UserPreferencesQueriesGQL {
   @GraphQL
   trait AsterismPreferencesQuery extends GraphQLOperation[UserPreferencesDB] {
     val document = """
-    query asterismPreferences($userId: String!, $targetIds: [String!] = "") {
-      exploreAsterismPreferences(where: {_and: {userId: {_eq: $userId}, lucumaAsterisms: {targetId: {_in: $targetIds}}}}) {
+    query asterismPreferences($userId: String!, $targetIds: [String!] = []) {
+      exploreAsterismPreferences(where: {_and: [{userId: {_eq: $userId}}, {lucumaAsterisms: {targetId: {_in: $targetIds}}}]}) {
         id
         brightness
         saturation
@@ -163,7 +163,7 @@ object UserPreferencesQueriesGQL {
   @GraphQL
   trait AsterismUpsert extends GraphQLOperation[UserPreferencesDB] {
     val document = """
-      mutation asterismUpsert($object: ExploreAsterismPreferencesInsertInput!, $updateColumns: [ExploreAsterismPreferencesUpdateColumn!]) {
+      mutation asterismUpsert($object: ExploreAsterismPreferencesInsertInput!, $updateColumns: [ExploreAsterismPreferencesUpdateColumn!]!) {
         insertExploreAsterismPreferencesOne(object: $object, onConflict: {constraint: exploreAsterismPreferences_pkey, update_columns: $updateColumns}) {
           id
         }
@@ -186,7 +186,7 @@ object UserPreferencesQueriesGQL {
   @GraphQL
   trait TargetPreferencesUpsert extends GraphQLOperation[UserPreferencesDB] {
     val document = """
-      mutation targetPreferencesUpsert($object: LucumaTargetInsertInput!, $updateColumns: [LucumaTargetUpdateColumn!]) {
+      mutation targetPreferencesUpsert($object: LucumaTargetInsertInput!, $updateColumns: [LucumaTargetUpdateColumn!]!) {
         insertLucumaTargetOne(object: $object, onConflict: {constraint: lucumaTarget_pkey, update_columns: $updateColumns}) {
           userId
           targetId
@@ -269,7 +269,7 @@ object UserPreferencesQueriesGQL {
   @GraphQL
   trait UserPreferencesAladinUpdate extends GraphQLOperation[UserPreferencesDB] {
     val document = """
-    mutation aladinUserPreferences($objects: LucumaUserPreferencesInsertInput! = {}, $update_columns: [LucumaUserPreferencesUpdateColumn!]) {
+    mutation aladinUserPreferences($objects: LucumaUserPreferencesInsertInput! = {}, $update_columns: [LucumaUserPreferencesUpdateColumn!]!) {
       insertLucumaUserPreferencesOne(object: $objects, onConflict: {constraint: lucuma_user_preferences_pkey, update_columns: $update_columns}) {
         userId
       }

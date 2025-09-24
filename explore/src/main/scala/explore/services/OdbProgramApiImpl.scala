@@ -228,7 +228,7 @@ trait OdbProgramApiImpl[F[_]: MonadThrow](using StreamingClient[F, ObservationDB
     email:         EmailAddress
   ): F[CreateUserInvitation] =
     CreateInviteMutation[F]
-      .execute(programUserId, email.value.value)
+      .execute(programUserId, email)
       .processErrors
       .map(_.createUserInvitation)
 
