@@ -101,7 +101,7 @@ object UserPreferencesQueries:
               acquisitionOffsets.isDefined
             ),
             LucumaUserPreferencesUpdateColumn.FullScreen.some.filter(_ => fullScreen.isDefined)
-          ).flattenOption.widen[LucumaUserPreferencesUpdateColumn].assign
+          ).flattenOption.widen[LucumaUserPreferencesUpdateColumn]
         )
         .attempt
         .void
@@ -325,7 +325,7 @@ object UserPreferencesQueries:
             ),
             ExploreAsterismPreferencesUpdateColumn.ViewOffsetP.some.filter(_ => offset.isDefined),
             ExploreAsterismPreferencesUpdateColumn.ViewOffsetQ.some.filter(_ => offset.isDefined)
-          ).flattenOption.assign
+          ).flattenOption
         )
         .raiseGraphQLErrors
         .map(_.insertExploreAsterismPreferencesOne.map(_.id))
@@ -357,7 +357,7 @@ object UserPreferencesQueries:
           ),
           updateColumns = List(
             LucumaTargetUpdateColumn.LineOfSightMotion
-          ).assign
+          )
         )
         .attempt
         .void

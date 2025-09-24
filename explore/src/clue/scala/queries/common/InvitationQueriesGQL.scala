@@ -9,11 +9,13 @@ import lucuma.schemas.ObservationDB
 import explore.model.UserInvitation
 import explore.model.RedeemInvitationResult
 
+// gql: import io.circe.refined.given
+
 object InvitationQueriesGQL:
   @GraphQL
   trait CreateInviteMutation extends GraphQLOperation[ObservationDB]:
     val document: String = s"""
-      mutation($$programUserId: ProgramUserId!, $$recipientEmail: String!) {
+      mutation($$programUserId: ProgramUserId!, $$recipientEmail: EmailAddress!) {
         createUserInvitation(input: {
           programUserId: $$programUserId,
           recipientEmail: $$recipientEmail
