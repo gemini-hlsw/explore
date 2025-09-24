@@ -377,6 +377,7 @@ object ProgramUsersTable:
                 value = view,
                 disabled = meta.isActive.get.value,
                 validFormat = ExploreModelValidators.MailValidator.optional,
+                validateOnPaste = false,
                 placeholder = pu.email.orUndefined
               ).clearable: VdomNode
             else pu.email.getOrElse("-"): VdomNode
