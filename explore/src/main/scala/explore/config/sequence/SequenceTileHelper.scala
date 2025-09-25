@@ -12,7 +12,9 @@ import crystal.react.hooks.*
 import explore.*
 import explore.model.AppContext
 import explore.model.Observation
+import explore.model.syntax.all.needsITC
 import japgolly.scalajs.react.*
+import lucuma.core.enums.CalibrationRole
 import lucuma.core.model.Target
 import lucuma.core.util.Timestamp
 import lucuma.schemas.ObservationDB
@@ -32,13 +34,17 @@ trait SequenceTileHelper:
   protected def useLiveSequence(
     obsId:               Observation.Id,
     targetIds:           List[Target.Id],
-    customSedTimestamps: List[Timestamp]
+    customSedTimestamps: List[Timestamp],
+    calibrationRole:     Option[CalibrationRole]
   ): HookResult[LiveSequence] =
     for
       ctx                                     <- useContext(AppContext.ctx)
       given StreamingClient[IO, ObservationDB] = ctx.clients.odb
       visits                                  <- useEffectKeepResultOnMount(ctx.odbApi.observationVisits(obsId))
-      sequenceData                            <- useEffectKeepResultOnMount(ctx.odbApi.sequenceData(obsId))
+      sequenceData                            <-
+        useEffectKeepResultOnMount(
+          ctx.odbApi.sequenceData(obsId, calibrationRole.forall(_.needsITC))
+        )
       refreshVisits                           <- useThrottledCallback(5.seconds)(visits.refresh.value.to[IO])
       refreshSequence                         <- useThrottledCallback(7.seconds)(sequenceData.refresh.to[IO])
       _                                       <-

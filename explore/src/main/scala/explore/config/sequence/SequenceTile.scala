@@ -22,6 +22,7 @@ import explore.syntax.ui.*
 import explore.utils.*
 import japgolly.scalajs.react.*
 import japgolly.scalajs.react.vdom.html_<^.*
+import lucuma.core.enums.CalibrationRole
 import lucuma.core.model.Target
 import lucuma.core.model.sequence.InstrumentExecutionConfig
 import lucuma.core.util.TimeSpan
@@ -41,6 +42,7 @@ object SequenceTile extends SequenceTileHelper:
     obsExecution:        Execution,
     asterismIds:         AsterismIds,
     customSedTimestamps: List[Timestamp],
+    calibrationRole:     Option[CalibrationRole],
     sequenceChanged:     View[Pot[Unit]]
   ) =
     Tile(
@@ -52,6 +54,7 @@ object SequenceTile extends SequenceTileHelper:
           obsId,
           asterismIds.toList,
           customSedTimestamps,
+          calibrationRole,
           sequenceChanged
         ),
       (_, _) => Title(obsExecution)
@@ -61,13 +64,18 @@ object SequenceTile extends SequenceTileHelper:
     obsId:               Observation.Id,
     targetIds:           List[Target.Id],
     customSedTimestamps: List[Timestamp],
+    calibrationRole:     Option[CalibrationRole],
     sequenceChanged:     View[Pot[Unit]]
   ) extends ReactFnProps(Body)
 
   private object Body
       extends ReactFnComponent[Body](props =>
         for
-          liveSequence <- useLiveSequence(props.obsId, props.targetIds, props.customSedTimestamps)
+          liveSequence <- useLiveSequence(props.obsId,
+                                          props.targetIds,
+                                          props.customSedTimestamps,
+                                          props.calibrationRole
+                          )
           _            <- useEffectWithDeps(liveSequence.data): dataPot =>
                             props.sequenceChanged.set(dataPot.void)
         yield props.sequenceChanged.get
