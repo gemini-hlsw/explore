@@ -7,4 +7,4 @@ import lucuma.core.model.Observation
 import lucuma.ui.sequence.SequenceData
 
 trait OdbSequenceApi[F[_]]:
-  def sequenceData(obsId: Observation.Id): F[Option[SequenceData]]
+  def sequenceData(obsId: Observation.Id, includeItc: Boolean): F[Option[SequenceData]]

@@ -400,6 +400,7 @@ object ObsTabTiles:
               props.observation.get.execution,
               asterismIds.get,
               customSedTimestamps,
+              props.calibrationRole,
               sequenceChanged
             )
 
