@@ -230,6 +230,10 @@ trait ModesTableCommon:
           <.span(Icons.TriangleSolid.addClass(ExploreStyles.ItcErrorIcon))
             .withTooltip(tooltip = <.div(content.mkTagMod(<.span)), placement = Placement.RightEnd)
       case Some(Right(r: ItcResult.Result)) =>
+        val ccdWarnings =
+          r.ccdWarnings.collect:
+            case a @ (_, v) if v.nonEmpty => a
+
         val content = col.match
           case ItcColumns.Exposures =>
             r.exposures.toString
@@ -243,12 +247,12 @@ trait ModesTableCommon:
             ("": VdomNode, Placement.RightStart)
           case ItcColumns.Time      =>
             val baseText = s"${r.exposures} × ${formatDurationSeconds(r.exposureTime)}"
-            tooltipContent(baseText, r.ccdWarnings)
+            tooltipContent(baseText, ccdWarnings)
           case ItcColumns.SN        =>
             val baseText = s"${r.snAt.map(_.single.value).foldMap(_.format)} / exposure"
-            tooltipContent(baseText, r.ccdWarnings)
+            tooltipContent(baseText, ccdWarnings)
 
-        (if (r.ccdWarnings.nonEmpty)
+        (if (ccdWarnings.nonEmpty)
            <.span(
              content,
              Icons.ExclamationTriangle
