@@ -17,6 +17,7 @@ import explore.model.*
 import explore.model.enums.Visible
 import explore.optics.ModelOptics
 import japgolly.scalajs.react.*
+import japgolly.scalajs.react.vdom.html_<^.*
 import lucuma.core.model.Target
 import lucuma.core.model.User
 import lucuma.react.common.*
