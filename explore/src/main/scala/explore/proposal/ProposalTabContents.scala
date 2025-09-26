@@ -52,8 +52,7 @@ case class ProposalTabContents(
   hasUndefinedObservations: Boolean
 ) extends ReactFnProps(ProposalTabContents.component):
   val proposalStatus: ProposalStatus = programDetails.get.proposalStatus
-  val proposalIsReadonly: Boolean    =
-    proposalStatus === ProposalStatus.Submitted || proposalStatus === ProposalStatus.Accepted
+  val proposalIsReadonly: Boolean    = proposalStatus =!= ProposalStatus.NotSubmitted
   val users: View[List[ProgramUser]] =
     programDetails.zoom(ProgramDetails.allUsers)
 
