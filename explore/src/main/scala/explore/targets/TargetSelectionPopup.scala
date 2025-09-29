@@ -295,7 +295,7 @@ object TargetSelectionPopup:
                 )
               ),
               <.div(ExploreStyles.TargetSearchPreview)(
-                aladinRef.value.map(AladinZoomControl(_)),
+                aladinRef.value.map(AladinZoomControl(_, factor = 1.5)),
                 selectedTarget.get
                   .collect { case SelectedTarget(Target.Sidereal(_, tracking, _, _), _, _, _) =>
                     tracking.baseCoordinates
