@@ -59,31 +59,6 @@ const imageCache = ({
 });
 
 /**
- * Configuration for itc
- */
-const itcCache = ({
-  name,
-  pattern,
-}: {
-  name: string;
-  pattern: RuntimeCaching['urlPattern'];
-}): RuntimeCaching => ({
-  urlPattern: pattern,
-  handler: 'CacheFirst',
-  options: {
-    cacheName: name,
-    expiration: {
-      purgeOnQuotaError: true,
-      maxEntries: 5000,
-      maxAgeSeconds: 60 * 60 * 24, // 1day
-    },
-    cacheableResponse: {
-      statuses: [200],
-    },
-  },
-});
-
-/**
  * Check if a file or directory exists
  */
 const pathExists = async (path: PathLike) => {
