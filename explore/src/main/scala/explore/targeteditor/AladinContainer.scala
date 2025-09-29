@@ -286,12 +286,6 @@ object AladinContainer extends AladinCommon {
 
         // Use fov from aladin
         fov        <- useState(none[Fov])
-        // Update aladin if coords change
-        _          <-
-          useEffectWithDeps(
-            (props.globalPreferences.showCatalog, props.globalPreferences.aladinMouseScroll, resize)
-          ): _ =>
-            aladinRef.value.traverse(_.fixLayoutDimensionsCB).void
         // Survey
         survey     <- useState(
                         props.vizConf

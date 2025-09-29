@@ -59,31 +59,6 @@ const imageCache = ({
 });
 
 /**
- * Configuration for itc
- */
-const itcCache = ({
-  name,
-  pattern,
-}: {
-  name: string;
-  pattern: RuntimeCaching['urlPattern'];
-}): RuntimeCaching => ({
-  urlPattern: pattern,
-  handler: 'CacheFirst',
-  options: {
-    cacheName: name,
-    expiration: {
-      purgeOnQuotaError: true,
-      maxEntries: 5000,
-      maxAgeSeconds: 60 * 60 * 24, // 1day
-    },
-    cacheableResponse: {
-      statuses: [200],
-    },
-  },
-});
-
-/**
  * Check if a file or directory exists
  */
 const pathExists = async (path: PathLike) => {
@@ -276,10 +251,13 @@ export default defineConfig(async ({ mode }) => {
               pattern: /^https:\/\/alasky.u-strasbg.fr\/DSS/,
               name: 'aladin-images',
             }),
-            itcCache({
-              pattern:
-                /^https:\/\/cors-proxy.(lucuma.xyz|gpp.gemini.edu)\/http:\/\/aladin.unistra.fr\/java\/nph-aladin.*/,
-              name: 'cors-cache',
+            imageCache({
+              pattern: /^https:\/\/alasky.cds.unistra.fr\/DSS/,
+              name: 'cds-dss',
+            }),
+            imageCache({
+              pattern: /^https:\/\/alaskybis.cds.unistra.fr\/2MASS/,
+              name: 'cds-2mass',
             }),
           ],
         },
