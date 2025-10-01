@@ -445,8 +445,7 @@ object AladinContainer extends AladinCommon {
                   )
                 ),
               ReactAladin(
-                ExploreStyles.TargetAladin |+| ExploreStyles.TargetAladinDisableMouse
-                  .unless_(props.globalPreferences.aladinMouseScroll.value),
+                ExploreStyles.TargetAladin,
                 AladinOptions(
                   target = baseCoordinatesForAladin,
                   fov = Angle.fromMicroarcseconds(
@@ -464,7 +463,8 @@ object AladinContainer extends AladinCommon {
                   showCooLocation = false,
                   showFov = false
                 ),
-                customize = includeSvg
+                customize = includeSvg,
+                panningEnabled = props.globalPreferences.aladinMouseScroll.value
               )
             )
           } else EmptyVdom
