@@ -28,10 +28,6 @@ $brightness: var(--aladin-image-brightness);
     }
   }
 
-  .aladin-target-disable-mouse {
-    pointer-events: none;
-  }
-
   .aladin-container-body {
     grid-area: aladin;
     position: relative;
