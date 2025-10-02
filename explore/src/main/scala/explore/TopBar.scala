@@ -47,6 +47,8 @@ import lucuma.ui.syntax.all.given
 import org.scalajs.dom.window
 import typings.loglevel.mod.LogLevelDesc
 
+import scala.scalajs.LinkingInfo
+
 case class TopBar(
   vault:                      View[UserVault],
   programId:                  Option[Program.Id],
@@ -117,7 +119,7 @@ object TopBar:
                  )
                else List.empty)
 
-          val lastItems = List(
+          val lastCommonItems = List(
             MenuItem.Separator.some,
             MenuItem
               .Item(
@@ -156,20 +158,20 @@ object TopBar:
                   icon = Icons.Pencil
                 )
               )
-              .some,
-            if (ctx.environment === ExecutionEnvironment.Development)
-              ThemeSubMenu(props.theme).some
-            else
-              None,
-            MenuItem
-              .Item(
-                label = "Toggle Reusability",
-                icon = Icons.CrystalBall,
-                command = utils.toggleReusabilityOverlay[CallbackTo](),
-                visible = ctx.environment === ExecutionEnvironment.Development
-              )
               .some
           ).flattenOption
+
+          val lastItems =
+            if (LinkingInfo.developmentMode)
+              val reusabilityItem = MenuItem
+                .Item(
+                  label = "Toggle Reusability",
+                  icon = Icons.CrystalBall,
+                  command = utils.toggleReusabilityOverlay[CallbackTo](),
+                  visible = ctx.environment === ExecutionEnvironment.Development
+                )
+              lastCommonItems ++ List(ThemeSubMenu(props.theme), reusabilityItem)
+            else lastCommonItems
 
           val menuItems =
             if (role =!= GuestRole) {
