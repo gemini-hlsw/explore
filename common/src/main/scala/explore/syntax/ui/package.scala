@@ -116,7 +116,7 @@ extension [A](pot: Pot[A])
     pot.renderPot(valueRender = f, pendingRender = Icons.Spinner.withSpin(true))
 
 // TODO: Move to lucuma-react?
-extension (tag:    TagOf[HTMLElement])
+extension (tag: TagOf[HTMLElement])
   def withTooltipWhen(
     condition: Boolean,
     content:   VdomNode,

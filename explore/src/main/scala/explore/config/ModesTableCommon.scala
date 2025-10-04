@@ -110,8 +110,7 @@ trait ModesTableCommon:
     style:          Css,
     indexCondition: Int => Boolean
   ): TagMod =
-    index.whenDefined(
-      using
+    index.whenDefined(using
       idx =>
         Button(
           clazz = ExploreStyles.ScrollButton |+| style,

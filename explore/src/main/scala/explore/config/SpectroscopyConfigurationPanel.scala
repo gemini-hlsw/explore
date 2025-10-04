@@ -103,7 +103,9 @@ object SpectroscopyConfigurationPanel extends ConfigurationFormats:
                                  p.units,
                                  p.calibrationRole
           ),
-          Option.when(focalPlaneSupported) { // Hide until supported
+          Option.when(
+            focalPlaneSupported
+          ) { // Hide until supported
             ReactFragment(
               FormLabel("focal-plane".refined)("Focal Plane",
                                                HelpIcon("configuration/focal_plane.md".refined)

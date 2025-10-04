@@ -242,7 +242,7 @@ object KeyedIndexedTree {
         .map(node => (getKey(node.value), node))
         .distinctBy(_._1) // key
         .filterNot(accumKeys.contains.compose(_._1))
-    val newAccumKeys: Set[K] = accumKeys ++ keyedNewNodes.map(_._1)
+    val newAccumKeys: Set[K]              = accumKeys ++ keyedNewNodes.map(_._1)
     keyedNewNodes.zipWithIndex.foldLeft(
       List.empty[Node[IndexedElem[K, A]]]
     ) { case (nodes, ((key, node), idx)) =>

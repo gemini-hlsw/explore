@@ -242,9 +242,8 @@ object ItcImagingTile extends ModesTableCommon:
           // Display target selector if we have targets and results
           selectedTarget.map: (gr: ImagingTargetAndResults) =>
             val options =
-              props.tileState.get.imagingTargetResults.map(t =>
-                SelectItem(label = t.target.name.value, value = t)
-              )
+              props.tileState.get.imagingTargetResults
+                .map(t => SelectItem(label = t.target.name.value, value = t))
 
             <.div(
               ExploreStyles.ItcTileTitle,

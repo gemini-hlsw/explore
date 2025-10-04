@@ -207,7 +207,7 @@ case class ProgramSummaries(
       val newOrphans =
         if (obs.contains(obsId)) orphans - obsId // shouldn't be there in the first place...
         else orphans.updated(obsId, (workflow, digest))
-      val newObs = obs.updatedWith(obsId)(
+      val newObs     = obs.updatedWith(obsId)(
         _.map(Observation.calculatedValues.replace((workflow, digest)))
       )
       (newObs, newOrphans)

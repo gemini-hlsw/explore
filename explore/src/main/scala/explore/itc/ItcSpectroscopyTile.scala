@@ -238,9 +238,8 @@ object ItcSpectroscopyTile:
           // The only way this should be empty is if there are no targets in the results.
           props.tileState.get.selectedTarget.map: (gr: TargetAndResults) =>
             val options =
-              props.tileState.get.targetResults.map(t =>
-                SelectItem(label = t.target.name.value, value = t)
-              )
+              props.tileState.get.targetResults
+                .map(t => SelectItem(label = t.target.name.value, value = t))
 
             <.div(
               ExploreStyles.ItcTileTitle,

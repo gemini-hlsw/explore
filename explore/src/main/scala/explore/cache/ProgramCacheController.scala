@@ -66,7 +66,9 @@ object ProgramCacheController
   // TODO: Move into updateStream and use the keyedSwitchEvalMap for recursion?
   private def updateGroupTimeRange(
     groupId: Option[Group.Id]
-  )(using odbApi: OdbGroupApi[IO]): IO[
+  )(using
+    odbApi:  OdbGroupApi[IO]
+  ): IO[
     ProgramSummaries => ProgramSummaries
   ] =
     def go(

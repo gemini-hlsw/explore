@@ -94,8 +94,7 @@ object SchedulingGroupObsList:
   private given Render[TimingWindowInclusion] = Render.by: twt =>
     <.span(twt match
       case TimingWindowInclusion.Include => ExploreStyles.TimingWindowInclude
-      case TimingWindowInclusion.Exclude => ExploreStyles.TimingWindowExclude
-    )(
+      case TimingWindowInclusion.Exclude => ExploreStyles.TimingWindowExclude)(
       <.span(Icons.CircleSolid).withTooltip(tooltip = twt.shortName)
     )
 
