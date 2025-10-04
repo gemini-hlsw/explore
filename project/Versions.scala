@@ -31,7 +31,7 @@ object Versions {
   val mUnitScalacheck        = "1.2.0"
   val mUnitCatsEffect        = "2.1.0"
   val sbtBuildInfo           = "0.13.1"
-  val sbtLucuma              = "0.14.3"
+  val sbtLucuma              = "0.14.4"
   val scalaCollectionContrib = "0.4.0"
   val scalaJsDom             = "2.8.1"
   val scalaJsReact           = "3.0.0-beta12"

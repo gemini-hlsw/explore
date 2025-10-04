@@ -214,7 +214,9 @@ object NightPlot:
         val seriesIndex: Int = ctx.series.index.toInt / chartData.size.toInt
         val value            = seriesIndex match
           case 0 =>                      // Target elevation with airmass
-            formatAngle(y) + s"<br/>Airmass: ${"%.3f".format(ctx.point.asInstanceOf[ElevationPointWithAirmass].airmass)}"
+            formatAngle(
+              y
+            ) + s"<br/>Airmass: ${"%.3f".format(ctx.point.asInstanceOf[ElevationPointWithAirmass].airmass)}"
           case 2 => "%.2f".format(ctx.y) // Sky Brightness
           case _ => formatAngle(y)       // Other elevations
 

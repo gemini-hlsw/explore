@@ -93,7 +93,7 @@ object ObsTabContents extends TwoPanels:
             case (None, SelectedPanel.Editor) => selected.set(SelectedPanel.Summary)
             case _                            => Callback.empty
       .useResizeDetector() // Measure its size
-      .useState(none[ObsIdSet])                 // shadowClipboardObs (a copy as state only if it has observations)
+      .useState(none[ObsIdSet]) // shadowClipboardObs (a copy as state only if it has observations)
       .useEffectOnMountBy: (_, ctx, _, _, shadowClipboardObs) => // initialize shadowClipboard
         import ctx.given
 
@@ -162,7 +162,7 @@ object ObsTabContents extends TwoPanels:
             callbacks
           )
       .useStateView(DeckShown.Shown)
-      .useStateView(AddingObservation(false))   // adding new observation or duplicating
+      .useStateView(AddingObservation(false)) // adding new observation or duplicating
       .render:
         (
           props,

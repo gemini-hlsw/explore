@@ -68,7 +68,9 @@ object ProgramTable:
     pinf.zoom(ProgramInfo.deleted).set(false).toAsync >>
       odbApi.undeleteProgram(pinf.get.id)
 
-  private def onModName(pinf: ProgramInfo)(using odbApi: OdbProgramApi[IO])(using
+  private def onModName(pinf: ProgramInfo)(using
+    odbApi: OdbProgramApi[IO]
+  )(using
     Logger[IO]
   ): Callback =
     odbApi.updateProgramName(pinf.id, pinf.name).runAsync

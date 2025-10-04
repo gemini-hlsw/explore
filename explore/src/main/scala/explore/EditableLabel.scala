@@ -91,7 +91,7 @@ object EditableLabel:
       .useStateBy(props => Editing(props.forceEditing)) // editing
       .useEffectWithDepsBy((props, _) => props.forceEditing): (_, editing) =>
         forceEditing => if forceEditing then editing.setState(InEdition) else Callback.empty
-      .useState("")                                     // displayValue
+      .useState("") // displayValue
       .useId
       .render: (props, editing, displayValue, id) =>
         def editCB(e: ReactMouseEvent): Callback =

@@ -370,7 +370,7 @@ object AladinCell extends ModelOptics with AladinCommon:
                                          val selectedGS = index.flatMap(i => r.flatMap(_.lift(i)))
                                          props.guideStarSelection
                                            .mod:
-                                             case AgsSelection(_) =>
+                                             case AgsSelection(_)               =>
                                                AgsSelection(selectedGS.tupleLeft(0)) // replace automatic selection
                                              case rem @ RemoteGSSelection(name) =>
                                                // Recover the analysis for the remotely selected star

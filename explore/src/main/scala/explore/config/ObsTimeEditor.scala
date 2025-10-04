@@ -52,7 +52,8 @@ object ObsTimeEditor
         defaultDuration <- useMemo(props.pendingTime)(_.getOrElse(TimeSpan.fromHours(1).get))
       } yield
         val nowTooltip         =
-          s"Set time to the current time${props.pendingTime.fold("")(_ => " and duration to remaining time")}"
+          s"Set time to the current time${props.pendingTime
+              .fold("")(_ => " and duration to remaining time")}"
         val staleTooltipString = props.calcDigest.staleTooltipString
 
         <.div(ExploreStyles.ObsInstantTileTitle)(

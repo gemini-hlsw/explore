@@ -336,9 +336,9 @@ case class SpectroscopyModesMatrix(matrix: List[SpectroscopyModeRow]) derives Eq
     }
 
     matrix
-      .filter(filter)  // Only include matches
+      .filter(filter) // Only include matches
       .fproduct(score) // Give it a score
-      .sortBy(_._2)    // Sort by score
+      .sortBy(_._2) // Sort by score
       .map(_._1)
       .reverse
   }

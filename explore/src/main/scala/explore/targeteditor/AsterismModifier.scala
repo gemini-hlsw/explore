@@ -66,7 +66,9 @@ trait AsterismModifier:
     onAsterismUpdate: OnAsterismUpdateParams => Callback,
     readOnly:         Boolean = false,
     buttonClass:      Css = Css.Empty
-  )(using odbApi: OdbTargetApi[IO] & OdbAsterismApi[IO])(using
+  )(using
+    odbApi:           OdbTargetApi[IO] & OdbAsterismApi[IO]
+  )(using
     Logger[IO]
   ): TargetSelectionPopup =
     TargetSelectionPopup(

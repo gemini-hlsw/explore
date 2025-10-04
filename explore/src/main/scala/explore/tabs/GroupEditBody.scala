@@ -272,7 +272,13 @@ object GroupEditBody
               <.div(
                 ExploreStyles.GroupWarnings,
                 nes.toList
-                  .toTagMod(using w => Message(id = s"${group.id}-${w.shortMsg}", text = w.longMsg, severity = Message.Severity.Warning))
+                  .toTagMod(using
+                    w =>
+                      Message(id = s"${group.id}-${w.shortMsg}",
+                              text = w.longMsg,
+                              severity = Message.Severity.Warning
+                      )
+                  )
               )
           )
         )

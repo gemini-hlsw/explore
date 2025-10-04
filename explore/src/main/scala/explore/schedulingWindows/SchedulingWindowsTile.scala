@@ -175,8 +175,7 @@ object SchedulingWindowsTile:
     private given Render[TimingWindowInclusion] = Render.by: swt =>
       <.span(swt match
         case TimingWindowInclusion.Include => ExploreStyles.TimingWindowInclude
-        case TimingWindowInclusion.Exclude => ExploreStyles.TimingWindowExclude
-      )(swt.shortName)
+        case TimingWindowInclusion.Exclude => ExploreStyles.TimingWindowExclude)(swt.shortName)
 
     private given Render[TimingWindow] = Render.by:
       case TimingWindow(inclusion, start, Some(TimingWindowEnd.At(endAt)))           =>

@@ -119,8 +119,10 @@ object ProposalAttachmentsTable extends ProposalAttachmentUtils {
           (readOnly, client) =>
             import ctx.given
 
-            def column[V](id: ColumnId, accessor: Row => V)
-              : ColumnDef.Single.WithTableMeta[Row, V, TableMeta] =
+            def column[V](
+              id:       ColumnId,
+              accessor: Row => V
+            ): ColumnDef.Single.WithTableMeta[Row, V, TableMeta] =
               ColDef(id, v => accessor(v), columnNames(id))
 
             List(
@@ -219,9 +221,8 @@ object ProposalAttachmentsTable extends ProposalAttachmentUtils {
               .forPurpose(AttachmentPurpose.Proposal)
               .filterNot(
                 // Fast turnaround proposals do not have a team attachment
-                _ === AttachmentType.Team && pt.exists(t =>
-                  t.scienceSubtype === ScienceSubtype.FastTurnaround
-                )
+                _ === AttachmentType.Team && pt
+                  .exists(t => t.scienceSubtype === ScienceSubtype.FastTurnaround)
               )
               .map(pat => pas.find(_.attachmentType === pat).toRight(pat))
       .useReactTableBy: (_, _, _, action, urlMap, cols, rows) =>

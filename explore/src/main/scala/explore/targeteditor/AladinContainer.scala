@@ -285,16 +285,16 @@ object AladinContainer extends AladinCommon {
                               .flatten
 
         // Use fov from aladin
-        fov        <- useState(none[Fov])
+        fov    <- useState(none[Fov])
         // Survey
-        survey     <- useState(
-                        props.vizConf
-                          .flatMap(_.centralWavelength)
-                          .map(w => surveyForWavelength(w.value))
-                          .getOrElse(ImageSurvey.DSS)
-                      )
+        survey <- useState(
+                    props.vizConf
+                      .flatMap(_.centralWavelength)
+                      .map(w => surveyForWavelength(w.value))
+                      .getOrElse(ImageSurvey.DSS)
+                  )
         // Update survey if conf changes
-        _          <-
+        _      <-
           useEffectWithDeps(props.vizConf.flatMap(_.centralWavelength.map(_.value))): w =>
             w.map(w => survey.setState(surveyForWavelength(w))).getOrEmpty
       } yield {

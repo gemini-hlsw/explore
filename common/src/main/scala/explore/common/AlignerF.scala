@@ -33,11 +33,11 @@ trait AlignerF[F[_], B, S]:
   protected type _T // Base delta structure type
 
   protected val _undoCtx: UndoSetter[_A] // Base model instance within an `UndoContext`
-  protected val _remoteBaseInput: _T     // Base delta structure instance
-  protected val _onMod: _T => F[Unit]    // Effect to send the delta structure to the remote server
+  protected val _remoteBaseInput: _T // Base delta structure instance
+  protected val _onMod: _T => F[Unit] // Effect to send the delta structure to the remote server
 
-  protected val _modelGet: _A => B               // Model drill-down getter function
-  protected val _modelMod: (B => B) => _A => _A  // Model drill-down modifier function
+  protected val _modelGet: _A => B // Model drill-down getter function
+  protected val _modelMod: (B => B) => _A => _A // Model drill-down modifier function
   protected val _remoteMod: (S => S) => _T => _T // Delta structure drill-down modifier function
 
   /** Get the value of the model. */

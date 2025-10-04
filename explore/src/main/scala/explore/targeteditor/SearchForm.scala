@@ -48,8 +48,8 @@ object SearchForm:
       .withHooks[Props]
       .useContext(AppContext.ctx)
       .useStateViewBy((props, _) => props.targetName.get) // term
-      .useState(true)                                     // enabled
-      .useState(none[NonEmptyString])                     // error
+      .useState(true) // enabled
+      .useState(none[NonEmptyString]) // error
       .useEffectWithDepsBy((props, _, _, _, _) => props.targetName.get)((_, _, term, enabled, _) =>
         name => term.set(name) >> enabled.setState(true)
       )

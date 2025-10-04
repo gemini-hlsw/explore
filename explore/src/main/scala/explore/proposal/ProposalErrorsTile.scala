@@ -24,8 +24,7 @@ object ProposalErrorsTile:
       extends ReactFnComponent[Body](props =>
         <.div(
           ExploreStyles.ProposalErrorsTile,
-          props.errors.toTagMod(
-            using
+          props.errors.toTagMod(using
             e =>
               <.div(
                 Icons.ErrorIcon,
